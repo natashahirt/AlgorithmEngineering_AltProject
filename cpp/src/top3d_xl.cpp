@@ -4,7 +4,13 @@
 #include <algorithm>
 #include <numeric>
 #include <iostream>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+#include <cstdlib>
+#include <sstream>
 #include <unordered_set>
+#include <filesystem>
 #include <functional>
 #include <string>
 #include "io_export.hpp"
@@ -17,6 +23,54 @@ static inline int idx_dof(int nodeIdx, int comp) { return 3*nodeIdx + comp; }
 // forward declarations for exports
 static void export_volume_nifti(const Problem& pb, const std::vector<double>& xPhys, const std::string& path);
 static void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso);
+
+// output directory helpers
+static inline void ensure_out_dir(const std::string& outDir) {
+	std::error_code ec; (void)std::filesystem::create_directories(outDir, ec);
+}
+
+static inline std::string out_dir_for_cwd() {
+	namespace fs = std::filesystem;
+	std::error_code ec;
+	fs::path cwd = fs::current_path(ec);
+	if (ec) return std::string("./out/");
+	fs::path tryLocal = cwd / "out";
+	if (fs::exists(tryLocal, ec)) return tryLocal.string() + "/";
+	fs::path tryParent = cwd.parent_path() / "out";
+	if (fs::exists(tryParent, ec)) return tryParent.string() + "/";
+	return (cwd / "out").string() + "/";
+}
+
+static inline std::string out_stl_dir_for_cwd() {
+	return out_dir_for_cwd() + "stl/";
+}
+
+static inline std::string generate_unique_filename(const std::string& mode) {
+	// Generate datetime string matching bash format: YYYYMMDD_HHMMSS
+	auto now = std::chrono::system_clock::now();
+	auto time_t = std::chrono::system_clock::to_time_t(now);
+	std::tm* tm_buf = std::localtime(&time_t);
+	
+	std::ostringstream oss;
+	oss << std::setfill('0') << std::setw(4) << (tm_buf->tm_year + 1900)
+		<< std::setw(2) << (tm_buf->tm_mon + 1)
+		<< std::setw(2) << tm_buf->tm_mday << "_"
+		<< std::setw(2) << tm_buf->tm_hour
+		<< std::setw(2) << tm_buf->tm_min
+		<< std::setw(2) << tm_buf->tm_sec;
+	std::string datetime = oss.str();
+	
+	// Get SLURM_JOB_ID from environment if available
+	const char* job_id = std::getenv("SLURM_JOB_ID");
+	std::string job_id_str = job_id ? std::string(job_id) : "";
+	
+	// Format: MODE_DATETIME_JOBID.stl (or MODE_DATETIME.stl if no job ID)
+	if (!job_id_str.empty()) {
+		return mode + "_" + datetime + "_" + job_id_str + ".stl";
+	} else {
+		return mode + "_" + datetime + ".stl";
+	}
+}
 
 void InitialSettings(GlobalParams& out) {
 	out = GlobalParams{};
@@ -470,11 +524,32 @@ void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<do
 }
 
 void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin) {
+	auto tStartTotal = std::chrono::steady_clock::now();
+	
 	Problem pb;
 	InitialSettings(pb.params);
+	
+	std::cout << "\n==========================Displaying Inputs==========================\n";
+	std::cout << std::fixed << std::setprecision(4);
+	std::cout << "..............................................Volume Fraction: " << std::setw(6) << V0 << "\n";
+	std::cout << "..........................................Filter Radius: " << std::setw(6) << rMin << " Cells\n";
+	std::cout << std::scientific << std::setprecision(4);
+	std::cout << "................................................Cell Size: " << std::setw(10) << pb.params.cellSize << "\n";
+	std::cout << std::fixed;
+	std::cout << "...............................................#CG Iterations: " << std::setw(4) << pb.params.cgMaxIt << "\n";
+	std::cout << std::scientific << std::setprecision(4);
+	std::cout << "...........................................Youngs Modulus: " << std::setw(10) << pb.params.youngsModulus << "\n";
+	std::cout << "....................................Youngs Modulus (Min.): " << std::setw(10) << pb.params.youngsModulusMin << "\n";
+	std::cout << "...........................................Poissons Ratio: " << std::setw(10) << pb.params.poissonRatio << "\n";
+	std::cout << std::fixed << std::setprecision(6);
+	
+	auto tStart = std::chrono::steady_clock::now();
 	CreateVoxelFEAmodel_Cuboid(pb, nely, nelx, nelz);
 	ApplyBoundaryConditions(pb);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+	auto tModelTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+	std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
+	
 	// Initialize design
 	for (double& x: pb.density) x = V0;
 
@@ -486,30 +561,46 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 
 	// Solve fully solid for reference
 	{
+		tStart = std::chrono::steady_clock::now();
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
-		PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
-		std::cout << "Compliance of Fully Solid Domain: " << Csolid << "\n";
+		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+		std::cout << std::scientific << std::setprecision(6);
+		std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
+		std::cout << std::fixed;
+		std::cout << " It.: " << std::setw(4) << 0 << " Solver Time: " << std::setw(4) << std::setprecision(0) << tSolveTime << "s.\n\n";
+		std::cout << std::setprecision(6);
 	}
 
 	int loop=0;
 	double change=1.0;
-	while (loop < nLoop && change > 1e-4) {
+	double sharpness = 1.0;
+	
+	while (loop < nLoop && change > 1e-4 && sharpness > 0.01) {
+		auto tPerIter = std::chrono::steady_clock::now();
+		++loop;
+		
 		// Update modulus via SIMP
 		for (int e=0;e<ne;e++) {
 			double rho = std::clamp(xPhys[e], 0.0, 1.0);
 			eleMod[e] = pb.params.youngsModulusMin + std::pow(rho, pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
 		}
+		
 		// Solve KU=F
+		auto tSolveStart = std::chrono::steady_clock::now();
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree(bFree.size(), 0.0);
-		PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
 		scatter_from_free(pb, uFree, U);
+		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
+		
 		// Compliance and sensitivities
+		auto tOptStart = std::chrono::steady_clock::now();
 		double C = ComputeCompliance(pb, eleMod, U, ce);
 		std::vector<double> dc(ne, 0.0);
 		for (int e=0;e<ne;e++) {
@@ -517,13 +608,17 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
 			dc[e] = - dEdrho * ce[e];
 		}
+		
 		// PDE filter on dc (ft=1): filter(x.*dc)./max(1e-3,x)
+		auto tFilterStart = std::chrono::steady_clock::now();
 		{
 			std::vector<double> xdc(ne);
 			for (int e=0;e<ne;e++) xdc[e] = x[e]*dc[e];
 			std::vector<double> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt);
 			for (int e=0;e<ne;e++) dc[e] = dc_filt[e] / std::max(1e-3, x[e]);
 		}
+		auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
+		
 		// OC update with move limits
 		double l1=0.0, l2=1e9;
 		double move=0.2;
@@ -541,14 +636,43 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
 		x.swap(xnew);
 		xPhys = x; // no filter in this minimal port
-		++loop;
-		std::cout << " It.:" << loop << " Obj.:" << C << " Vol.:" << (std::accumulate(xPhys.begin(), xPhys.end(), 0.0)/ne)
-				  << " Ch.:" << change << "\n";
+		sharpness = 4.0 * std::accumulate(xPhys.begin(), xPhys.end(), 0.0, 
+			[](double sum, double val) { return sum + val * (1.0 - val); }) / static_cast<double>(ne);
+		auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
+		auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tPerIter).count();
+		
+		double volFrac = std::accumulate(xPhys.begin(), xPhys.end(), 0.0) / static_cast<double>(ne);
+		double fval = volFrac - V0;
+		
+		// Print iteration results (matching MATLAB format)
+		std::cout << std::scientific << std::setprecision(8);
+		std::cout << " It.:" << std::setw(4) << loop 
+				  << " Obj.:" << std::setw(16) << C 
+				  << " Vol.:" << std::setw(6) << std::setprecision(4) << volFrac
+				  << " Sharp.:" << std::setw(6) << sharpness
+				  << " Cons.:" << std::setw(4) << std::setprecision(2) << fval
+				  << " Ch.:" << std::setw(4) << change << "\n";
+		std::cout << std::fixed << std::setprecision(2);
+		std::cout << " It.: " << std::setw(4) << loop << " (Time)... Total per-It.: " << std::setw(8) << std::scientific << tTotalTime << "s;"
+				  << " CG: " << std::setw(8) << tSolveTime << "s;"
+				  << " Opti.: " << std::setw(8) << tOptTime << "s;"
+				  << " Filtering: " << std::setw(8) << tFilterTime << "s.\n";
+		std::cout << std::fixed;
 	}
 	// Exports
-	export_volume_nifti(pb, xPhys, "DesignVolume.nii");
-	export_surface_stl(pb, xPhys, "DesignVolume.stl", 0.3f);
-	std::cout << "Done.\n";
+	auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStartTotal).count();
+	std::cout << "\n..........Performing Topology Optimization Costs (in total): " 
+			  << std::scientific << std::setprecision(4) << tTotalTime << "s.\n";
+	std::cout << std::fixed;
+	
+	const std::string stlDir = out_stl_dir_for_cwd();
+	ensure_out_dir(stlDir);
+	// NIfTI export disabled
+	// export_volume_nifti(pb, xPhys, outDir + "DesignVolume.nii");
+	std::string stlFilename = generate_unique_filename("GLOBAL");
+	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
+	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
+	std::cout << "\nDone.\n";
 }
 
 // ===== LOCAL (PIO) =====
@@ -621,6 +745,14 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << "\n";
 		if (change < 1e-4) break;
 	}
+	
+	// Exports
+	const std::string stlDir = out_stl_dir_for_cwd();
+	ensure_out_dir(stlDir);
+	std::string stlFilename = generate_unique_filename("LOCAL");
+	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
+	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
+	std::cout << "\nDone.\n";
 }
 
 // ===== Export helpers =====

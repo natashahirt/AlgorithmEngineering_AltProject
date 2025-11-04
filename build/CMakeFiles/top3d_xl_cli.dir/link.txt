@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o -o top3d_xl_cli  libtop3d_xl.a
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o -o top3d_xl_cli  libtop3d_xl.a 

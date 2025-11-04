@@ -2,339 +2,22 @@
 ---
 events:
   -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineSystem.cmake:12 (find_program)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_UNAME"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "uname"
-    candidate_directories:
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/Users/tashahirt/.local/bin/uname"
-      - "/Users/tashahirt/.npm-global/bin/uname"
-      - "/Users/tashahirt/Applications/quarto/bin/uname"
-      - "/Users/tashahirt/.juliaup/bin/uname"
-      - "/usr/local/bin/uname"
-      - "/usr/local/sbin/uname"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/uname"
-      - "/System/Cryptexes/App/usr/bin/uname"
-    found: "/usr/bin/uname"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
     kind: "message-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineSystem.cmake:211 (message)"
       - "CMakeLists.txt:2 (project)"
     message: |
-      The system is: Darwin - 23.4.0 - x86_64
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeUnixFindMake.cmake:5 (find_program)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_MAKE_PROGRAM"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "gmake"
-      - "make"
-      - "smake"
-    candidate_directories:
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/Users/tashahirt/.local/bin/gmake"
-      - "/Users/tashahirt/.npm-global/bin/gmake"
-      - "/Users/tashahirt/Applications/quarto/bin/gmake"
-      - "/Users/tashahirt/.juliaup/bin/gmake"
-      - "/usr/local/bin/gmake"
-      - "/usr/local/sbin/gmake"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/gmake"
-      - "/System/Cryptexes/App/usr/bin/gmake"
-      - "/usr/bin/gmake"
-      - "/bin/gmake"
-      - "/usr/sbin/gmake"
-      - "/sbin/gmake"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/gmake"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/gmake"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/gmake"
-      - "/Library/TeX/texbin/gmake"
-      - "/Applications/quarto/bin/gmake"
-      - "/opt/miniconda3/bin/gmake"
-      - "/opt/miniconda3/condabin/gmake"
-      - "/Users/tashahirt/.cargo/bin/gmake"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/gmake"
-      - "/Users/tashahirt/.local/bin/make"
-      - "/Users/tashahirt/.npm-global/bin/make"
-      - "/Users/tashahirt/Applications/quarto/bin/make"
-      - "/Users/tashahirt/.juliaup/bin/make"
-      - "/usr/local/bin/make"
-      - "/usr/local/sbin/make"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/make"
-      - "/System/Cryptexes/App/usr/bin/make"
-    found: "/usr/bin/make"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompiler.cmake:73 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:69 (_cmake_find_compiler)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_CXX_COMPILER"
-    description: "CXX compiler"
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "c++"
-      - "g++"
-      - "cl"
-      - "bcc"
-      - "icpx"
-      - "icx"
-      - "clang++"
-    candidate_directories:
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/Users/tashahirt/.local/bin/c++"
-      - "/Users/tashahirt/.npm-global/bin/c++"
-      - "/Users/tashahirt/Applications/quarto/bin/c++"
-      - "/Users/tashahirt/.juliaup/bin/c++"
-      - "/usr/local/bin/c++"
-      - "/usr/local/sbin/c++"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/c++"
-      - "/System/Cryptexes/App/usr/bin/c++"
-    found: "/usr/bin/c++"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "file"
-    variable: "src_in"
-    description: "Path to a file."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "CMakeCXXCompilerId.cpp.in"
-    candidate_directories:
-      - "/usr/local/share/cmake/Modules/"
-    found: "/usr/local/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
+      The system is: Linux - 5.14.0-503.38.1.el9_5.x86_64 - x86_64
   -
     kind: "message-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
       - "CMakeLists.txt:2 (project)"
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
-      Compiler: /usr/bin/c++ 
+      Compiler: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ 
       Build flags: 
       Id flags:  
       
@@ -344,1196 +27,232 @@ events:
       
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
       
-      The CXX compiler identification is AppleClang, found in:
-        /Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/4.1.2/CompilerIdCXX/a.out
+      The CXX compiler identification is GNU, found in:
+        /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/3.27.9/CompilerIdCXX/a.out
       
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:290 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Detecting CXX compiler apple sysroot: "/usr/bin/c++" "-E" "apple-sdk.cpp"
-        # 1 "apple-sdk.cpp"
-        # 1 "<built-in>" 1
-        # 1 "<built-in>" 3
-        # 400 "<built-in>" 3
-        # 1 "<command line>" 1
-        # 1 "<built-in>" 2
-        # 1 "apple-sdk.cpp" 2
-        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 1 3 4
-        # 86 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 3 4
-        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h" 1 3 4
-        # 87 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 2 3 4
-        # 206 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 3 4
-        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 1 3 4
-        # 177 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 3 4
-        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h" 1 3 4
-        # 176 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h" 3 4
-        # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h" 1 3 4
-        # 177 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h" 2 3 4
-        # 178 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h" 2 3 4
-        # 207 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h" 2 3 4
-        # 2 "apple-sdk.cpp" 2
-        
-        
-      Found apple sysroot: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_AR"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "ar"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/ar"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_RANLIB"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "ranlib"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/ranlib"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_STRIP"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "strip"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/strip"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_LINKER"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "ld"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/ld"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_NM"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "nm"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/nm"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_OBJDUMP"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "objdump"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    found: "/usr/bin/objdump"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_OBJCOPY"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "objcopy"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/usr/bin/objcopy"
-      - "/Users/tashahirt/.local/bin/objcopy"
-      - "/Users/tashahirt/.npm-global/bin/objcopy"
-      - "/Users/tashahirt/Applications/quarto/bin/objcopy"
-      - "/Users/tashahirt/.juliaup/bin/objcopy"
-      - "/usr/local/bin/objcopy"
-      - "/usr/local/sbin/objcopy"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/objcopy"
-      - "/System/Cryptexes/App/usr/bin/objcopy"
-      - "/bin/objcopy"
-      - "/usr/sbin/objcopy"
-      - "/sbin/objcopy"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/objcopy"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/objcopy"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/objcopy"
-      - "/Library/TeX/texbin/objcopy"
-      - "/Applications/quarto/bin/objcopy"
-      - "/opt/miniconda3/bin/objcopy"
-      - "/opt/miniconda3/condabin/objcopy"
-      - "/Users/tashahirt/.cargo/bin/objcopy"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/objcopy"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_READELF"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "readelf"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/usr/bin/readelf"
-      - "/Users/tashahirt/.local/bin/readelf"
-      - "/Users/tashahirt/.npm-global/bin/readelf"
-      - "/Users/tashahirt/Applications/quarto/bin/readelf"
-      - "/Users/tashahirt/.juliaup/bin/readelf"
-      - "/usr/local/bin/readelf"
-      - "/usr/local/sbin/readelf"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/readelf"
-      - "/System/Cryptexes/App/usr/bin/readelf"
-      - "/bin/readelf"
-      - "/usr/sbin/readelf"
-      - "/sbin/readelf"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/readelf"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/readelf"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/readelf"
-      - "/Library/TeX/texbin/readelf"
-      - "/Applications/quarto/bin/readelf"
-      - "/opt/miniconda3/bin/readelf"
-      - "/opt/miniconda3/condabin/readelf"
-      - "/Users/tashahirt/.cargo/bin/readelf"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/readelf"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_DLLTOOL"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "dlltool"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/usr/bin/dlltool"
-      - "/Users/tashahirt/.local/bin/dlltool"
-      - "/Users/tashahirt/.npm-global/bin/dlltool"
-      - "/Users/tashahirt/Applications/quarto/bin/dlltool"
-      - "/Users/tashahirt/.juliaup/bin/dlltool"
-      - "/usr/local/bin/dlltool"
-      - "/usr/local/sbin/dlltool"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/dlltool"
-      - "/System/Cryptexes/App/usr/bin/dlltool"
-      - "/bin/dlltool"
-      - "/usr/sbin/dlltool"
-      - "/sbin/dlltool"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/dlltool"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/dlltool"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/dlltool"
-      - "/Library/TeX/texbin/dlltool"
-      - "/Applications/quarto/bin/dlltool"
-      - "/opt/miniconda3/bin/dlltool"
-      - "/opt/miniconda3/condabin/dlltool"
-      - "/Users/tashahirt/.cargo/bin/dlltool"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/dlltool"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_ADDR2LINE"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "addr2line"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/usr/bin/addr2line"
-      - "/Users/tashahirt/.local/bin/addr2line"
-      - "/Users/tashahirt/.npm-global/bin/addr2line"
-      - "/Users/tashahirt/Applications/quarto/bin/addr2line"
-      - "/Users/tashahirt/.juliaup/bin/addr2line"
-      - "/usr/local/bin/addr2line"
-      - "/usr/local/sbin/addr2line"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/addr2line"
-      - "/System/Cryptexes/App/usr/bin/addr2line"
-      - "/bin/addr2line"
-      - "/usr/sbin/addr2line"
-      - "/sbin/addr2line"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/addr2line"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/addr2line"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/addr2line"
-      - "/Library/TeX/texbin/addr2line"
-      - "/Applications/quarto/bin/addr2line"
-      - "/opt/miniconda3/bin/addr2line"
-      - "/opt/miniconda3/condabin/addr2line"
-      - "/Users/tashahirt/.cargo/bin/addr2line"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/addr2line"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:206 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_TAPI"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: false
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "tapi"
-    candidate_directories:
-      - "/usr/bin/"
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/usr/bin/tapi"
-      - "/Users/tashahirt/.local/bin/tapi"
-      - "/Users/tashahirt/.npm-global/bin/tapi"
-      - "/Users/tashahirt/Applications/quarto/bin/tapi"
-      - "/Users/tashahirt/.juliaup/bin/tapi"
-      - "/usr/local/bin/tapi"
-      - "/usr/local/sbin/tapi"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/tapi"
-      - "/System/Cryptexes/App/usr/bin/tapi"
-      - "/bin/tapi"
-      - "/usr/sbin/tapi"
-      - "/sbin/tapi"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/tapi"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/tapi"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/tapi"
-      - "/Library/TeX/texbin/tapi"
-      - "/Applications/quarto/bin/tapi"
-      - "/opt/miniconda3/bin/tapi"
-      - "/opt/miniconda3/condabin/tapi"
-      - "/Users/tashahirt/.cargo/bin/tapi"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/tapi"
-    found: false
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-  -
-    kind: "find-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/Platform/Darwin.cmake:76 (find_program)"
-      - "/usr/local/share/cmake/Modules/CMakeSystemSpecificInformation.cmake:32 (include)"
-      - "CMakeLists.txt:2 (project)"
-    mode: "program"
-    variable: "CMAKE_INSTALL_NAME_TOOL"
-    description: "Path to a program."
-    settings:
-      SearchFramework: "FIRST"
-      SearchAppBundle: "FIRST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "install_name_tool"
-    candidate_directories:
-      - "/Users/tashahirt/.local/bin/"
-      - "/Users/tashahirt/.npm-global/bin/"
-      - "/Users/tashahirt/Applications/quarto/bin/"
-      - "/Users/tashahirt/.juliaup/bin/"
-      - "/usr/local/bin/"
-      - "/usr/local/sbin/"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/"
-      - "/System/Cryptexes/App/usr/bin/"
-      - "/usr/bin/"
-      - "/bin/"
-      - "/usr/sbin/"
-      - "/sbin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin/"
-      - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/"
-      - "/Library/TeX/texbin/"
-      - "/Applications/quarto/bin/"
-      - "/opt/miniconda3/bin/"
-      - "/opt/miniconda3/condabin/"
-      - "/Users/tashahirt/.cargo/bin/"
-      - "/Users/tashahirt/.local/sketch/sketch-frontend/"
-    searched_directories:
-      - "/Users/tashahirt/.local/bin/install_name_tool"
-      - "/Users/tashahirt/.npm-global/bin/install_name_tool"
-      - "/Users/tashahirt/Applications/quarto/bin/install_name_tool"
-      - "/Users/tashahirt/.juliaup/bin/install_name_tool"
-      - "/usr/local/bin/install_name_tool"
-      - "/usr/local/sbin/install_name_tool"
-      - "/Library/Frameworks/Python.framework/Versions/3.11/bin/install_name_tool"
-      - "/System/Cryptexes/App/usr/bin/install_name_tool"
-    found: "/usr/bin/install_name_tool"
-    search_context:
-      ENV{PATH}:
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/usr/local/bin"
-        - "/usr/local/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.11/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/Library/TeX/texbin"
-        - "/Applications/quarto/bin"
-        - "/opt/miniconda3/bin"
-        - "/opt/miniconda3/condabin"
-        - "/Users/tashahirt/.local/bin"
-        - "/Users/tashahirt/.npm-global/bin"
-        - "/Users/tashahirt/Applications/quarto/bin"
-        - "/Users/tashahirt/.juliaup/bin"
-        - "/Users/tashahirt/.cargo/bin"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-        - "/Users/tashahirt/.local/sketch/sketch-frontend"
-      CMAKE_INSTALL_PREFIX: "/usr/local"
   -
     kind: "try_compile-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
-      - "/usr/local/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:2 (project)"
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W"
-      binary: "/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W"
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
-      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
       CMAKE_EXE_LINKER_FLAGS: ""
-      CMAKE_OSX_ARCHITECTURES: ""
-      CMAKE_OSX_DEPLOYMENT_TARGET: ""
-      CMAKE_OSX_SYSROOT: ""
     buildResult:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W'
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7'
         
-        Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_555f9/fast
-        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_555f9.dir/build.make CMakeFiles/cmTC_555f9.dir/build
-        Building CXX object CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -v -Wl,-v -MD -MT CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/share/cmake/Modules/CMakeCXXCompilerABI.cpp
-        Apple clang version 15.0.0 (clang-1500.3.9.4)
-        Target: x86_64-apple-darwin23.4.0
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_92d09/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_92d09.dir/build.make CMakeFiles/cmTC_92d09.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7'
+        Building CXX object CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++   -v -o CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -c /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp
+        Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs
+        COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++
+        Target: x86_64-pc-linux-gnu
+        Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c,c++,fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64' --with-boot-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack
         Thread model: posix
-        InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-        clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
-         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple x86_64-apple-macosx14.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=all -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=2 -target-sdk-version=14.4 -fvisibility-inlines-hidden-static-local-var -target-cpu penryn -tune-cpu generic -debugger-tuning=lldb -target-linker-version 1053.12 -v "-fcoverage-compilation-dir=/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W" -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0 -dependency-file CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro "-fdebug-compilation-dir=/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W" -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/local/share/cmake/Modules/CMakeCXXCompilerABI.cpp
-        clang -cc1 version 15.0.0 (clang-1500.3.9.4) default target x86_64-apple-darwin23.4.0
-        ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
-        ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 12.2.0 (Spack GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/'
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/cc1plus -quiet -v -D_GNU_SOURCE /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_92d09.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccOhub9b.s
+        GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)
+        	compiled by GNU C version 12.2.0, GMP version 6.2.1, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"
         #include "..." search starts here:
         #include <...> search starts here:
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include
          /usr/local/include
-         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
-         /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include
-         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
-         /Library/Developer/CommandLineTools/usr/include
-         /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed
+         /usr/include
         End of search list.
-        Linking CXX executable cmTC_555f9
-        /usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_555f9.dir/link.txt --verbose=1
-        Apple clang version 15.0.0 (clang-1500.3.9.4)
-        Target: x86_64-apple-darwin23.4.0
+        GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)
+        	compiled by GNU C version 12.2.0, GMP version 6.2.1, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        Compiler executable checksum: bb029ae40352653463a7b34b72e4fb1b
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/'
+         as -v --64 -o CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccOhub9b.s
+        GNU assembler version 2.30 (x86_64-redhat-linux) using BFD version version 2.30-123.el8
+        COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/
+        LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_92d09
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_92d09.dir/link.txt --verbose=1
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++  -v CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_92d09 
+        Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs
+        COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++
+        COLLECT_LTO_WRAPPER=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper
+        Target: x86_64-pc-linux-gnu
+        Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c,c++,fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64' --with-boot-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack
         Thread model: posix
-        InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 14.0.0 14.4 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_555f9 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.osx.a
-        @(#)PROGRAM:ld PROJECT:ld-1053.12
-        BUILD 15:44:24 Feb  3 2024
-        configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
-        will use ld-classic for: armv6 armv7 armv7s arm64_32 i386 armv6m armv7k armv7m armv7em
-        LTO support using: LLVM version 15.0.0 (static support for 29, runtime is 29)
-        TAPI support using: Apple TAPI version 15.0.0 (tapi-1500.3.2.2)
-        Library search paths:
-        	/usr/local/lib
-        	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
-        	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift
-        Framework search paths:
-        	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks
-        /usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_555f9
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 12.2.0 (Spack GCC) 
+        COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/
+        LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_92d09' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_92d09.'
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2 -plugin /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so -plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccoVopSd.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_92d09 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../.. -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_92d09' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_92d09.'
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7'
         
       exitCode: 0
   -
     kind: "message-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:122 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Effective list of requested architectures (possibly empty)  : ""
-      Effective list of architectures found in the ABI info binary: "x86_64"
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:217 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:2 (project)"
     message: |
       Parsed CXX implicit include dir info: rv=done
         found start of include info
         found start of implicit include info
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include]
           add: [/usr/local/include]
-          add: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
-          add: [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include]
-          add: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
-          add: [/Library/Developer/CommandLineTools/usr/include]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed]
+          add: [/usr/include]
         end of search list found
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include]
         collapse include dir [/usr/local/include] ==> [/usr/local/include]
-        collapse include dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
-        collapse include dir [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include] ==> [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include]
-        collapse include dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
-        collapse include dir [/Library/Developer/CommandLineTools/usr/include] ==> [/Library/Developer/CommandLineTools/usr/include]
-        implicit include dirs: [/usr/local/include;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1;/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include;/Library/Developer/CommandLineTools/usr/include]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include;/usr/local/include;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed;/usr/include]
       
       
   -
     kind: "message-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:152 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
       - "CMakeLists.txt:2 (project)"
     message: |
       Parsed CXX implicit link information:
-        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
-        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W']
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7']
         ignore line: []
-        ignore line: [Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_555f9/fast]
-        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_555f9.dir/build.make CMakeFiles/cmTC_555f9.dir/build]
-        ignore line: [Building CXX object CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -v -Wl -v -MD -MT CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
-        ignore line: [Apple clang version 15.0.0 (clang-1500.3.9.4)]
-        ignore line: [Target: x86_64-apple-darwin23.4.0]
+        ignore line: [Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_92d09/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_92d09.dir/build.make CMakeFiles/cmTC_92d09.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-WdhKn7']
+        ignore line: [Building CXX object CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++   -v -o CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -c /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs]
+        ignore line: [COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c c++ fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64' --with-boot-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack]
         ignore line: [Thread model: posix]
-        ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
-        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple x86_64-apple-macosx14.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=all -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=2 -target-sdk-version=14.4 -fvisibility-inlines-hidden-static-local-var -target-cpu penryn -tune-cpu generic -debugger-tuning=lldb -target-linker-version 1053.12 -v "-fcoverage-compilation-dir=/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W" -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0 -dependency-file CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro "-fdebug-compilation-dir=/Users/tashahirt/MIT Dropbox/Natasha Hirt/_MIT/6.6050 Algorithm Engineering/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-qTPJ0W" -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/local/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
-        ignore line: [clang -cc1 version 15.0.0 (clang-1500.3.9.4) default target x86_64-apple-darwin23.4.0]
-        ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
-        ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 12.2.0 (Spack GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/']
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/cc1plus -quiet -v -D_GNU_SOURCE /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_92d09.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o /tmp/ccOhub9b.s]
+        ignore line: [GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)]
+        ignore line: [	compiled by GNU C version 12.2.0  GMP version 6.2.1  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"]
         ignore line: [#include "..." search starts here:]
         ignore line: [#include <...> search starts here:]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include]
         ignore line: [ /usr/local/include]
-        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1]
-        ignore line: [ /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include]
-        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include]
-        ignore line: [ /Library/Developer/CommandLineTools/usr/include]
-        ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed]
+        ignore line: [ /usr/include]
         ignore line: [End of search list.]
-        ignore line: [Linking CXX executable cmTC_555f9]
-        ignore line: [/usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_555f9.dir/link.txt --verbose=1]
-        ignore line: [Apple clang version 15.0.0 (clang-1500.3.9.4)]
-        ignore line: [Target: x86_64-apple-darwin23.4.0]
+        ignore line: [GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)]
+        ignore line: [	compiled by GNU C version 12.2.0  GMP version 6.2.1  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [Compiler executable checksum: bb029ae40352653463a7b34b72e4fb1b]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccOhub9b.s]
+        ignore line: [GNU assembler version 2.30 (x86_64-redhat-linux) using BFD version version 2.30-123.el8]
+        ignore line: [COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_92d09]
+        ignore line: [/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_92d09.dir/link.txt --verbose=1]
+        ignore line: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++  -v CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_92d09 ]
+        ignore line: [Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs]
+        ignore line: [COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++]
+        ignore line: [COLLECT_LTO_WRAPPER=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c c++ fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64' --with-boot-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack]
         ignore line: [Thread model: posix]
-        ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 14.0.0 14.4 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o cmTC_555f9 -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.osx.a]
-          arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
-          arg [-demangle] ==> ignore
-          arg [-lto_library] ==> ignore, skip following value
-          arg [/Library/Developer/CommandLineTools/usr/lib/libLTO.dylib] ==> skip value of -lto_library
-          arg [-dynamic] ==> ignore
-          arg [-arch] ==> ignore
-          arg [x86_64] ==> ignore
-          arg [-platform_version] ==> ignore
-          arg [macos] ==> ignore
-          arg [14.0.0] ==> ignore
-          arg [14.4] ==> ignore
-          arg [-syslibroot] ==> ignore
-          arg [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk] ==> ignore
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 12.2.0 (Spack GCC) ]
+        ignore line: [COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_92d09' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_92d09.']
+        link line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2 -plugin /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so -plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccoVopSd.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_92d09 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../.. -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o]
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccoVopSd.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_555f9] ==> ignore
-          arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
-          arg [-search_paths_first] ==> ignore
-          arg [-headerpad_max_install_names] ==> ignore
-          arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_555f9.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
-          arg [-lc++] ==> lib [c++]
-          arg [-lSystem] ==> lib [System]
-          arg [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.osx.a]
-        linker tool for 'CXX': /Library/Developer/CommandLineTools/usr/bin/ld
-        Library search paths: [;/usr/local/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift]
-        Framework search paths: [;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks]
-        remove lib [System]
-        remove lib [/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.osx.a]
-        collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
-        collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
-        collapse library dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib]
-        collapse library dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift]
-        collapse framework dir [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks] ==> [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks]
-        implicit libs: [c++]
-        implicit objs: []
-        implicit dirs: [/usr/local/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift]
-        implicit fwks: [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks]
+          arg [cmTC_92d09] ==> ignore
+          arg [/lib/../lib64/crt1.o] ==> obj [/lib/../lib64/crt1.o]
+          arg [/lib/../lib64/crti.o] ==> obj [/lib/../lib64/crti.o]
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o] ==> obj [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..]
+          arg [-rpath] ==> ignore
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64] ==> ignore
+          arg [CMakeFiles/cmTC_92d09.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o] ==> obj [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o]
+          arg [/lib/../lib64/crtn.o] ==> obj [/lib/../lib64/crtn.o]
+        collapse obj [/lib/../lib64/crt1.o] ==> [/lib64/crt1.o]
+        collapse obj [/lib/../lib64/crti.o] ==> [/lib64/crti.o]
+        collapse obj [/lib/../lib64/crtn.o] ==> [/lib64/crtn.o]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib]
+        implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+        implicit objs: [/lib64/crt1.o;/lib64/crti.o;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o;/lib64/crtn.o]
+        implicit dirs: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64;/lib64;/usr/lib64;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib]
+        implicit fwks: []
       
       
-  -
-    kind: "message-v1"
-    backtrace:
-      - "/usr/local/share/cmake/Modules/Internal/CMakeDetermineLinkerId.cmake:36 (message)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
-      - "/usr/local/share/cmake/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:2 (project)"
-    message: |
-      Running the CXX compiler's linker: "/Library/Developer/CommandLineTools/usr/bin/ld" "-v"
-      @(#)PROGRAM:ld PROJECT:ld-1053.12
-      BUILD 15:44:24 Feb  3 2024
-      configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
-      will use ld-classic for: armv6 armv7 armv7s arm64_32 i386 armv6m armv7k armv7m armv7em
-      LTO support using: LLVM version 15.0.0 (static support for 29, runtime is 29)
-      TAPI support using: Apple TAPI version 15.0.0 (tapi-1500.3.2.2)
 ...
