@@ -1,0 +1,37 @@
+Job started at Tue Nov  4 17:39:28 EST 2025
+Mode: GLOBAL
+Parameters: 12 24 12 0.12 5
+Output file: out/log/GLOBAL_20251104_173928_5887080.out
+Error file: out/log/GLOBAL_20251104_173928_5887080.err
+Latest log: out/log/GLOBAL_latest.log
+STL dir: out/stl/
+Running GLOBAL topo-opt on cuboid: 12x24x12, V0=0.12, iters=5
+
+==========================Displaying Inputs==========================
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+...............................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Preparing Voxel-based FEA Model Costs        0.0s
+Compliance of Fully Solid Domain:     3.624842e+00
+ It.:    0 Solver Time:    7s.
+
+ It.:   1 Obj.:  2.09649809e+03 Vol.:1.2000e-01 Sharp.:4.0944e-01 Cons.:9.15e-09 Ch.:1.91e-01
+ It.:    1 (Time)... Total per-It.: 7.15e+00s; CG: 7.12e+00s; Opti.: 2.62e-02s; Filtering: 1.41e-02s.
+ It.:   2 Obj.:  1.51382682e+03 Vol.:1.2000e-01 Sharp.:4.1221e-01 Cons.:2.15e-08 Ch.:1.04e-01
+ It.:    2 (Time)... Total per-It.: 7.15e+00s; CG: 7.12e+00s; Opti.: 2.51e-02s; Filtering: 1.29e-02s.
+ It.:   3 Obj.:  9.57912655e+02 Vol.:1.2000e-01 Sharp.:4.0217e-01 Cons.:6.16e-08 Ch.:1.76e-01
+ It.:    3 (Time)... Total per-It.: 7.15e+00s; CG: 7.13e+00s; Opti.: 2.52e-02s; Filtering: 1.30e-02s.
+ It.:   4 Obj.:  6.52185000e+02 Vol.:1.2000e-01 Sharp.:4.0521e-01 Cons.:-1.13e-08 Ch.:8.34e-02
+ It.:    4 (Time)... Total per-It.: 7.15e+00s; CG: 7.12e+00s; Opti.: 2.52e-02s; Filtering: 1.30e-02s.
+ It.:   5 Obj.:  8.26285683e+02 Vol.:1.2000e-01 Sharp.:3.9797e-01 Cons.:3.45e-08 Ch.:1.33e-01
+ It.:    5 (Time)... Total per-It.: 7.15e+00s; CG: 7.13e+00s; Opti.: 2.52e-02s; Filtering: 1.30e-02s.
+
+..........Performing Topology Optimization Costs (in total): 4.2879e+01s.
+STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/GLOBAL_20251104_174011_5887080.stl
+
+Done.
+Job completed at Tue Nov  4 17:40:11 EST 2025

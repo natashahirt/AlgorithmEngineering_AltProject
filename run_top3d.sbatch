@@ -8,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
+#SBATCH --mem=32G
 
 # Set up environment
 module load gcc/12.2.0
@@ -19,9 +19,9 @@ cd /home/nhirt/AlgorithmEngineering_AltProject
 
 # Set mode and parameters (modify these as needed)
 MODE="GLOBAL"
-# For GLOBAL mode: nely nelx nelz V0 nLoop
+# For GLOBAL mode: nely nelx nelz V0 nLoop (rMin is hardcoded to sqrt(3))
 # For LOCAL mode: nely nelx nelz Ve0 nLoop rMin rHat
-PARAMS="12 24 12 0.12 30"
+PARAMS="50 100 50 0.12 50"
 
 # Generate datetime string (YYYYMMDD_HHMMSS)
 DATETIME=$(date +"%Y%m%d_%H%M%S")

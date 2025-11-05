@@ -9,7 +9,6 @@
 #include <ctime>
 #include <cstdlib>
 #include <sstream>
-#include <unordered_set>
 #include <filesystem>
 #include <functional>
 #include <string>
@@ -21,7 +20,6 @@ namespace top3d {
 static inline int idx_dof(int nodeIdx, int comp) { return 3*nodeIdx + comp; }
 
 // forward declarations for exports
-static void export_volume_nifti(const Problem& pb, const std::vector<double>& xPhys, const std::string& path);
 static void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso);
 
 // output directory helpers
@@ -331,56 +329,81 @@ static void scatter_from_free(const Problem& pb, const std::vector<double>& free
 	for (size_t i=0;i<pb.freeDofIndex.size();++i) full[pb.freeDofIndex[i]] = freev[i];
 }
 
+void ComputeJacobiDiagonalFree(const Problem& pb,
+							   const std::vector<double>& eleModulus,
+							   std::vector<double>& diagFree) {
+	const auto& mesh = pb.mesh;
+	std::vector<double> diagFull(mesh.numDOFs, 0.0);
+	const auto& Ke = mesh.Ke; // 24x24
+	for (int e=0; e<mesh.numElements; ++e) {
+		double Ee = eleModulus[e];
+		for (int a=0; a<8; ++a) {
+			int n = mesh.eNodMat[e*8 + a];
+			for (int c=0; c<3; ++c) {
+				int local = 3*a + c;
+				diagFull[3*n + c] += Ke[local*24 + local] * Ee;
+			}
+		}
+	}
+	// Restrict to free DOFs
+	diagFree.resize(pb.freeDofIndex.size());
+	for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+		double v = diagFull[pb.freeDofIndex[i]];
+		diagFree[i] = (v>0 ? v : 1.0);
+	}
+}
+
 int PCG_free(const Problem& pb,
 			  const std::vector<double>& eleModulus,
 			  const std::vector<double>& bFree,
 			  std::vector<double>& xFree,
-			  double tol, int maxIt) {
-	// Preconditioner: simple Jacobi (identity here, upgraded later with MG)
-	std::vector<double> r = bFree;
-	std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
-	// Initial xFree maintained
-	// r = b - A*x
-	if (!xFree.empty()) {
-		std::vector<double> xfull(pb.mesh.numDOFs, 0.0), yfull;
-		scatter_from_free(pb, xFree, xfull);
-		K_times_u_finest(pb, eleModulus, xfull, yfull);
-		std::vector<double> yfree; restrict_to_free(pb, yfull, yfree);
-		for (size_t i=0;i<r.size();++i) r[i] -= yfree[i];
-	}
-	// Jacobi as 1.0 (scaling) for now
-	for (size_t i=0;i<r.size();++i) z[i] = r[i];
-	double rz_old = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
-	if (xFree.empty()) xFree.assign(r.size(), 0.0);
-	int it=0;
-	const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
-	while (it < maxIt) {
-		if (it==0) p = z; else {
-			double beta = rz_old / std::max(1e-30, std::inner_product(r.begin(), r.end(), z.begin(), 0.0));
-			for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
-		}
-		// Ap = A*p
-		std::vector<double> pfull(pb.mesh.numDOFs, 0.0), Apfull;
-		scatter_from_free(pb, p, pfull);
-		K_times_u_finest(pb, eleModulus, pfull, Apfull);
-		std::vector<double> Apfree; restrict_to_free(pb, Apfull, Apfree);
-		Ap.swap(Apfree);
-		double alpha = rz_old / std::max(1e-30, std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0));
-		for (size_t i=0;i<xFree.size();++i) xFree[i] += alpha * p[i];
-		for (size_t i=0;i<r.size();++i) r[i] -= alpha * Ap[i];
-		double res = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0)) / std::max(1e-30, normb);
-		if (res < tol) return it+1;
-		// z = M^{-1} r, Jacobi ~ identity
-		for (size_t i=0;i<z.size();++i) z[i] = r[i];
-		double rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
-		rz_old = rz_new;
-		++it;
-	}
-	return it;
+			  double tol, int maxIt,
+			  Preconditioner M) {
+    std::vector<double> r = bFree;
+    std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
+    // r = b - A*x (if nonzero initial guess)
+    if (!xFree.empty()) {
+        std::vector<double> xfull(pb.mesh.numDOFs, 0.0), yfull;
+        scatter_from_free(pb, xFree, xfull);
+        K_times_u_finest(pb, eleModulus, xfull, yfull);
+        std::vector<double> yfree; restrict_to_free(pb, yfull, yfree);
+        for (size_t i=0;i<r.size();++i) r[i] -= yfree[i];
+    }
+    if (xFree.empty()) xFree.assign(r.size(), 0.0);
+    // z0 and p0
+    if (M) M(r, z); else z = r;
+    double rz_old = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+    p = z;
+
+    const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
+    for (int it=0; it<maxIt; ++it) {
+        // Ap = A*p
+        std::vector<double> pfull(pb.mesh.numDOFs, 0.0), Apfull;
+        scatter_from_free(pb, p, pfull);
+        K_times_u_finest(pb, eleModulus, pfull, Apfull);
+        std::vector<double> Apfree; restrict_to_free(pb, Apfull, Apfree);
+        Ap.swap(Apfree);
+
+        double denom = std::max(1e-30, std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0));
+        double alpha = rz_old / denom;
+
+        for (size_t i=0;i<xFree.size();++i) xFree[i] += alpha * p[i];
+        for (size_t i=0;i<r.size();++i)     r[i]     -= alpha * Ap[i];
+
+        double res = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0)) / std::max(1e-30, normb);
+        if (res < tol) return it+1;
+
+        // z_{k+1}
+        if (M) M(r, z); else z = r;
+        double rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+
+        double beta = rz_new / std::max(1e-30, rz_old);
+        for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
+        rz_old = rz_new;
+    }
+    return maxIt;
 }
 
-// Minimal hook to later enable MG (no-op here to keep builds simple)
-void EnableMultigridPreconditioner(const Problem& /*pb*/, const MGPrecondConfig& /*cfg*/) {}
 
 double ComputeCompliance(const Problem& pb,
 						   const std::vector<double>& eleModulus,
@@ -523,6 +546,499 @@ void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<do
 	}
 }
 
+// ===== MG scaffolding: trilinear weights and hierarchy (Step 2) =====
+
+// Trilinear shape for 8-node hex at natural coords (xi, eta, zeta) in [-1,1]
+static inline void shape_trilinear8(double xi, double eta, double zeta, double N[8]) {
+	N[0] = 0.125*(1-xi)*(1-eta)*(1-zeta);
+	N[1] = 0.125*(1+xi)*(1-eta)*(1-zeta);
+	N[2] = 0.125*(1+xi)*(1+eta)*(1-zeta);
+	N[3] = 0.125*(1-xi)*(1+eta)*(1-zeta);
+	N[4] = 0.125*(1-xi)*(1-eta)*(1+zeta);
+	N[5] = 0.125*(1+xi)*(1-eta)*(1+zeta);
+	N[6] = 0.125*(1+xi)*(1+eta)*(1+zeta);
+	N[7] = 0.125*(1-xi)*(1+eta)*(1+zeta);
+}
+
+// Build per-element nodal weights table for a given span (2 or 4)
+// Mapping: coarse element's 8 vertices -> (span+1)^3 embedded fine-grid vertices
+static std::vector<double> make_trilinear_weights_table(int span) {
+	const int grid = span + 1;
+	std::vector<double> W(grid*grid*grid*8, 0.0);
+	for (int iz=0; iz<=span; ++iz) {
+		for (int iy=0; iy<=span; ++iy) {
+			for (int ix=0; ix<=span; ++ix) {
+				double xi   = -1.0 + 2.0 * (double(ix) / double(span));
+				double eta  = -1.0 + 2.0 * (double(iy) / double(span));
+				double zeta = -1.0 + 2.0 * (double(iz) / double(span));
+				double N[8]; shape_trilinear8(xi, eta, zeta, N);
+				const int v = (iz*grid + iy)*grid + ix;
+				for (int a=0; a<8; ++a) W[v*8 + a] = N[a];
+			}
+		}
+	}
+	return W;
+}
+
+// Build a structured MG level of resolution (nx,ny,nz)
+static MGLevel build_structured_level(int nx, int ny, int nz, int span) {
+	MGLevel L;
+	L.resX = nx; L.resY = ny; L.resZ = nz;
+	L.spanWidth = span;
+	L.numElements = nx*ny*nz;
+	const int nnx = nx+1, nny = ny+1, nnz = nz+1;
+	L.numNodes = nnx*nny*nnz;
+	L.numDOFs = L.numNodes * 3;
+
+	L.nodMapBack.resize(L.numNodes);
+	std::iota(L.nodMapBack.begin(), L.nodMapBack.end(), 0);
+	L.nodMapForward = L.nodMapBack;
+
+	L.eNodMat.resize(L.numElements*8);
+	auto nodeIndex = [&](int ix,int iy,int iz){ return (nnx*nny*iz + nnx*iy + ix); };
+	int eComp=0;
+	for (int ez=0; ez<nz; ++ez) {
+		for (int ex=0; ex<nx; ++ex) {
+			for (int ey=0; ey<ny; ++ey) {
+				int n1 = nodeIndex(ex,   ny-ey,   ez);
+				int n2 = nodeIndex(ex+1, ny-ey,   ez);
+				int n3 = nodeIndex(ex+1, ny-ey-1, ez);
+				int n4 = nodeIndex(ex,   ny-ey-1, ez);
+				int n5 = nodeIndex(ex,   ny-ey,   ez+1);
+				int n6 = nodeIndex(ex+1, ny-ey,   ez+1);
+				int n7 = nodeIndex(ex+1, ny-ey-1, ez+1);
+				int n8 = nodeIndex(ex,   ny-ey-1, ez+1);
+				int base = eComp*8;
+				L.eNodMat[base+0]=n1; L.eNodMat[base+1]=n2; L.eNodMat[base+2]=n3; L.eNodMat[base+3]=n4;
+				L.eNodMat[base+4]=n5; L.eNodMat[base+5]=n6; L.eNodMat[base+6]=n7; L.eNodMat[base+7]=n8;
+				++eComp;
+			}
+		}
+	}
+	L.weightsNode = make_trilinear_weights_table(span);
+	return L;
+}
+
+void BuildMGHierarchy(const Problem& pb, bool nonDyadic, MGHierarchy& H, int maxLevels) {
+	H.levels.clear();
+	H.nonDyadic = nonDyadic;
+
+	// Finest level: same resolution; span not used here
+	{
+		MGLevel L0 = build_structured_level(pb.mesh.resX, pb.mesh.resY, pb.mesh.resZ, /*span=*/1);
+		L0.weightsNode.clear();
+		H.levels.push_back(std::move(L0));
+	}
+
+	int nx = pb.mesh.resX;
+	int ny = pb.mesh.resY;
+	int nz = pb.mesh.resZ;
+
+    for (int li=1; li<maxLevels; ++li) {
+        int span = (li==1 && nonDyadic ? 4 : 2);
+        // Enforce divisibility to avoid misalignment; stop if indivisible
+        if (nx % span != 0 || ny % span != 0 || nz % span != 0) break;
+        if (nx/span < 1 || ny/span < 1 || nz/span < 1) break;
+        nx = nx / span; ny = ny / span; nz = nz / span;
+        H.levels.push_back(build_structured_level(nx, ny, nz, span));
+        if (std::min({nx,ny,nz}) <= 2) break;
+    }
+}
+
+// ===== MG diagonal-only V-cycle (Adapted) =====
+
+// Forward declarations for transfer operators used below
+static void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
+                                  const std::vector<double>& xc, std::vector<double>& xf);
+static void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
+                                   const std::vector<double>& rf, std::vector<double>& rc);
+
+// Build per-level fixed-DOF masks by restricting the finest mask
+static void MG_BuildFixedMasks(const Problem& pb, const MGHierarchy& H,
+							   std::vector<std::vector<uint8_t>>& fixedMasks) {
+	fixedMasks.resize(H.levels.size());
+	// Finest-level mask from pb.isFreeDOF (3 DOFs per node)
+	{
+		const int n0 = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
+		fixedMasks[0].assign(3*n0, 0);
+		for (int n=0;n<pb.mesh.numNodes;n++) {
+			for (int c=0;c<3;c++) fixedMasks[0][3*n+c] = pb.isFreeDOF[3*n+c] ? 0 : 1;
+		}
+	}
+	// Restrict masks to coarser levels (component-wise), threshold 0.5
+	for (size_t l=0; l+1<H.levels.size(); ++l) {
+		const int fnn = H.levels[l].numNodes;
+		const int cnn = H.levels[l+1].numNodes;
+		fixedMasks[l+1].assign(3*cnn, 0);
+		for (int c=0;c<3;c++) {
+			std::vector<double> rf(fnn), rc;
+			for (int n=0;n<fnn;n++) rf[n] = fixedMasks[l][3*n+c] ? 1.0 : 0.0;
+			MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
+			for (int n=0;n<cnn;n++) fixedMasks[l+1][3*n+c] = (rc[n] > 0.5) ? 1 : 0;
+		}
+	}
+}
+
+static void ComputeJacobiDiagonalFull(const Problem& pb,
+									  const std::vector<double>& eleModulus,
+									  std::vector<double>& diagFull) {
+	const auto& mesh = pb.mesh;
+	diagFull.assign(mesh.numDOFs, 0.0);
+	const auto& Ke = mesh.Ke;
+	for (int e=0; e<mesh.numElements; ++e) {
+		double Ee = eleModulus[e];
+		for (int a=0; a<8; ++a) {
+			int n = mesh.eNodMat[e*8 + a];
+			for (int c=0; c<3; ++c) {
+				int local = 3*a + c;
+				diagFull[3*n + c] += Ke[local*24 + local] * Ee;
+			}
+		}
+	}
+	for (double& v : diagFull) if (!(v > 0.0)) v = 1.0;
+}
+
+static void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
+								  const std::vector<double>& xc, std::vector<double>& xf) {
+	const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
+	const int cnnx = Lc.resX+1, cnny = Lc.resY+1, cnnz = Lc.resZ+1;
+const int span = Lc.spanWidth;
+	const int grid = span+1;
+
+	xf.assign(fnnx*fnny*fnnz, 0.0);
+	std::vector<double> wsum(xf.size(), 0.0);
+
+	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
+	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
+
+	for (int cez=0; cez<Lc.resZ; ++cez) {
+		for (int cex=0; cex<Lc.resX; ++cex) {
+			for (int cey=0; cey<Lc.resY; ++cey) {
+				int c1 = idxC(cex,   Lc.resY-cey,   cez);
+				int c2 = idxC(cex+1, Lc.resY-cey,   cez);
+				int c3 = idxC(cex+1, Lc.resY-cey-1, cez);
+				int c4 = idxC(cex,   Lc.resY-cey-1, cez);
+				int c5 = idxC(cex,   Lc.resY-cey,   cez+1);
+				int c6 = idxC(cex+1, Lc.resY-cey,   cez+1);
+				int c7 = idxC(cex+1, Lc.resY-cey-1, cez+1);
+				int c8 = idxC(cex,   Lc.resY-cey-1, cez+1);
+				double cv[8] = {xc[c1],xc[c2],xc[c3],xc[c4],xc[c5],xc[c6],xc[c7],xc[c8]};
+
+                int fx0 = cex*span, fy0 = (Lc.resY - cey)*span, fz0 = cez*span;
+				for (int iz=0; iz<=span; ++iz) {
+					for (int iy=0; iy<=span; ++iy) {
+						for (int ix=0; ix<=span; ++ix) {
+							int fxi = fx0 + ix;
+							int fyi = fy0 - iy;
+							int fzi = fz0 + iz;
+							int fidx = idxF(fxi, fyi, fzi);
+const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+							double sum = 0.0; for (int a=0;a<8;a++) sum += W[a]*cv[a];
+							xf[fidx] += sum; wsum[fidx] += 1.0;
+						}
+					}
+				}
+			}
+		}
+	}
+	for (size_t i=0;i<xf.size();++i) if (wsum[i]>0) xf[i] /= wsum[i];
+}
+
+static void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
+								 const std::vector<double>& rf, std::vector<double>& rc) {
+	const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
+	const int cnnx = Lc.resX+1, cnny = Lc.resY+1, cnnz = Lc.resZ+1;
+const int span = Lc.spanWidth;
+	const int grid = span+1;
+
+	rc.assign(cnnx*cnny*cnnz, 0.0);
+	std::vector<double> wsum(rc.size(), 0.0);
+
+	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
+	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
+
+	for (int cez=0; cez<Lc.resZ; ++cez) {
+		for (int cex=0; cex<Lc.resX; ++cex) {
+			for (int cey=0; cey<Lc.resY; ++cey) {
+				int cidx[8] = {
+					idxC(cex,   Lc.resY-cey,   cez),
+					idxC(cex+1, Lc.resY-cey,   cez),
+					idxC(cex+1, Lc.resY-cey-1, cez),
+					idxC(cex,   Lc.resY-cey-1, cez),
+					idxC(cex,   Lc.resY-cey,   cez+1),
+					idxC(cex+1, Lc.resY-cey,   cez+1),
+					idxC(cex+1, Lc.resY-cey-1, cez+1),
+					idxC(cex,   Lc.resY-cey-1, cez+1)
+				};
+
+                int fx0 = cex*span, fy0 = (Lc.resY - cey)*span, fz0 = cez*span;
+				for (int iz=0; iz<=span; ++iz) {
+					for (int iy=0; iy<=span; ++iy) {
+						for (int ix=0; ix<=span; ++ix) {
+							int fxi = fx0 + ix;
+							int fyi = fy0 - iy;
+							int fzi = fz0 + iz;
+							int fidx = idxF(fxi, fyi, fzi);
+const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+							double val = rf[fidx];
+							for (int a=0;a<8;a++) { rc[cidx[a]] += W[a]*val; wsum[cidx[a]] += W[a]; }
+						}
+					}
+				}
+			}
+		}
+	}
+	for (size_t i=0;i<rc.size();++i) if (wsum[i]>0) rc[i] /= wsum[i];
+}
+
+static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
+                                  const std::vector<double>& diagFine, std::vector<double>& diagCoarse) {
+    const int span = Lc.spanWidth;
+    const int grid = span+1;
+
+	diagCoarse.assign((Lc.resX+1)*(Lc.resY+1)*(Lc.resZ+1)*3, 0.0);
+	std::vector<double> wsum(diagCoarse.size(), 0.0);
+
+	auto idxF = [&](int ix,int iy,int iz){ return (Lf.resX+1)*(Lf.resY+1)*iz + (Lf.resX+1)*iy + ix; };
+	auto idxC = [&](int ix,int iy,int iz){ return (Lc.resX+1)*(Lc.resY+1)*iz + (Lc.resX+1)*iy + ix; };
+
+	for (int cez=0; cez<Lc.resZ; ++cez) {
+		for (int cex=0; cex<Lc.resX; ++cex) {
+			for (int cey=0; cey<Lc.resY; ++cey) {
+                int fx0 = cex*span, fy0 = (Lc.resY - cey)*span, fz0 = cez*span;
+				for (int iz=0; iz<=span; ++iz) {
+					for (int iy=0; iy<=span; ++iy) {
+						for (int ix=0; ix<=span; ++ix) {
+							int fxi = fx0 + ix; int fyi = fy0 - iy; int fzi = fz0 + iz;
+							int fn = idxF(fxi, fyi, fzi);
+                            const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+							int cidx[8] = {
+								idxC(cex,   Lc.resY-cey,   cez),
+								idxC(cex+1, Lc.resY-cey,   cez),
+								idxC(cex+1, Lc.resY-cey-1, cez),
+								idxC(cex,   Lc.resY-cey-1, cez),
+								idxC(cex,   Lc.resY-cey,   cez+1),
+								idxC(cex+1, Lc.resY-cey,   cez+1),
+								idxC(cex+1, Lc.resY-cey-1, cez+1),
+								idxC(cex,   Lc.resY-cey-1, cez+1)
+							};
+							for (int a=0;a<8;a++) {
+								double w2 = W[a]*W[a];
+								for (int c=0;c<3;c++) { diagCoarse[3*cidx[a]+c] += w2 * diagFine[3*fn+c]; wsum[3*cidx[a]+c] += w2; }
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	for (size_t i=0;i<diagCoarse.size();++i) if (wsum[i]>0) diagCoarse[i] /= wsum[i];
+	for (double& v : diagCoarse) if (!(v>0.0)) v = 1.0;
+}
+
+static void MG_BuildDiagonals(const Problem& pb, const MGHierarchy& H,
+							   const std::vector<double>& eleModulus,
+							   std::vector<std::vector<double>>& diagLevels) {
+	diagLevels.resize(H.levels.size());
+	ComputeJacobiDiagonalFull(pb, eleModulus, diagLevels[0]);
+	for (size_t l=0; l+1<H.levels.size(); ++l) {
+		MG_CoarsenDiagonal(H.levels[l+1], H.levels[l], diagLevels[l], diagLevels[l+1]);
+	}
+}
+
+// ===== Coarsest-level assembly and Cholesky (to mirror MATLAB direct solve) =====
+static void MG_AssembleCoarsestDenseK(const MGLevel& L,
+									  const std::array<double,24*24>& Ke,
+									  std::vector<double>& K) {
+	const int N = 3*L.numNodes;
+	K.assign(N*N, 0.0);
+	for (int e=0; e<L.numElements; ++e) {
+		int dof[24];
+		for (int a=0;a<8;a++) {
+			const int n = L.eNodMat[e*8 + a];
+			dof[3*a+0] = 3*n+0;
+			dof[3*a+1] = 3*n+1;
+			dof[3*a+2] = 3*n+2;
+		}
+		for (int i=0;i<24;i++) {
+			for (int j=0;j<24;j++) {
+				K[dof[i]*N + dof[j]] += Ke[i*24 + j];
+			}
+		}
+	}
+}
+
+static bool chol_spd_inplace(std::vector<double>& A, int N) {
+	for (int i=0;i<N;i++) {
+		for (int j=0;j<=i;j++) {
+			double sum = A[i*N + j];
+			for (int k=0;k<j;k++) sum -= A[i*N + k]*A[j*N + k];
+			if (i==j) {
+				if (sum <= 0.0) return false;
+				A[i*N + j] = std::sqrt(sum);
+			} else {
+				A[i*N + j] = sum / A[j*N + j];
+			}
+		}
+		for (int j=i+1;j<N;j++) A[i*N + j] = 0.0;
+	}
+	return true;
+}
+
+static void chol_solve_lower(const std::vector<double>& L,
+							  const std::vector<double>& b,
+							  std::vector<double>& x, int N) {
+	std::vector<double> y(N, 0.0);
+	for (int i=0;i<N;i++) {
+		double sum = b[i];
+		for (int k=0;k<i;k++) sum -= L[i*N+k]*y[k];
+		y[i] = sum / L[i*N+i];
+	}
+	x.assign(N, 0.0);
+	for (int i=N-1;i>=0;i--) {
+		double sum = y[i];
+		for (int k=i+1;k<N;k++) sum -= L[k*N+i]*x[k];
+		x[i] = sum / L[i*N+i];
+	}
+}
+
+Preconditioner MakeMGDiagonalPreconditioner(const Problem& pb,
+												const std::vector<double>& eleModulus,
+												const MGPrecondConfig& cfg) {
+	MGHierarchy H; BuildMGHierarchy(pb, cfg.nonDyadic, H, cfg.maxLevels);
+	std::vector<std::vector<double>> diag; MG_BuildDiagonals(pb, H, eleModulus, diag);
+	std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildFixedMasks(pb, H, fixedMasks);
+
+	// Assemble & factorize coarsest K (like MATLAB direct solve), with BC enforcement
+	std::vector<double> Lcoarse; int Ncoarse = 0;
+	{
+		const auto& Lc = H.levels.back();
+		Ncoarse = 3*Lc.numNodes;
+		// Guard: skip dense factorization when the coarsest system is too large or no coarsening happened
+		const int NlimitDofs = 200000; // tune if needed
+		if (H.levels.size() == 1 || Ncoarse > NlimitDofs) {
+			Ncoarse = 0; // trigger diagonal fallback below
+		} else {
+			std::vector<double> Kc; MG_AssembleCoarsestDenseK(Lc, pb.mesh.Ke, Kc);
+			// Impose fixed DOFs on coarsest K: zero row/col, set diag=1
+			for (int n=0;n<Lc.numNodes;n++) {
+				for (int c=0;c<3;c++) {
+					if (fixedMasks.back()[3*n+c]) {
+						int d = 3*n+c;
+						for (int j=0;j<Ncoarse;j++) { Kc[d*Ncoarse + j] = 0.0; Kc[j*Ncoarse + d] = 0.0; }
+						Kc[d*Ncoarse + d] = 1.0;
+					}
+				}
+			}
+			if (chol_spd_inplace(Kc, Ncoarse)) Lcoarse.swap(Kc);
+			else { Lcoarse.clear(); Ncoarse = 0; }
+		}
+	}
+
+return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
+    // 0) Embed free DOFs into full vector at finest level
+    const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
+    const int n0_dofs  = 3*n0_nodes;
+    std::vector<double> r0(n0_dofs, 0.0);
+    for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree[i];
+
+    // 1) Allocate per-level full-DOF vectors
+    std::vector<std::vector<double>> rLv(H.levels.size());
+    std::vector<std::vector<double>> xLv(H.levels.size());
+    rLv[0] = r0; xLv[0].assign(n0_dofs, 0.0);
+
+    // Apply fixed mask to finest residual
+    for (int i=0;i<n0_nodes;i++) {
+        for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
+    }
+
+    // 2) Down-sweep: diagonal pre-smooth and restrict residual (Adapted)
+    for (size_t l=0; l+1<H.levels.size(); ++l) {
+        const int fn_nodes = H.levels[l].numNodes;
+        const int fn_dofs  = 3*fn_nodes;
+        const int cn_nodes = H.levels[l+1].numNodes;
+        const int cn_dofs  = 3*cn_nodes;
+
+        if ((int)xLv[l].size() != fn_dofs) xLv[l].assign(fn_dofs, 0.0);
+        const auto& D = diag[l];
+        for (int i=0;i<fn_nodes;i++) {
+            for (int c=0;c<3;c++) {
+                const int d = 3*i+c;
+                if (fixedMasks[l][d]) continue;
+                xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
+            }
+        }
+
+        // Restrict residual r to level l+1
+        rLv[l+1].assign(cn_dofs, 0.0);
+        for (int c=0;c<3;c++) {
+            std::vector<double> rf(fn_nodes), rc;
+            for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
+            MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
+            for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
+        }
+        // Mask next-level residual
+        for (int i=0;i<cn_nodes;i++) {
+            for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
+        }
+        xLv[l+1].assign(cn_dofs, 0.0);
+    }
+
+    // 3) Coarsest solve: direct solve on full vector if available; else diagonal division
+    const size_t Lidx = H.levels.size()-1;
+    if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
+        chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
+        const int cn_nodes = H.levels[Lidx].numNodes;
+        for (int i=0;i<cn_nodes;i++) {
+            for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
+        }
+    } else {
+        const auto& D = diag[Lidx];
+        const int cn_nodes = H.levels[Lidx].numNodes;
+        xLv[Lidx].assign(3*cn_nodes, 0.0);
+        for (int i=0;i<cn_nodes;i++) {
+            for (int c=0;c<3;c++) {
+                const int d = 3*i+c;
+                if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
+                xLv[Lidx][d] = rLv[Lidx][d] / std::max(1e-30, D[d]);
+            }
+        }
+    }
+
+    // 4) Up-sweep: interpolate deviation and diagonal post-smooth (Adapted)
+    for (int l=(int)H.levels.size()-2; l>=0; --l) {
+        const int fn_nodes = H.levels[l].numNodes;
+        const int fn_dofs  = 3*fn_nodes;
+        std::vector<double> add(fn_dofs, 0.0);
+        for (int c=0;c<3;c++) {
+            std::vector<double> xc(H.levels[l+1].numNodes), xf;
+            for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
+            MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
+            for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
+        }
+        if ((int)xLv[l].size() != fn_dofs) xLv[l].assign(fn_dofs, 0.0);
+        for (int i=0;i<fn_dofs;i++) xLv[l][i] += add[i];
+
+        const auto& D = diag[l];
+        // Mask x and post-smooth
+        for (int i=0;i<fn_nodes;i++) {
+            for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
+        }
+        for (int i=0;i<fn_nodes;i++) {
+            for (int c=0;c<3;c++) {
+                const int d = 3*i+c;
+                if (fixedMasks[l][d]) continue;
+                xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
+            }
+        }
+    }
+
+    // 5) Extract free DOFs to z
+    zFree.resize(rFree.size());
+    for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = xLv[0][pb.freeDofIndex[i]];
+};
+}
+
 void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin) {
 	auto tStartTotal = std::chrono::steady_clock::now();
 	
@@ -565,7 +1081,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
+		// Preconditioner: MG diagonal-only (adapted)
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
@@ -595,7 +1114,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree(bFree.size(), 0.0);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
+		// Rebuild MG preconditioner for current SIMP-modified modulus
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		
@@ -756,13 +1278,6 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 }
 
 // ===== Export helpers =====
-static void export_volume_nifti(const Problem& pb, const std::vector<double>& xPhys, const std::string& path) {
-	int ny = pb.mesh.resY, nx = pb.mesh.resX, nz = pb.mesh.resZ;
-	std::vector<float> vol(ny*nx*nz, 0.0f);
-	for (int e=0; e<pb.mesh.numElements; ++e) vol[pb.mesh.eleMapBack[e]] = static_cast<float>(xPhys[e]);
-	ioexp::write_nifti_float32(path, nx, ny, nz, (float)pb.mesh.eleSize[0], (float)pb.mesh.eleSize[1], (float)pb.mesh.eleSize[2], vol);
-}
-
 static void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso=0.5f) {
 	int ny = pb.mesh.resY, nx = pb.mesh.resX, nz = pb.mesh.resZ;
 	std::vector<float> vol(ny*nx*nz, 0.0f);

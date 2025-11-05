@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <functional>
 #include <cstdint>
 
 namespace top3d {
@@ -92,16 +93,28 @@ std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize);
 void K_times_u_finest(const Problem& pb, const std::vector<double>& eleModulus,
 					   const std::vector<double>& uFull, std::vector<double>& yFull);
 
-// PCG on free DOFs with matrix-free operator
+// Preconditioner functor: z = M^{-1} r (operates on free-DOF vectors)
+using Preconditioner = std::function<void(const std::vector<double>& rFree, std::vector<double>& zFree)>;
+
+// Build Jacobi diagonal on free DOFs (from finest-level element Ke and eleModulus)
+void ComputeJacobiDiagonalFree(const Problem& pb,
+							   const std::vector<double>& eleModulus,
+							   std::vector<double>& diagFree);
+
+// PCG on free DOFs with matrix-free operator and optional preconditioner
 int PCG_free(const Problem& pb,
 			  const std::vector<double>& eleModulus,
 			  const std::vector<double>& bFree,
 			  std::vector<double>& xFree,
-			  double tol, int maxIt);
+			  double tol, int maxIt,
+			  Preconditioner M = Preconditioner{});
 
-// Optional: Multigrid preconditioner hooks (2-level minimal)
-struct MGPrecondConfig { int levels = 1; };
-void EnableMultigridPreconditioner(const Problem& pb, const MGPrecondConfig& cfg);
+// Optional: Multigrid preconditioner config (diagonal-only V-cycle)
+struct MGPrecondConfig {
+	bool nonDyadic = true;   // first jump 1->3 (span=4)
+	int  maxLevels = 5;      // cap levels
+	double weight = 0.6;     // diagonal relaxation factor
+};
 
 // Compute compliance per element and total
 double ComputeCompliance(const Problem& pb,
@@ -115,8 +128,35 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 // Run LOCAL (PIO) topology optimization with Heaviside + p-norm LVF
 void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double rMin, double rHat);
 
+// ================= Multigrid scaffolding (Step 2) =================
+struct MGLevel {
+	int resX = 0, resY = 0, resZ = 0;
+	int spanWidth = 2;                 // 2 (dyadic) or 4 (non-dyadic jump)
+	int numElements = 0, numNodes = 0, numDOFs = 0;
+
+	// Structured connectivity at this level
+	std::vector<int32_t> eNodMat;      // numElements x 8
+	std::vector<int32_t> nodMapBack;   // [0..numNodes-1]
+	std::vector<int32_t> nodMapForward;
+
+	// Per-element nodal weights from 8 coarse vertices to embedded (span+1)^3 fine vertices
+	// Stored as weightsNode[(iz*grid + iy)*grid + ix]*8 + a, grid = spanWidth+1, a in [0..7]
+	std::vector<double> weightsNode;   // size = (span+1)^3 * 8
+};
+
+struct MGHierarchy {
+	std::vector<MGLevel> levels;       // levels[0] = finest
+	bool nonDyadic = true;             // if true, first coarsening uses span=4
+};
+
+// Build lightweight geometric hierarchy (no coarse Ks yet). Stops when coarse dims <2 or maxLevels.
+void BuildMGHierarchy(const Problem& pb, bool nonDyadic, MGHierarchy& H, int maxLevels = 5);
+
+// Build an MG diagonal-only V-cycle preconditioner (captures hierarchy + diagonals)
+Preconditioner MakeMGDiagonalPreconditioner(const Problem& pb,
+												const std::vector<double>& eleModulus,
+												const MGPrecondConfig& cfg);
+
 } // namespace top3d
 
 #endif // TOP3D_XL_HPP
-
-
