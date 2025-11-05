@@ -1,0 +1,10 @@
+Job started at Wed Nov  5 16:07:15 EST 2025
+Mode: GLOBAL_TV
+File: /home/nhirt/AlgorithmEngineering_AltProject/inputs/femur.TopVoxel
+Parameters: 0.40 50 1.7320508075688772
+Output file: out/log/GLOBAL_TV_20251105_160715_5917497.out
+Error file: out/log/GLOBAL_TV_20251105_160715_5917497.err
+Latest log: out/log/GLOBAL_TV_latest.log (tail -f out/log/GLOBAL_TV_latest.log)
+STL out: out/stl/
+
+Job completed at Wed Nov  5 16:07:24 EST 2025

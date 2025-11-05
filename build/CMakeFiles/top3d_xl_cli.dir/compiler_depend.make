@@ -3,6 +3,7 @@
 
 CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/main.cpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl.hpp \
+  /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/topvoxel.hpp \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/array \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/algorithmfwd.h \
@@ -100,6 +101,7 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/istream \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/limits \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/new \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/optional \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/ostream \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/pstl/pstl_config.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/stdexcept \
@@ -160,6 +162,7 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
   /usr/include/bits/mathcalls-helper-functions.h \
   /usr/include/bits/mathcalls-narrow.h \
   /usr/include/bits/mathcalls.h \
+  /usr/include/bits/mathinline.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/sched.h \
@@ -167,7 +170,9 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
   /usr/include/bits/setjmp.h \
   /usr/include/bits/stdint-intn.h \
   /usr/include/bits/stdint-uintn.h \
+  /usr/include/bits/stdio.h \
   /usr/include/bits/stdio_lim.h \
+  /usr/include/bits/stdlib-bsearch.h \
   /usr/include/bits/stdlib-float.h \
   /usr/include/bits/sys_errlist.h \
   /usr/include/bits/thread-shared-types.h \
@@ -285,6 +290,8 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /usr/include/bits/types.h:
 
+/usr/include/bits/stdlib-bsearch.h:
+
 /usr/include/bits/stdint-intn.h:
 
 /usr/include/bits/select.h:
@@ -294,6 +301,8 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /usr/include/gnu/stubs.h:
 
 /usr/include/bits/pthreadtypes-arch.h:
+
+/usr/include/bits/mathinline.h:
 
 /usr/include/bits/types/clock_t.h:
 
@@ -335,6 +344,8 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/cpu_defines.h:
 
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++locale.h:
+
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/ctype_inline.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_iterator.h:
@@ -357,29 +368,21 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/predefined_ops.h:
 
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_iterator_base_types.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stringfwd.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/limits:
-
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/refwrap.h:
 
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_iterator_base_funcs.h:
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/node_handle.h:
 
-/usr/include/bits/stdint-uintn.h:
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ios_base.h:
 
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/cxxabi_init_exception.h:
+/usr/include/bits/types/timer_t.h:
 
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ostream_insert.h:
-
-/usr/include/alloca.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/charconv.h:
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/pstl/pstl_config.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/basic_string.tcc:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_algobase.h:
+
+/home/nhirt/AlgorithmEngineering_AltProject/cpp/include/topvoxel.hpp:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/exception_defines.h:
 
@@ -393,17 +396,25 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/basic_ios.h:
 
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/uses_allocator.h:
+
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/exception.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/allocator.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/cxxabi_forced.h:
 
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_iterator_base_funcs.h:
+
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/exp_integral.tcc:
 
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_heap.h:
-
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/functional_hash.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_heap.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ostream.tcc:
 
@@ -418,16 +429,6 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl.hpp:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cctype:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/node_handle.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ios_base.h:
-
-/usr/include/bits/types/timer_t.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/pstl/pstl_config.h:
 
 /usr/include/bits/stdlib-float.h:
 
@@ -444,6 +445,16 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/memoryfwd.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/poly_laguerre.tcc:
+
+/usr/include/bits/stdint-uintn.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/cxxabi_init_exception.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ostream_insert.h:
+
+/usr/include/alloca.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/charconv.h:
 
 /usr/include/bits/byteswap.h:
 
@@ -499,6 +510,12 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/bessel_function.tcc:
 
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_iterator_base_types.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stringfwd.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/limits:
+
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_tempbuf.h:
 
 /usr/include/errno.h:
@@ -540,10 +557,6 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /usr/include/bits/sys_errlist.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/string:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/std_abs.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/vector.tcc:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/poly_hermite.tcc:
 
@@ -633,6 +646,12 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/new:
 
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/std_abs.h:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/vector.tcc:
+
+/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/optional:
+
 /usr/include/bits/types/mbstate_t.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/streambuf:
@@ -646,6 +665,8 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /usr/include/gnu/stubs-64.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/modified_bessel_func.tcc:
+
+/usr/include/bits/stdio.h:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/riemann_zeta.tcc:
 
@@ -668,9 +689,3 @@ CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_Alt
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/stdexcept:
 
 /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++allocator.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/uses_allocator.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h:
-
-/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++locale.h:

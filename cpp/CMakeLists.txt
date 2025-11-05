@@ -7,6 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(top3d_xl
     src/top3d_xl.cpp
+    src/topvoxel.cpp
     src/io_export.cpp
     src/voxel_surface.cpp
 )

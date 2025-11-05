@@ -1,42 +1,42 @@
-Job started at Wed Nov  5 13:52:12 EST 2025
+Job started at Wed Nov  5 15:18:23 EST 2025
 Mode: LOCAL
 Parameters: 12 24 12 0.5 30 1.7320508075688772 6
-Output file: out/log/LOCAL_20251105_135212_5913792.out
-Error file: out/log/LOCAL_20251105_135212_5913792.err
+Output file: out/log/LOCAL_20251105_151823_5916823.out
+Error file: out/log/LOCAL_20251105_151823_5916823.err
 Latest log: out/log/LOCAL_latest.log
 STL dir: out/stl/
 Running LOCAL (PIO) topo-opt on cuboid: 12x24x12, Ve0=0.5, iters=30, rMin=1.73205, rHat=6
- It.:1 Obj.:26.2687 Cons.:-0.5
- It.:2 Obj.:17.2648 Cons.:-0.44443
- It.:3 Obj.:12.0702 Cons.:-0.399167
- It.:4 Obj.:9.57181 Cons.:-0.351745
- It.:5 Obj.:7.38388 Cons.:-0.314351
- It.:6 Obj.:6.35281 Cons.:-0.281655
- It.:7 Obj.:5.47668 Cons.:-0.24258
- It.:8 Obj.:4.99376 Cons.:-0.211686
- It.:9 Obj.:4.59817 Cons.:-0.190903
- It.:10 Obj.:4.38462 Cons.:-0.175932
- It.:11 Obj.:4.22423 Cons.:-0.161649
- It.:12 Obj.:4.07422 Cons.:-0.146633
- It.:13 Obj.:3.95358 Cons.:-0.135211
- It.:14 Obj.:3.8713 Cons.:-0.1257
- It.:15 Obj.:3.80148 Cons.:-0.116598
- It.:16 Obj.:3.7409 Cons.:-0.108222
- It.:17 Obj.:3.69111 Cons.:-0.100706
- It.:18 Obj.:3.64924 Cons.:-0.0941213
- It.:19 Obj.:3.61386 Cons.:-0.0881532
- It.:20 Obj.:3.58295 Cons.:-0.0827044
- It.:21 Obj.:3.55618 Cons.:-0.0776416
- It.:22 Obj.:3.53236 Cons.:-0.0729137
- It.:23 Obj.:3.51055 Cons.:-0.0684803
- It.:24 Obj.:3.49066 Cons.:-0.0643178
- It.:25 Obj.:3.47242 Cons.:-0.060414
- It.:26 Obj.:3.45585 Cons.:-0.0567511
- It.:27 Obj.:3.44076 Cons.:-0.0533163
- It.:28 Obj.:3.42661 Cons.:-0.0500987
- It.:29 Obj.:3.41342 Cons.:-0.047084
- It.:30 Obj.:3.40166 Cons.:-0.0442519
-STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/LOCAL_20251105_135521_5913792.stl
+ It.:1 Obj.:26.2675 Cons.:-0.5 CG:1.66179s
+ It.:2 Obj.:17.264 Cons.:-0.444429 CG:1.82472s
+ It.:3 Obj.:12.0695 Cons.:-0.399162 CG:1.90314s
+ It.:4 Obj.:9.57277 Cons.:-0.351745 CG:1.83519s
+ It.:5 Obj.:7.38372 Cons.:-0.314346 CG:2.0078s
+ It.:6 Obj.:6.3527 Cons.:-0.281651 CG:1.97428s
+ It.:7 Obj.:5.47637 Cons.:-0.242579 CG:2.0551s
+ It.:8 Obj.:4.99411 Cons.:-0.211736 CG:2.02084s
+ It.:9 Obj.:4.59873 Cons.:-0.190941 CG:1.95329s
+ It.:10 Obj.:4.385 Cons.:-0.175964 CG:1.99649s
+ It.:11 Obj.:4.22459 Cons.:-0.161673 CG:1.93733s
+ It.:12 Obj.:4.07466 Cons.:-0.146673 CG:1.95035s
+ It.:13 Obj.:3.95407 Cons.:-0.135263 CG:1.92692s
+ It.:14 Obj.:3.87178 Cons.:-0.125748 CG:1.9279s
+ It.:15 Obj.:3.80186 Cons.:-0.116653 CG:1.93817s
+ It.:16 Obj.:3.74143 Cons.:-0.108287 CG:1.91938s
+ It.:17 Obj.:3.69146 Cons.:-0.100779 CG:1.93875s
+ It.:18 Obj.:3.64963 Cons.:-0.0941975 CG:1.92747s
+ It.:19 Obj.:3.61419 Cons.:-0.0882306 CG:1.93885s
+ It.:20 Obj.:3.58329 Cons.:-0.0827806 CG:1.92866s
+ It.:21 Obj.:3.55649 Cons.:-0.0777142 CG:1.92691s
+ It.:22 Obj.:3.53264 Cons.:-0.0729816 CG:1.92766s
+ It.:23 Obj.:3.51082 Cons.:-0.0685437 CG:1.92601s
+ It.:24 Obj.:3.49093 Cons.:-0.064377 CG:1.91946s
+ It.:25 Obj.:3.47271 Cons.:-0.0604693 CG:1.91453s
+ It.:26 Obj.:3.45613 Cons.:-0.0568027 CG:1.91532s
+ It.:27 Obj.:3.44107 Cons.:-0.053364 CG:1.90158s
+ It.:28 Obj.:3.42691 Cons.:-0.0501429 CG:1.90381s
+ It.:29 Obj.:3.41371 Cons.:-0.0471251 CG:1.90374s
+ It.:30 Obj.:3.40197 Cons.:-0.0442901 CG:1.89207s
+STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/LOCAL_20251105_151925_5916823.stl
 
 Done.
-Job completed at Wed Nov  5 13:55:21 EST 2025
+Job completed at Wed Nov  5 15:19:25 EST 2025

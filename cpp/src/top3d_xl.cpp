@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <functional>
 #include <string>
+#include <fstream>
+#include <stdexcept>
 #include "io_export.hpp"
 #include "voxel_surface.hpp"
 
@@ -243,44 +245,92 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	pb.freeDofIndex.clear();
 }
 
+// moved to topvoxel.cpp
+
 void ApplyBoundaryConditions(Problem& pb) {
-	const int ny = pb.mesh.resY;
-	const int nx = pb.mesh.resX;
-	const int nz = pb.mesh.resZ;
-	const int nnx = nx+1, nny=ny+1, nnz=nz+1;
+    const int ny = pb.mesh.resY;
+    const int nx = pb.mesh.resX;
+    const int nz = pb.mesh.resZ;
+    const int nnx = nx+1, nny=ny+1, nnz=nz+1;
 
-	// Fix x=0 face nodes in all three directions
-	std::vector<int> fixedNodes;
-	for (int iz=0; iz<nnz; ++iz) {
-		for (int iy=0; iy<nny; ++iy) {
-			int node = nnx*nny*iz + nnx*iy + 0;
-			fixedNodes.push_back(node);
-		}
-	}
-	for (int n : fixedNodes) {
-		pb.isFreeDOF[idx_dof(n,0)] = 0;
-		pb.isFreeDOF[idx_dof(n,1)] = 0;
-		pb.isFreeDOF[idx_dof(n,2)] = 0;
-	}
+    // Reset DOF masks and loads
+    std::fill(pb.isFreeDOF.begin(), pb.isFreeDOF.end(), 1);
+    std::fill(pb.F.begin(), pb.F.end(), 0.0);
 
-	// Apply a distributed -Z load on x=nx face, lower half of z as in demo
-	std::vector<int> loadedNodes;
-	int count=0;
-	for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
-		for (int iy=0; iy<nny; ++iy) {
-			int node = nnx*nny*iz + nnx*iy + nx;
-			loadedNodes.push_back(node);
-			++count;
-		}
-	}
-	if (count>0) {
-		double fz = -1.0/static_cast<double>(count);
-		for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
-	}
+    // Prefer external BC/loads if present
+    bool usedExternal = false;
+    if (pb.extBC || pb.extLoads) {
+        usedExternal = true;
+        if (pb.extBC) {
+            for (auto f : pb.extBC->fixations) {
+                int full = f[0]-1; if (full < 0) continue;
+                if (full >= (int)pb.mesh.nodMapForward.size()) continue;
+                int n = pb.mesh.nodMapForward[full]; if (n < 0 || n >= pb.mesh.numNodes) continue;
+                if (f[1]) pb.isFreeDOF[idx_dof(n,0)] = 0;
+                if (f[2]) pb.isFreeDOF[idx_dof(n,1)] = 0;
+                if (f[3]) pb.isFreeDOF[idx_dof(n,2)] = 0;
+            }
+        }
+        if (pb.extLoads && !pb.extLoads->cases.empty()) {
+            const auto& lc = pb.extLoads->cases.front();
+            for (auto rec : lc) {
+                int full = int(rec[0]) - 1; if (full < 0) continue;
+                if (full >= (int)pb.mesh.nodMapForward.size()) continue;
+                int n = pb.mesh.nodMapForward[full]; if (n < 0 || n>=pb.mesh.numNodes) continue;
+                pb.F[idx_dof(n,0)] += rec[1];
+                pb.F[idx_dof(n,1)] += rec[2];
+                pb.F[idx_dof(n,2)] += rec[3];
+            }
+        }
+    }
 
-	// Build free dof index list
-	pb.freeDofIndex.clear();
-	for (int i=0;i<pb.mesh.numDOFs;i++) if (pb.isFreeDOF[i]) pb.freeDofIndex.push_back(i);
+    if (!usedExternal) {
+        // Built-in demo BCs as fallback
+        std::vector<int> fixedNodes;
+        for (int iz=0; iz<nnz; ++iz) {
+            for (int iy=0; iy<nny; ++iy) {
+                int node = nnx*nny*iz + nnx*iy + 0;
+                fixedNodes.push_back(node);
+            }
+        }
+        for (int n : fixedNodes) {
+            pb.isFreeDOF[idx_dof(n,0)] = 0;
+            pb.isFreeDOF[idx_dof(n,1)] = 0;
+            pb.isFreeDOF[idx_dof(n,2)] = 0;
+        }
+
+        std::vector<int> loadedNodes;
+        int count=0;
+        for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
+            for (int iy=0; iy<nny; ++iy) {
+                int node = nnx*nny*iz + nnx*iy + nx;
+                loadedNodes.push_back(node);
+                ++count;
+            }
+        }
+        if (count>0) {
+            double fz = -1.0/static_cast<double>(count);
+            for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
+        }
+    }
+
+    // Fix DOFs on nodes not connected to any element (void nodes)
+    {
+        std::vector<uint8_t> usedNode(pb.mesh.numNodes, 0);
+        for (int e=0;e<pb.mesh.numElements;e++) {
+            int base = e*8;
+            for (int j=0;j<8;j++) usedNode[pb.mesh.eNodMat[base+j]] = 1;
+        }
+        for (int n=0;n<pb.mesh.numNodes;n++) if (!usedNode[n]) {
+            pb.isFreeDOF[idx_dof(n,0)] = 0;
+            pb.isFreeDOF[idx_dof(n,1)] = 0;
+            pb.isFreeDOF[idx_dof(n,2)] = 0;
+        }
+    }
+
+    // Build free dof index list
+    pb.freeDofIndex.clear();
+    for (int i=0;i<pb.mesh.numDOFs;i++) if (pb.isFreeDOF[i]) pb.freeDofIndex.push_back(i);
 }
 
 void K_times_u_finest(const Problem& pb, const std::vector<double>& eleModulus,
@@ -1162,12 +1212,19 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
 				xnew[e] = std::clamp(xe, 0.0, 1.0);
 			}
+			// Enforce passive elements (if provided externally)
+			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
+			}
 			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
 			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 		}
 		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
 		x.swap(xnew);
 		xPhys = x; // no filter in this minimal port
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0;
+		}
 		sharpness = 4.0 * std::accumulate(xPhys.begin(), xPhys.end(), 0.0, 
 			[](double sum, double val) { return sum + val * (1.0 - val); }) / static_cast<double>(ne);
 		auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
@@ -1271,6 +1328,10 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 				xnew[e] = std::clamp(xe, 0.0, 1.0);
 				volg += dfdx_filt[e] * (xnew[e]-x[e]);
 			}
+			// Enforce passive elements during update
+			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
+			}
 			if (f + volg > 0) l1 = lm; else l2 = lm;
 		}
 		double change=0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
@@ -1278,6 +1339,9 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		// Update xTilde and xPhys
 		ApplyPDEFilter(pb, pfFilter, x, xTilde);
 		for (int e=0;e<ne;e++) xPhys[e] = H(xTilde[e]);
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0;
+		}
 		if (beta < pMax && loopbeta >= 40) { beta *= 2.0; loopbeta = 0; }
 		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << " CG:" << tSolveTime << "s\n";
 		if (change < 1e-4) break;
@@ -1292,6 +1356,198 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 	std::cout << "\nDone.\n";
 }
 
+void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop, double rMin) {
+	auto tStartTotal = std::chrono::steady_clock::now();
+	Problem pb; InitialSettings(pb.params);
+	std::cout << "\n==========================Displaying Inputs==========================\n";
+	std::cout << std::fixed << std::setprecision(4);
+	std::cout << "..............................................Volume Fraction: " << std::setw(6) << V0 << "\n";
+	std::cout << "..........................................Filter Radius: " << std::setw(6) << rMin << " Cells\n";
+	std::cout << std::scientific << std::setprecision(4);
+	std::cout << "................................................Cell Size: " << std::setw(10) << pb.params.cellSize << "\n";
+	std::cout << std::fixed;
+	std::cout << "...............................................#CG Iterations: " << std::setw(4) << pb.params.cgMaxIt << "\n";
+	std::cout << std::scientific << std::setprecision(4);
+	std::cout << "...........................................Youngs Modulus: " << std::setw(10) << pb.params.youngsModulus << "\n";
+	std::cout << "....................................Youngs Modulus (Min.): " << std::setw(10) << pb.params.youngsModulusMin << "\n";
+	std::cout << "...........................................Poissons Ratio: " << std::setw(10) << pb.params.poissonRatio << "\n";
+	std::cout << std::fixed << std::setprecision(6);
+	
+	auto tStart = std::chrono::steady_clock::now();
+	CreateVoxelFEAmodel_TopVoxel(pb, file);
+	ApplyBoundaryConditions(pb);
+	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+	auto tModelTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+	std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
+
+	for (double& x: pb.density) x = V0;
+	const int ne = pb.mesh.numElements;
+	std::vector<double> x = pb.density;
+	std::vector<double> xPhys = x;
+	std::vector<double> ce(ne, 0.0);
+	std::vector<double> eleMod(ne, pb.params.youngsModulus);
+	double CsolidRef = 0.0;
+
+	{
+		tStart = std::chrono::steady_clock::now();
+		std::vector<double> U(pb.mesh.numDOFs, 0.0);
+		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+		std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFree, U);
+		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
+		CsolidRef = Csolid;
+		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+		std::cout << std::scientific << std::setprecision(6);
+		std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
+		std::cout << std::fixed;
+		std::cout << " It.: " << std::setw(4) << 0 << " Solver Time: " << std::setw(4) << std::setprecision(0) << tSolveTime << "s.\n\n";
+		std::cout << std::setprecision(6);
+	}
+
+	int loop=0; double change=1.0; double sharpness=1.0;
+	while (loop < nLoop && change > 1e-4 && sharpness > 0.01) {
+		auto tPerIter = std::chrono::steady_clock::now();
+		++loop;
+		for (int e=0;e<ne;e++) {
+			double rho = std::clamp(xPhys[e], 0.0, 1.0);
+			eleMod[e] = pb.params.youngsModulusMin + std::pow(rho, pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+		}
+		auto tSolveStart = std::chrono::steady_clock::now();
+		std::vector<double> U(pb.mesh.numDOFs, 0.0);
+		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+		std::vector<double> uFree(bFree.size(), 0.0);
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFree, U);
+		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
+		auto tOptStart = std::chrono::steady_clock::now();
+		double C = ComputeCompliance(pb, eleMod, U, ce);
+		double cObjNorm = 0.0;
+		if (CsolidRef > 0) { for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * (ce[e] / CsolidRef); }
+		else { for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * ce[e]; }
+		double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
+		std::vector<double> dc(ne, 0.0);
+		for (int e=0;e<ne;e++) {
+			double rho = std::clamp(xPhys[e], 0.0, 1.0);
+			double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+			dc[e] = - dEdrho * ce[e];
+		}
+		auto tFilterStart = std::chrono::steady_clock::now();
+		{
+			std::vector<double> xdc(ne);
+			for (int e=0;e<ne;e++) xdc[e] = x[e]*dc[e];
+			std::vector<double> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt);
+			for (int e=0;e<ne;e++) dc[e] = dc_filt[e] / std::max(1e-3, x[e]);
+		}
+		auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
+		double l1=0.0, l2=1e9; double move=0.2; std::vector<double> xnew(ne, 0.0);
+		while ((l2-l1)/(l1+l2) > 1e-6) {
+			double lmid = 0.5*(l1+l2);
+			for (int e=0;e<ne;e++) {
+				double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
+				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
+				xnew[e] = std::clamp(xe, 0.0, 1.0);
+			}
+			if (pb.extBC && !pb.extBC->passiveCompact.empty()) { for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0; }
+			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
+			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
+		}
+		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
+		x.swap(xnew);
+		xPhys = x;
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) { for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0; }
+		sharpness = 4.0 * std::accumulate(xPhys.begin(), xPhys.end(), 0.0, [](double sum, double val){ return sum + val*(1.0-val); }) / static_cast<double>(ne);
+		auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
+		auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tPerIter).count();
+		double volFrac = std::accumulate(xPhys.begin(), xPhys.end(), 0.0) / static_cast<double>(ne);
+		double fval = volFrac - V0;
+		std::cout << std::scientific << std::setprecision(8);
+		std::cout << " It.:" << std::setw(4) << loop
+				  << " Obj.:" << std::setw(16) << Cdisp
+				  << " Vol.:" << std::setw(6) << std::setprecision(4) << volFrac
+				  << " Sharp.:" << std::setw(6) << sharpness
+				  << " Cons.:" << std::setw(4) << std::setprecision(2) << fval
+				  << " Ch.:" << std::setw(4) << change << "\n";
+		std::cout << std::fixed << std::setprecision(2);
+		std::cout << " It.: " << std::setw(4) << loop << " (Time)... Total per-It.: " << std::setw(8) << std::scientific << tTotalTime << "s;"
+			  << " CG: " << std::setw(8) << tSolveTime << "s;"
+			  << " Opti.: " << std::setw(8) << tOptTime << "s;"
+			  << " Filtering: " << std::setw(8) << tFilterTime << "s.\n";
+		std::cout << std::fixed;
+	}
+	auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStartTotal).count();
+	std::cout << "\n..........Performing Topology Optimization Costs (in total): "
+			  << std::scientific << std::setprecision(4) << tTotalTime << "s.\n";
+	std::cout << std::fixed;
+	const std::string stlDir = out_stl_dir_for_cwd(); ensure_out_dir(stlDir);
+	std::string stlFilename = generate_unique_filename("GLOBAL");
+	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
+	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
+	std::cout << "\nDone.\n";
+}
+
+void TOP3D_XL_LOCAL_FromTopVoxel(const std::string& file, double Ve0, int nLoop, double rMin, double rHat) {
+	Problem pb; InitialSettings(pb.params);
+	CreateVoxelFEAmodel_TopVoxel(pb, file);
+	ApplyBoundaryConditions(pb);
+	const int ne = pb.mesh.numElements;
+	std::vector<double> x(ne, Ve0), xTilde(ne, Ve0), xPhys(ne, Ve0);
+	std::vector<double> eleMod(ne, pb.params.youngsModulus);
+	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
+	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
+	for (int it=0; it<nLoop; ++it) {
+		loopbeta++;
+		for (int e=0;e<ne;e++) eleMod[e] = pb.params.youngsModulusMin + std::pow(xPhys[e], pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+		auto tSolveStart = std::chrono::steady_clock::now();
+		std::vector<double> U(pb.mesh.numDOFs, 0.0);
+		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+		std::vector<double> uFree(bFree.size(), 0.0);
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFree, U);
+		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
+		std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
+		std::vector<double> dc(ne);
+		for (int e=0;e<ne;e++) { double dE = pb.params.simpPenalty * std::pow(std::max(1e-9,xPhys[e]), pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin); dc[e] = - dE * ce[e]; }
+		std::vector<double> xHat; ApplyPDEFilter(pb, pfLVF, xPhys, xHat);
+		double accum=0.0; for (int e=0;e<ne;e++) accum += std::pow(xHat[e], p);
+		double f = std::pow(accum / ne, 1.0/p) - 1.0;
+		std::vector<double> dfdx_hat(ne); double coeff = std::pow(accum/ne, 1.0/p - 1.0) / ne; for (int e=0;e<ne;e++) dfdx_hat[e] = coeff * p * std::pow(std::max(1e-9,xHat[e]), p-1);
+		std::vector<double> dfdx_phys; ApplyPDEFilter(pb, pfLVF, dfdx_hat, dfdx_phys);
+		auto H = [&](double v){ return (std::tanh(beta*eta) + std::tanh(beta*(v-eta))) / (std::tanh(beta*eta) + std::tanh(beta*(1-eta))); };
+		auto dH = [&](double v){ double th = std::tanh(beta*(v-eta)); double den = (std::tanh(beta*eta) + std::tanh(beta*(1-eta))); return beta*(1-th*th)/den; };
+		std::vector<double> dx(ne); for (int e=0;e<ne;e++) dx[e] = dH(xTilde[e]);
+		std::vector<double> dc_filt; ApplyPDEFilter(pb, pfFilter, std::vector<double>(dc.begin(), dc.end()), dc_filt); for (int e=0;e<ne;e++) dc_filt[e] *= dx[e];
+		std::vector<double> dfdx_filt; ApplyPDEFilter(pb, pfFilter, dfdx_phys, dfdx_filt); for (int e=0;e<ne;e++) dfdx_filt[e] *= dx[e];
+		double l1=0.0, l2=1e9; double move=0.1; std::vector<double> xnew(ne);
+		while ((l2-l1)/(l1+l2) > 1e-6) {
+			double lm = 0.5*(l1+l2);
+			double volg=0.0;
+			for (int e=0;e<ne;e++) { double step = -dc_filt[e] / std::max(1e-16, lm*dfdx_filt[e]); double xe = std::clamp(x[e]*std::sqrt(std::max(0.1, step)), x[e]-move, x[e]+move); xnew[e] = std::clamp(xe, 0.0, 1.0); volg += dfdx_filt[e] * (xnew[e]-x[e]); }
+			if (pb.extBC && !pb.extBC->passiveCompact.empty()) { for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0; }
+			if (f + volg > 0) l1 = lm; else l2 = lm;
+		}
+		double change=0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
+		x.swap(xnew);
+		ApplyPDEFilter(pb, pfFilter, x, xTilde);
+		for (int e=0;e<ne;e++) xPhys[e] = H(xTilde[e]);
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) { for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0; }
+		if (beta < pMax && loopbeta >= 40) { beta *= 2.0; loopbeta = 0; }
+		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << " CG:" << tSolveTime << "s\n";
+		if (change < 1e-4) break;
+	}
+	const std::string stlDir = out_stl_dir_for_cwd(); ensure_out_dir(stlDir);
+	std::string stlFilename = generate_unique_filename("LOCAL");
+	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
+	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
+	std::cout << "\nDone.\n";
+}
 // ===== Export helpers =====
 static void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso=0.5f) {
 	int ny = pb.mesh.resY, nx = pb.mesh.resX, nz = pb.mesh.resZ;

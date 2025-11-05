@@ -6,6 +6,8 @@
 #include <string>
 #include <functional>
 #include <cstdint>
+#include <optional>
+#include "topvoxel.hpp"
 
 namespace top3d {
 
@@ -53,17 +55,22 @@ struct CartesianMesh {
 	std::array<double,24*24> Ke{};
 };
 
+
 struct Problem {
-	GlobalParams params;
-	CartesianMesh mesh;
+    GlobalParams params;
+    CartesianMesh mesh;
 
-	// Loads: one load case supported in minimal port: numNodes x 3 vector (flattened DOF)
-	std::vector<double> F;          // size = numDOFs
-	std::vector<uint8_t> isFreeDOF; // size = numDOFs (1 free, 0 fixed)
-	std::vector<int> freeDofIndex;  // compact list of free dofs
+    // Loads: one load case supported in minimal port: numNodes x 3 vector (flattened DOF)
+    std::vector<double> F;          // size = numDOFs
+    std::vector<uint8_t> isFreeDOF; // size = numDOFs (1 free, 0 fixed)
+    std::vector<int> freeDofIndex;  // compact list of free dofs
 
-	// Design variables
-	std::vector<double> density;    // per element x, size = numElements
+    // Design variables
+    std::vector<double> density;    // per element x, size = numElements
+    // Optional external model data / initial densities
+    std::vector<double> initialDensityFromFile; // optional per-element initial rho (compact)
+    std::optional<ExternalBC> extBC;
+    std::optional<ExternalLoads> extLoads;
 };
 
 struct PDEFilter {
@@ -82,6 +89,7 @@ void InitialSettings(GlobalParams& out);
 
 // Build a simple cuboid boolean model (all true) and discretize
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz);
+
 
 // Apply built-in boundary conditions similar to MATLAB demo
 void ApplyBoundaryConditions(Problem& pb);
@@ -125,8 +133,13 @@ double ComputeCompliance(const Problem& pb,
 // Run GLOBAL topology optimization (simplified, no PDE filter)
 void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin);
 
+// GLOBAL/LOCAL entry points using external TopVoxel file
+void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop, double rMin);
+
 // Run LOCAL (PIO) topology optimization with Heaviside + p-norm LVF
 void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double rMin, double rHat);
+
+void TOP3D_XL_LOCAL_FromTopVoxel(const std::string& file, double Ve0, int nLoop, double rMin, double rHat);
 
 // ================= Multigrid scaffolding (Step 2) =================
 struct MGLevel {

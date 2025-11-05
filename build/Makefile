@@ -214,6 +214,30 @@ src/top3d_xl.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s
 .PHONY : src/top3d_xl.cpp.s
 
+src/topvoxel.o: src/topvoxel.cpp.o
+.PHONY : src/topvoxel.o
+
+# target to build an object file
+src/topvoxel.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o
+.PHONY : src/topvoxel.cpp.o
+
+src/topvoxel.i: src/topvoxel.cpp.i
+.PHONY : src/topvoxel.i
+
+# target to preprocess a source file
+src/topvoxel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.i
+.PHONY : src/topvoxel.cpp.i
+
+src/topvoxel.s: src/topvoxel.cpp.s
+.PHONY : src/topvoxel.s
+
+# target to generate assembly for a file
+src/topvoxel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.s
+.PHONY : src/topvoxel.cpp.s
+
 src/voxel_surface.o: src/voxel_surface.cpp.o
 .PHONY : src/voxel_surface.o
 
@@ -257,6 +281,9 @@ help:
 	@echo "... src/top3d_xl.o"
 	@echo "... src/top3d_xl.i"
 	@echo "... src/top3d_xl.s"
+	@echo "... src/topvoxel.o"
+	@echo "... src/topvoxel.i"
+	@echo "... src/topvoxel.s"
 	@echo "... src/voxel_surface.o"
 	@echo "... src/voxel_surface.i"
 	@echo "... src/voxel_surface.s"

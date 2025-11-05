@@ -83,10 +83,24 @@ CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s"
 	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp -o CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s
 
+CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/topvoxel.cpp
+CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o -MF CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/topvoxel.cpp
+
+CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/topvoxel.cpp > CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/topvoxel.cpp -o CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.s
+
 CMakeFiles/top3d_xl.dir/src/io_export.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
 CMakeFiles/top3d_xl.dir/src/io_export.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io_export.cpp
 CMakeFiles/top3d_xl.dir/src/io_export.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/top3d_xl.dir/src/io_export.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/top3d_xl.dir/src/io_export.cpp.o"
 	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/io_export.cpp.o -MF CMakeFiles/top3d_xl.dir/src/io_export.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/io_export.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io_export.cpp
 
 CMakeFiles/top3d_xl.dir/src/io_export.cpp.i: cmake_force
@@ -100,7 +114,7 @@ CMakeFiles/top3d_xl.dir/src/io_export.cpp.s: cmake_force
 CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
 CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/voxel_surface.cpp
 CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o"
 	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o -MF CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/voxel_surface.cpp
 
 CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.i: cmake_force
@@ -114,6 +128,7 @@ CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.s: cmake_force
 # Object files for target top3d_xl
 top3d_xl_OBJECTS = \
 "CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o" \
 "CMakeFiles/top3d_xl.dir/src/io_export.cpp.o" \
 "CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o"
 
@@ -121,11 +136,12 @@ top3d_xl_OBJECTS = \
 top3d_xl_EXTERNAL_OBJECTS =
 
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/topvoxel.cpp.o
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/io_export.cpp.o
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/voxel_surface.cpp.o
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/build.make
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libtop3d_xl.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libtop3d_xl.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/top3d_xl.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/top3d_xl.dir/link.txt --verbose=$(VERBOSE)
 
