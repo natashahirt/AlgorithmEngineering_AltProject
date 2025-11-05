@@ -1,0 +1,8 @@
+Job started at Wed Nov  5 11:49:36 EST 2025
+Mode: LOCAL
+Parameters: 50 100 50 0.5 300 1.7320508075688772 6
+Output file: out/log/LOCAL_20251105_114936_5910894.out
+Error file: out/log/LOCAL_20251105_114936_5910894.err
+Latest log: out/log/LOCAL_latest.log (use 'tail -f out/log/LOCAL_latest.log' to monitor)
+STL files will be saved to: out/stl/
+

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Job Flags
 #SBATCH -p mit_normal
-#SBATCH --job-name=top3d_xl
+#SBATCH --job-name=top3d_GLOBAL
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 #SBATCH --time=12:00:00

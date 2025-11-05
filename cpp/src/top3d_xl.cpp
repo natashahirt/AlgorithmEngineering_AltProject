@@ -1044,6 +1044,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	
 	Problem pb;
 	InitialSettings(pb.params);
+	double CsolidRef = 0.0;
 	
 	std::cout << "\n==========================Displaying Inputs==========================\n";
 	std::cout << std::fixed << std::setprecision(4);
@@ -1087,6 +1088,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
+		CsolidRef = Csolid;
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
 		std::cout << std::scientific << std::setprecision(6);
 		std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
@@ -1124,6 +1126,14 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		// Compliance and sensitivities
 		auto tOptStart = std::chrono::steady_clock::now();
 		double C = ComputeCompliance(pb, eleMod, U, ce);
+		// Normalized reporting to mirror MATLAB: ceNorm = ce / CsolidRef; cObj = sum(Ee*ceNorm); Cdisp = cObj*CsolidRef
+		double cObjNorm = 0.0;
+		if (CsolidRef > 0) {
+			for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * (ce[e] / CsolidRef);
+		} else {
+			for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * ce[e];
+		}
+		double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
 		std::vector<double> dc(ne, 0.0);
 		for (int e=0;e<ne;e++) {
 			double rho = std::clamp(xPhys[e], 0.0, 1.0);
@@ -1169,7 +1179,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		// Print iteration results (matching MATLAB format)
 		std::cout << std::scientific << std::setprecision(8);
 		std::cout << " It.:" << std::setw(4) << loop 
-				  << " Obj.:" << std::setw(16) << C 
+				  << " Obj.:" << std::setw(16) << Cdisp 
 				  << " Vol.:" << std::setw(6) << std::setprecision(4) << volFrac
 				  << " Sharp.:" << std::setw(6) << sharpness
 				  << " Cons.:" << std::setw(4) << std::setprecision(2) << fval
@@ -1215,11 +1225,16 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 			eleMod[e] = pb.params.youngsModulusMin + std::pow(xPhys[e], pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
 		}
 		// Solve KU=F
-		std::vector<double> U(pb.mesh.numDOFs, 0.0);
-		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-		std::vector<double> uFree(bFree.size(), 0.0);
-		PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt);
+		auto tSolveStart = std::chrono::steady_clock::now();
+	    std::vector<double> U(pb.mesh.numDOFs, 0.0);
+    std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+    std::vector<double> uFree(bFree.size(), 0.0);
+    // Use MG diagonal V-cycle preconditioner (same config as GLOBAL)
+    MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+    auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+    PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
+		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		// Compliance sensitivities dc = -dE/drho * ce_norm (we use ce raw here as solid ref omitted)
 		std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
 		std::vector<double> dc(ne);
@@ -1264,7 +1279,7 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		ApplyPDEFilter(pb, pfFilter, x, xTilde);
 		for (int e=0;e<ne;e++) xPhys[e] = H(xTilde[e]);
 		if (beta < pMax && loopbeta >= 40) { beta *= 2.0; loopbeta = 0; }
-		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << "\n";
+		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << " CG:" << tSolveTime << "s\n";
 		if (change < 1e-4) break;
 	}
 	
@@ -1288,5 +1303,3 @@ static void export_surface_stl(const Problem& pb, const std::vector<double>& xPh
 }
 
 } // namespace top3d
-
-

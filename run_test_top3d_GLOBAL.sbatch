@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p mit_quicktest
-#SBATCH --job-name=cpp_mg_step1
+#SBATCH --job-name=test_GLOBAL
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 #SBATCH --time=00:15:00
