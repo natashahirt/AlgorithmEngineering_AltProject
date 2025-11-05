@@ -1125,6 +1125,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	std::vector<double> xPhys = x;
 	std::vector<double> ce(ne, 0.0);
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
+	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 
 	// Solve fully solid for reference
 	{
@@ -1139,6 +1140,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 		CsolidRef = Csolid;
+		// Seed warm start for first optimization iteration
+		uFreeWarm = uFree;
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
 		std::cout << std::scientific << std::setprecision(6);
 		std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
@@ -1165,12 +1168,13 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		auto tSolveStart = std::chrono::steady_clock::now();
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-		std::vector<double> uFree(bFree.size(), 0.0);
+		// Ensure warm-start vector matches current system size
+		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
 		// Rebuild MG preconditioner for current SIMP-modified modulus
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
-		scatter_from_free(pb, uFree, U);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFreeWarm, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		
 		// Compliance and sensitivities
@@ -1275,6 +1279,7 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
 	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
+	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 	for (int it=0; it<nLoop; ++it) {
 		loopbeta++;
 		// SIMP modulus
@@ -1283,14 +1288,14 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		}
 		// Solve KU=F
 		auto tSolveStart = std::chrono::steady_clock::now();
-	    std::vector<double> U(pb.mesh.numDOFs, 0.0);
-    std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-    std::vector<double> uFree(bFree.size(), 0.0);
-    // Use MG diagonal V-cycle preconditioner (same config as GLOBAL)
-    MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-    auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-    PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
-		scatter_from_free(pb, uFree, U);
+		std::vector<double> U(pb.mesh.numDOFs, 0.0);
+		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
+		// Use MG diagonal V-cycle preconditioner (same config as GLOBAL)
+		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFreeWarm, U);
 		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		// Compliance sensitivities dc = -dE/drho * ce_norm (we use ce raw here as solid ref omitted)
 		std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
@@ -1387,6 +1392,7 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 	std::vector<double> ce(ne, 0.0);
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	double CsolidRef = 0.0;
+	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 
 	{
 		tStart = std::chrono::steady_clock::now();
@@ -1399,6 +1405,8 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 		CsolidRef = Csolid;
+		// Seed warm start for first optimization iteration
+		uFreeWarm = uFree;
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
 		std::cout << std::scientific << std::setprecision(6);
 		std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
@@ -1418,11 +1426,11 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 		auto tSolveStart = std::chrono::steady_clock::now();
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-		std::vector<double> uFree(bFree.size(), 0.0);
+		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
-		scatter_from_free(pb, uFree, U);
+		int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFreeWarm, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		auto tOptStart = std::chrono::steady_clock::now();
 		double C = ComputeCompliance(pb, eleMod, U, ce);
@@ -1500,17 +1508,18 @@ void TOP3D_XL_LOCAL_FromTopVoxel(const std::string& file, double Ve0, int nLoop,
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
 	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
+	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 	for (int it=0; it<nLoop; ++it) {
 		loopbeta++;
 		for (int e=0;e<ne;e++) eleMod[e] = pb.params.youngsModulusMin + std::pow(xPhys[e], pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
 		auto tSolveStart = std::chrono::steady_clock::now();
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-		std::vector<double> uFree(bFree.size(), 0.0);
+		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
-		scatter_from_free(pb, uFree, U);
+		PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		scatter_from_free(pb, uFreeWarm, U);
 		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
 		std::vector<double> dc(ne);

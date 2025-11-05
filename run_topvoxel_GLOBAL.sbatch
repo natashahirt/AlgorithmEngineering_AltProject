@@ -19,7 +19,7 @@ cd /home/nhirt/AlgorithmEngineering_AltProject
 
 # Mode and parameters
 MODE="GLOBAL_TV"
-FILE="/home/nhirt/AlgorithmEngineering_AltProject/inputs/femur.TopVoxel"
+FILE="/home/nhirt/AlgorithmEngineering_AltProject/inputs/Femur.TopVoxel"
 # GLOBAL_FromTopVoxel(file, V0, nLoop, rMin); use rMin = sqrt(3)
 PARAMS="0.40 50 1.7320508075688772"
 
