@@ -1,0 +1,42 @@
+Job started at Thu Nov  6 15:28:51 EST 2025
+Mode: LOCAL
+Parameters: 12 24 12 0.5 30 1.7320508075688772 6
+Output file: out/log/LOCAL_20251106_152851_5937632.out
+Error file: out/log/LOCAL_20251106_152851_5937632.err
+Latest log: out/log/LOCAL_latest.log
+STL dir: out/stl/
+Running LOCAL (PIO) topo-opt on cuboid: 12x24x12, Ve0=0.5, iters=30, rMin=1.73205, rHat=6
+ It.:1 Obj.:26.2576 Cons.:-0.5 CG:0.108643s
+ It.:2 Obj.:17.2622 Cons.:-0.444426 CG:0.0839194s
+ It.:3 Obj.:12.0718 Cons.:-0.399171 CG:0.136374s
+ It.:4 Obj.:9.5718 Cons.:-0.351798 CG:0.08173s
+ It.:5 Obj.:7.38317 Cons.:-0.314393 CG:0.103828s
+ It.:6 Obj.:6.35277 Cons.:-0.281641 CG:0.0839324s
+ It.:7 Obj.:5.47578 Cons.:-0.242596 CG:0.0968003s
+ It.:8 Obj.:4.99303 Cons.:-0.211745 CG:0.100665s
+ It.:9 Obj.:4.59939 Cons.:-0.190955 CG:0.0828613s
+ It.:10 Obj.:4.38523 Cons.:-0.175975 CG:0.0776322s
+ It.:11 Obj.:4.22382 Cons.:-0.16168 CG:0.0734825s
+ It.:12 Obj.:4.07427 Cons.:-0.146642 CG:0.0828874s
+ It.:13 Obj.:3.95458 Cons.:-0.135232 CG:0.076585s
+ It.:14 Obj.:3.87069 Cons.:-0.125729 CG:0.0777072s
+ It.:15 Obj.:3.80243 Cons.:-0.11664 CG:0.073465s
+ It.:16 Obj.:3.74125 Cons.:-0.108269 CG:0.0797405s
+ It.:17 Obj.:3.69168 Cons.:-0.100758 CG:0.0714342s
+ It.:18 Obj.:3.64798 Cons.:-0.0941753 CG:0.0698599s
+ It.:19 Obj.:3.61338 Cons.:-0.0882063 CG:0.0664007s
+ It.:20 Obj.:3.58257 Cons.:-0.0827568 CG:0.062861s
+ It.:21 Obj.:3.55595 Cons.:-0.077691 CG:0.0597917s
+ It.:22 Obj.:3.531 Cons.:-0.0729596 CG:0.0607801s
+ It.:23 Obj.:3.50986 Cons.:-0.068523 CG:0.060715s
+ It.:24 Obj.:3.48997 Cons.:-0.0643575 CG:0.0597342s
+ It.:25 Obj.:3.47166 Cons.:-0.060451 CG:0.0585989s
+ It.:26 Obj.:3.45509 Cons.:-0.0567855 CG:0.0586343s
+ It.:27 Obj.:3.44032 Cons.:-0.0533478 CG:0.0575888s
+ It.:28 Obj.:3.42664 Cons.:-0.0501278 CG:0.0576074s
+ It.:29 Obj.:3.41361 Cons.:-0.0471109 CG:0.05659s
+ It.:30 Obj.:3.40166 Cons.:-0.0442768 CG:0.0565408s
+STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/LOCAL_20251106_152853_5937632.stl
+
+Done.
+Job completed at Thu Nov  6 15:28:53 EST 2025

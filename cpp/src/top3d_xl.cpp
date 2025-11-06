@@ -379,29 +379,6 @@ static void scatter_from_free(const Problem& pb, const std::vector<double>& free
 	for (size_t i=0;i<pb.freeDofIndex.size();++i) full[pb.freeDofIndex[i]] = freev[i];
 }
 
-void ComputeJacobiDiagonalFree(const Problem& pb,
-							   const std::vector<double>& eleModulus,
-							   std::vector<double>& diagFree) {
-	const auto& mesh = pb.mesh;
-	std::vector<double> diagFull(mesh.numDOFs, 0.0);
-	const auto& Ke = mesh.Ke; // 24x24
-	for (int e=0; e<mesh.numElements; ++e) {
-		double Ee = eleModulus[e];
-		for (int a=0; a<8; ++a) {
-			int n = mesh.eNodMat[e*8 + a];
-			for (int c=0; c<3; ++c) {
-				int local = 3*a + c;
-				diagFull[3*n + c] += Ke[local*24 + local] * Ee;
-			}
-		}
-	}
-	// Restrict to free DOFs
-	diagFree.resize(pb.freeDofIndex.size());
-	for (size_t i=0;i<pb.freeDofIndex.size();++i) {
-		double v = diagFull[pb.freeDofIndex[i]];
-		diagFree[i] = (v>0 ? v : 1.0);
-	}
-}
 
 int PCG_free(const Problem& pb,
 			  const std::vector<double>& eleModulus,
@@ -897,26 +874,7 @@ static void MG_BuildDiagonals(const Problem& pb, const MGHierarchy& H,
 }
 
 // ===== Coarsest-level assembly and Cholesky (to mirror MATLAB direct solve) =====
-static void MG_AssembleCoarsestDenseK(const MGLevel& L,
-									  const std::array<double,24*24>& Ke,
-									  std::vector<double>& K) {
-	const int N = 3*L.numNodes;
-	K.assign(N*N, 0.0);
-	for (int e=0; e<L.numElements; ++e) {
-		int dof[24];
-		for (int a=0;a<8;a++) {
-			const int n = L.eNodMat[e*8 + a];
-			dof[3*a+0] = 3*n+0;
-			dof[3*a+1] = 3*n+1;
-			dof[3*a+2] = 3*n+2;
-		}
-		for (int i=0;i<24;i++) {
-			for (int j=0;j<24;j++) {
-				K[dof[i]*N + dof[j]] += Ke[i*24 + j];
-			}
-		}
-	}
-}
+// (removed old unmodulated coarsest assembly)
 
 static bool chol_spd_inplace(std::vector<double>& A, int N) {
 	for (int i=0;i<N;i++) {
@@ -952,25 +910,168 @@ static void chol_solve_lower(const std::vector<double>& L,
 	}
 }
 
-Preconditioner MakeMGDiagonalPreconditioner(const Problem& pb,
-												const std::vector<double>& eleModulus,
-												const MGPrecondConfig& cfg) {
-	MGHierarchy H; BuildMGHierarchy(pb, cfg.nonDyadic, H, cfg.maxLevels);
-	std::vector<std::vector<double>> diag; MG_BuildDiagonals(pb, H, eleModulus, diag);
-	std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildFixedMasks(pb, H, fixedMasks);
+// (removed old on-the-fly MG preconditioner; static variant is used instead)
 
-	// Assemble & factorize coarsest K (like MATLAB direct solve), with BC enforcement
+// ===== Static MG context and Galerkin coarsest assembly =====
+// Build coarsest-level K via P^T * K_fine * P with fine-level BC masking
+
+// Build H and fixed masks once, reuse later
+static void MG_BuildStaticOnce(const Problem& pb, const MGPrecondConfig& cfg,
+								  MGHierarchy& H, std::vector<std::vector<uint8_t>>& fixedMasks) {
+	H.levels.clear();
+	BuildMGHierarchy(pb, cfg.nonDyadic, H, cfg.maxLevels);
+	MG_BuildFixedMasks(pb, H, fixedMasks);
+}
+
+// Expand compact element moduli to full structured fine grid order (level 0)
+static void EleMod_CompactToFull_Finest(const Problem& pb,
+										const std::vector<double>& eleModCompact,
+										std::vector<double>& eleModFull) {
+	int nx = pb.mesh.resX, ny = pb.mesh.resY, nz = pb.mesh.resZ;
+	eleModFull.assign(nx*ny*nz, 0.0);
+	for (int e=0; e<pb.mesh.numElements; ++e) {
+		int full = pb.mesh.eleMapBack[e];
+		if (full >= 0 && full < (int)eleModFull.size()) eleModFull[full] = eleModCompact[e];
+	}
+}
+
+// Assemble coarsest dense K using Galerkin triple-products with BC at fine level
+static void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
+											   const MGHierarchy& H,
+											   const std::vector<double>& eleModFineFull,
+											   const std::vector<uint8_t>& fineFixedDofMask,
+											   std::vector<double>& Kc) {
+	const MGLevel& Lf = H.levels.front();
+	const MGLevel& Lc = H.levels.back();
+	const int N = 3*Lc.numNodes;
+	Kc.assign(N*N, 0.0);
+	const int s = Lc.spanWidth;
+	const int grid = s + 1;
+
+	auto idxElemF = [&](int ex,int ey,int ez)->int {
+		return (Lf.resY*Lf.resX)*ez + (Lf.resY)*ex + (Lf.resY - 1 - ey);
+	};
+
+	// Loop coarse elements
+	for (int cez=0; cez<Lc.resZ; ++cez) {
+		for (int cex=0; cex<Lc.resX; ++cex) {
+			for (int cey=0; cey<Lc.resY; ++cey) {
+				// coarse element global dofs
+				int c_dof[24];
+				for (int a=0;a<8;a++) {
+					int n = Lc.eNodMat[(cez*Lc.resX*Lc.resY + cex*Lc.resY + cey)*8 + a];
+					c_dof[3*a+0] = 3*n+0;
+					c_dof[3*a+1] = 3*n+1;
+					c_dof[3*a+2] = 3*n+2;
+				}
+				double Kce[24*24]; for (int i=0;i<24*24;i++) Kce[i]=0.0;
+
+				int fx0 = cex*s;
+				int fy0 = (Lc.resY - cey)*s;
+				int fz0 = cez*s;
+				// iterate s^3 sub-elements
+				for (int iz=0; iz<s; ++iz) {
+					for (int iy=0; iy<s; ++iy) {
+						for (int ix=0; ix<s; ++ix) {
+							int fex = fx0 + ix;
+							int fey = fy0 - iy - 1;
+							int fez = fz0 + iz;
+							int ef = idxElemF(fex, fey, fez);
+							double Ee = std::max(pb.params.youngsModulusMin, eleModFineFull[ef]);
+
+							// Build Kf = Ee * Ke (24x24)
+							double Kf[24*24];
+							for (int i=0;i<24;i++) {
+								for (int j=0;j<24;j++) {
+									Kf[i*24+j] = Ee * pb.mesh.Ke[i*24+j];
+								}
+							}
+							// Apply fine-level BC mask on this fine element's dofs
+							for (int v=0; v<8; ++v) {
+								int n_f = Lf.eNodMat[ef*8 + v];
+								for (int c=0;c<3;c++) {
+									if (fineFixedDofMask[3*n_f + c]) {
+										int d = 3*v + c;
+										for (int j=0;j<24;j++) { Kf[d*24+j] = 0.0; Kf[j*24+d] = 0.0; }
+										Kf[d*24 + d] = 1.0;
+									}
+								}
+							}
+							// Build T (24x24): maps coarse local dofs to fine local dofs at the 8 vertices
+							double T[24*24]; for (int i=0;i<24*24;i++) T[i]=0.0;
+							for (int v=0; v<8; ++v) {
+								int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
+								int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
+								int vz = (v<=3) ? 0 : 1;
+								const double* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
+								for (int a=0; a<8; ++a) {
+									for (int c=0;c<3;c++) {
+										int row = 3*v + c;
+										int col = 3*a + c;
+										T[row*24 + col] = W[a];
+									}
+								}
+							}
+							// Kce += T^T * Kf * T
+							double M[24*24];
+							for (int i=0;i<24;i++) {
+								for (int j=0;j<24;j++) {
+									double ssum=0.0;
+									for (int k=0;k<24;k++) ssum += Kf[i*24+k]*T[k*24+j];
+									M[i*24+j] = ssum;
+								}
+							}
+							for (int i=0;i<24;i++) {
+								for (int j=0;j<24;j++) {
+									double ssum=0.0;
+									for (int k=0;k<24;k++) ssum += T[k*24+i]*M[k*24+j];
+									Kce[i*24 + j] += ssum;
+								}
+							}
+						}
+					}
+				}
+				// Scatter Kce to global
+				for (int i=0;i<24;i++) {
+					int gi = c_dof[i];
+					for (int j=0;j<24;j++) {
+						int gj = c_dof[j];
+						Kc[gi*N + gj] += Kce[i*24 + j];
+					}
+				}
+			}
+		}
+	}
+}
+
+// Reuse H/fixedMasks; per-iteration, rebuild diagonals and assemble SIMP-modulated coarsest K
+Preconditioner MakeMGDiagonalPreconditionerFromStatic(const Problem& pb,
+														  const MGHierarchy& H,
+														  const std::vector<std::vector<uint8_t>>& fixedMasks,
+														  const std::vector<double>& eleModulus,
+														  const MGPrecondConfig& cfg) {
+	// 1) Build per-level diagonals
+	std::vector<std::vector<double>> diag;
+	MG_BuildDiagonals(pb, H, eleModulus, diag);
+
+	// 2) Build aggregated Ee at coarsest level and factorize
 	std::vector<double> Lcoarse; int Ncoarse = 0;
 	{
 		const auto& Lc = H.levels.back();
 		Ncoarse = 3*Lc.numNodes;
-		// Guard: skip dense factorization when the coarsest system is too large or no coarsening happened
-		const int NlimitDofs = 200000; // tune if needed
+		const int NlimitDofs = 200000;
 		if (H.levels.size() == 1 || Ncoarse > NlimitDofs) {
-			Ncoarse = 0; // trigger diagonal fallback below
+			Ncoarse = 0; // diagonal fallback
 		} else {
-			std::vector<double> Kc; MG_AssembleCoarsestDenseK(Lc, pb.mesh.Ke, Kc);
-			// Impose fixed DOFs on coarsest K: zero row/col, set diag=1
+			// 1) Finest-grid modulus in structured order
+			std::vector<double> emFineFull;
+			EleMod_CompactToFull_Finest(pb, eleModulus, emFineFull);
+
+			// 2) Coarsest dense K via Galerkin triple products with fine-level BC mask
+			std::vector<double> Kc;
+			MG_AssembleCoarsestDenseK_Galerkin(pb, H, emFineFull, fixedMasks.front(), Kc);
+
+			// 3) Safety: impose coarsest-level BCs too
 			for (int n=0;n<Lc.numNodes;n++) {
 				for (int c=0;c<3;c++) {
 					if (fixedMasks.back()[3*n+c]) {
@@ -980,113 +1081,86 @@ Preconditioner MakeMGDiagonalPreconditioner(const Problem& pb,
 					}
 				}
 			}
+
+			// 4) Factorize
 			if (chol_spd_inplace(Kc, Ncoarse)) Lcoarse.swap(Kc);
 			else { Lcoarse.clear(); Ncoarse = 0; }
 		}
 	}
 
-return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
-    // 0) Embed free DOFs into full vector at finest level
-    const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
-    const int n0_dofs  = 3*n0_nodes;
-    std::vector<double> r0(n0_dofs, 0.0);
-    for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree[i];
+	// 3) Return preconditioner closure (same as MG diagonal-only path)
+	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
+		const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
+		const int n0_dofs  = 3*n0_nodes;
+		std::vector<double> r0(n0_dofs, 0.0);
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree[i];
 
-    // 1) Allocate per-level full-DOF vectors
-    std::vector<std::vector<double>> rLv(H.levels.size());
-    std::vector<std::vector<double>> xLv(H.levels.size());
-    rLv[0] = r0; xLv[0].assign(n0_dofs, 0.0);
+		std::vector<std::vector<double>> rLv(H.levels.size());
+		std::vector<std::vector<double>> xLv(H.levels.size());
+		rLv[0] = r0; xLv[0].assign(n0_dofs, 0.0);
 
-    // Apply fixed mask to finest residual
-    for (int i=0;i<n0_nodes;i++) {
-        for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
-    }
+		for (int i=0;i<n0_nodes;i++) {
+			for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
+		}
 
-    // 2) Down-sweep: diagonal pre-smooth and restrict residual (Adapted)
-    for (size_t l=0; l+1<H.levels.size(); ++l) {
-        const int fn_nodes = H.levels[l].numNodes;
-        const int fn_dofs  = 3*fn_nodes;
-        const int cn_nodes = H.levels[l+1].numNodes;
-        const int cn_dofs  = 3*cn_nodes;
+		for (size_t l=0; l+1<H.levels.size(); ++l) {
+			const int fn_nodes = H.levels[l].numNodes;
+			const int cn_nodes = H.levels[l+1].numNodes;
+			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0);
+			const auto& D = diag[l];
+			for (int i=0;i<fn_nodes;i++) {
+				for (int c=0;c<3;c++) {
+					const int d = 3*i+c; if (fixedMasks[l][d]) continue;
+					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
+				}
+			}
+			rLv[l+1].assign(3*cn_nodes, 0.0);
+			for (int c=0;c<3;c++) {
+				std::vector<double> rf(fn_nodes), rc;
+				for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
+				MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
+				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
+			}
+			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
+			xLv[l+1].assign(3*cn_nodes, 0.0);
+		}
 
-        if ((int)xLv[l].size() != fn_dofs) xLv[l].assign(fn_dofs, 0.0);
-        const auto& D = diag[l];
-        for (int i=0;i<fn_nodes;i++) {
-            for (int c=0;c<3;c++) {
-                const int d = 3*i+c;
-                if (fixedMasks[l][d]) continue;
-                xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
-            }
-        }
+		const size_t Lidx = H.levels.size()-1;
+		if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
+			chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
+			const int cn_nodes = H.levels[Lidx].numNodes;
+			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
+		} else {
+			const auto& D = diag[Lidx];
+			const int cn_nodes = H.levels[Lidx].numNodes;
+			xLv[Lidx].assign(3*cn_nodes, 0.0);
+			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
+				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
+				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1e-30, D[d]);
+			}
+		}
 
-        // Restrict residual r to level l+1
-        rLv[l+1].assign(cn_dofs, 0.0);
-        for (int c=0;c<3;c++) {
-            std::vector<double> rf(fn_nodes), rc;
-            for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
-            MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
-            for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
-        }
-        // Mask next-level residual
-        for (int i=0;i<cn_nodes;i++) {
-            for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
-        }
-        xLv[l+1].assign(cn_dofs, 0.0);
-    }
-
-    // 3) Coarsest solve: direct solve on full vector if available; else diagonal division
-    const size_t Lidx = H.levels.size()-1;
-    if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
-        chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
-        const int cn_nodes = H.levels[Lidx].numNodes;
-        for (int i=0;i<cn_nodes;i++) {
-            for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
-        }
-    } else {
-        const auto& D = diag[Lidx];
-        const int cn_nodes = H.levels[Lidx].numNodes;
-        xLv[Lidx].assign(3*cn_nodes, 0.0);
-        for (int i=0;i<cn_nodes;i++) {
-            for (int c=0;c<3;c++) {
-                const int d = 3*i+c;
-                if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
-                xLv[Lidx][d] = rLv[Lidx][d] / std::max(1e-30, D[d]);
-            }
-        }
-    }
-
-    // 4) Up-sweep: interpolate deviation and diagonal post-smooth (Adapted)
-    for (int l=(int)H.levels.size()-2; l>=0; --l) {
-        const int fn_nodes = H.levels[l].numNodes;
-        const int fn_dofs  = 3*fn_nodes;
-        std::vector<double> add(fn_dofs, 0.0);
-        for (int c=0;c<3;c++) {
-            std::vector<double> xc(H.levels[l+1].numNodes), xf;
-            for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
-            MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
-            for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
-        }
-        if ((int)xLv[l].size() != fn_dofs) xLv[l].assign(fn_dofs, 0.0);
-        for (int i=0;i<fn_dofs;i++) xLv[l][i] += add[i];
-
-        const auto& D = diag[l];
-        // Mask x and post-smooth
-        for (int i=0;i<fn_nodes;i++) {
-            for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
-        }
-        for (int i=0;i<fn_nodes;i++) {
-            for (int c=0;c<3;c++) {
-                const int d = 3*i+c;
-                if (fixedMasks[l][d]) continue;
-                xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
-            }
-        }
-    }
-
-    // 5) Extract free DOFs to z
-    zFree.resize(rFree.size());
-    for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = xLv[0][pb.freeDofIndex[i]];
-};
+		for (int l=(int)H.levels.size()-2; l>=0; --l) {
+			const int fn_nodes = H.levels[l].numNodes;
+			std::vector<double> add(3*fn_nodes, 0.0);
+			for (int c=0;c<3;c++) {
+				std::vector<double> xc(H.levels[l+1].numNodes), xf;
+				for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
+				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
+				for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
+			}
+			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0);
+			for (int i=0;i<3*fn_nodes;i++) xLv[l][i] += add[i];
+			const auto& D = diag[l];
+			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
+			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) {
+				int d = 3*i+c; if (fixedMasks[l][d]) continue;
+				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30, D[d]);
+			}
+		}
+		zFree.resize(rFree.size());
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = xLv[0][pb.freeDofIndex[i]];
+	};
 }
 
 void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin) {
@@ -1114,6 +1188,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	CreateVoxelFEAmodel_Cuboid(pb, nely, nelx, nelz);
 	ApplyBoundaryConditions(pb);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+	// Build MG hierarchy and fixed masks once; reuse across solves
+	MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
+	MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_tv, H, fixedMasks);
+    
 	auto tModelTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
 	std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
 	
@@ -1133,10 +1211,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
-		// Preconditioner: MG diagonal-only (adapted)
+		// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
+        int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 		CsolidRef = Csolid;
@@ -1170,10 +1248,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		// Ensure warm-start vector matches current system size
 		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
-		// Rebuild MG preconditioner for current SIMP-modified modulus
+		// Reuse static MG context for current SIMP-modified modulus
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
+        int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFreeWarm, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		
@@ -1205,14 +1283,14 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		}
 		auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
 		
-		// OC update with move limits
+        // OC update with move limits
 		double l1=0.0, l2=1e9;
 		double move=0.2;
 		std::vector<double> xnew(ne, 0.0);
 		while ((l2-l1)/(l1+l2) > 1e-6) {
 			double lmid = 0.5*(l1+l2);
 			for (int e=0;e<ne;e++) {
-				double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
+                double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
 				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
 				xnew[e] = std::clamp(xe, 0.0, 1.0);
 			}
@@ -1220,7 +1298,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
 				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
 			}
-			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
+            double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
 			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 		}
 		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
@@ -1278,6 +1356,10 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
+	// Build MG hierarchy and fixed masks once; reuse across solves
+	MGPrecondConfig mgcfgStatic_ltv; mgcfgStatic_ltv.nonDyadic = true; mgcfgStatic_ltv.maxLevels = 5; mgcfgStatic_ltv.weight = 0.6;
+	MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_ltv, H, fixedMasks);
+    
 	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 	for (int it=0; it<nLoop; ++it) {
@@ -1291,10 +1373,16 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		std::vector<double> U(pb.mesh.numDOFs, 0.0);
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
-		// Use MG diagonal V-cycle preconditioner (same config as GLOBAL)
+		// Use MG with static hierarchy; per-iter diagonals and SIMP-modulated coarsest
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
-		PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
+        PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+        if (!std::all_of(uFreeWarm.begin(), uFreeWarm.end(), [](double v){ return std::isfinite(v); })) {
+            MGPrecondConfig mgdiag = mgcfg; mgdiag.maxLevels = 1;
+            auto MG2 = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgdiag);
+            std::fill(uFreeWarm.begin(), uFreeWarm.end(), 0.0);
+            PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG2);
+        }
 		scatter_from_free(pb, uFreeWarm, U);
 		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		// Compliance sensitivities dc = -dE/drho * ce_norm (we use ce raw here as solid ref omitted)
@@ -1382,6 +1470,9 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 	CreateVoxelFEAmodel_TopVoxel(pb, file);
 	ApplyBoundaryConditions(pb);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+    // Build MG hierarchy and fixed masks once; reuse across solves
+    MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
+    MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_tv, H, fixedMasks);
 	auto tModelTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
 	std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
 
@@ -1400,7 +1491,7 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
 		int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
@@ -1428,7 +1519,7 @@ void TOP3D_XL_GLOBAL_FromTopVoxel(const std::string& file, double V0, int nLoop,
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
 		int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFreeWarm, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
@@ -1507,6 +1598,9 @@ void TOP3D_XL_LOCAL_FromTopVoxel(const std::string& file, double Ve0, int nLoop,
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
+    // Build MG hierarchy and fixed masks once; reuse across solves
+    MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
+    MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_tv, H, fixedMasks);
 	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 	for (int it=0; it<nLoop; ++it) {
@@ -1517,7 +1611,7 @@ void TOP3D_XL_LOCAL_FromTopVoxel(const std::string& file, double Ve0, int nLoop,
 		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditioner(pb, eleMod, mgcfg);
+		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
 		PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
 		scatter_from_free(pb, uFreeWarm, U);
 		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();

@@ -1,0 +1,29 @@
+Job started at Wed Nov  5 19:25:56 EST 2025
+Mode: GLOBAL
+Parameters: 12 24 12 0.12 30
+Output file: out/log/GLOBAL_20251105_192556_5922061.out
+Error file: out/log/GLOBAL_20251105_192556_5922061.err
+Latest log: out/log/GLOBAL_latest.log
+STL dir: out/stl/
+Running GLOBAL topo-opt on cuboid: 12x24x12, V0=0.12, iters=30
+
+==========================Displaying Inputs==========================
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+...............................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Preparing Voxel-based FEA Model Costs        0.0s
+Compliance of Fully Solid Domain:     3.283464e+00
+ It.:    0 Solver Time:    0s.
+
+ It.:   1 Obj.:            -nan Vol.:1.2000e-16 Sharp.:4.8000e-16 Cons.:-1.20e-01 Ch.:1.20e-01
+ It.:    1 (Time)... Total per-It.: 8.96e-01s; CG: 8.53e-01s; Opti.: 4.25e-02s; Filtering: 3.36e-02s.
+
+..........Performing Topology Optimization Costs (in total): 1.0380e+00s.
+STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/GLOBAL_20251105_192557_5922061.stl
+
+Done.
+Job completed at Wed Nov  5 19:25:57 EST 2025nd
