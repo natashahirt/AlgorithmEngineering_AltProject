@@ -519,6 +519,9 @@ PDEFilter SetupPDEFilter(const Problem& pb, double filterRadius) {
 		}
 	}
 	for (double& v : pf.diagPrecondNode) v = v>0 ? 1.0/v : 1.0;
+	// initialize warm-start buffers
+	pf.lastXNode.assign(pb.mesh.numNodes, 0.0);
+	pf.lastRhsNode.assign(pb.mesh.numNodes, 0.0);
 	return pf;
 }
 
@@ -536,7 +539,7 @@ static void MatTimesVec_PDE(const Problem& pb, const PDEFilter& pf, const std::v
 	}
 }
 
-void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<double>& srcEle, std::vector<double>& dstEle) {
+void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<double>& srcEle, std::vector<double>& dstEle) {
 	// Ele -> Node (sum/8)
 	std::vector<double> rhs(pb.mesh.numNodes, 0.0);
 	for (int e=0;e<pb.mesh.numElements;e++) {
@@ -544,13 +547,43 @@ void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<do
 		int base = e*8; for (int a=0;a<8;a++) rhs[pb.mesh.eNodMat[base+a]] += val;
 	}
 	// Solve (PDE kernel) * x = rhs with PCG and Jacobi precond
-	std::vector<double> x(pb.mesh.numNodes, 0.0);
-	std::vector<double> r = rhs, z(rhs.size()), pvec(rhs.size()), Ap(rhs.size());
+	// Conditional warm-start: reuse lastX if rhs hasn't changed much
+	const double relThresh = 0.1; // relative RHS change threshold for warm-start
+	if ((int)pf.lastXNode.size() != pb.mesh.numNodes) pf.lastXNode.assign(pb.mesh.numNodes, 0.0);
+	if ((int)pf.lastRhsNode.size() != pb.mesh.numNodes) pf.lastRhsNode.assign(pb.mesh.numNodes, 0.0);
+	double normRhs=0.0, diff=0.0;
+	for (size_t i=0;i<rhs.size();++i) { normRhs += rhs[i]*rhs[i]; double d = rhs[i]-pf.lastRhsNode[i]; diff += d*d; }
+	normRhs = std::sqrt(normRhs); diff = std::sqrt(diff);
+	bool useWarm = (normRhs > 0.0) && (diff / normRhs < relThresh);
+	std::vector<double> x = useWarm ? pf.lastXNode : std::vector<double>(pb.mesh.numNodes, 0.0);
+
+	std::vector<double> r(rhs.size()), z(rhs.size()), pvec(rhs.size()), Ap(rhs.size());
+	if (useWarm) {
+		std::vector<double> y0; MatTimesVec_PDE(pb, pf, x, y0);
+		for (size_t i=0;i<r.size();++i) r[i] = rhs[i] - y0[i];
+	} else {
+		r = rhs;
+	}
 	for (size_t i=0;i<r.size();++i) z[i] = pf.diagPrecondNode[i]*r[i];
 	double rz = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
 	if (rz==0) rz=1.0; pvec = z;
 	const double tol = 1e-6;
 	const int maxIt = 400;
+	// Early exit if warm-start already good
+	{
+		double rn = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0));
+		if (rn < tol) {
+			// Node -> Ele (sum/8)
+			dstEle.assign(pb.mesh.numElements, 0.0);
+			for (int e=0;e<pb.mesh.numElements;e++) {
+				int base=e*8; double sum=0.0; for (int a=0;a<8;a++) sum += x[pb.mesh.eNodMat[base+a]];
+				dstEle[e] = sum*(1.0/8.0);
+			}
+			pf.lastXNode = x;
+			pf.lastRhsNode = rhs;
+			return;
+		}
+	}
 	for (int it=0; it<maxIt; ++it) {
 		MatTimesVec_PDE(pb, pf, pvec, Ap);
 		double denom = std::inner_product(pvec.begin(), pvec.end(), Ap.begin(), 0.0);
@@ -571,6 +604,9 @@ void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<do
 		int base=e*8; double sum=0.0; for (int a=0;a<8;a++) sum += x[pb.mesh.eNodMat[base+a]];
 		dstEle[e] = sum*(1.0/8.0);
 	}
+	// Save warm-start buffers
+	pf.lastXNode = x;
+	pf.lastRhsNode = rhs;
 }
 
 // ===== MG scaffolding: trilinear weights and hierarchy (Step 2) =====

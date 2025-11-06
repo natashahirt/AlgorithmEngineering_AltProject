@@ -77,12 +77,15 @@ struct PDEFilter {
 	// 8-node kernel (8x8) stored row-major
 	std::array<double,8*8> kernel{};
 	std::vector<double> diagPrecondNode; // numNodes
+	// Warm-start storage
+	std::vector<double> lastXNode;       // numNodes
+	std::vector<double> lastRhsNode;     // numNodes
 };
 
 // PDE filter setup and application
 PDEFilter SetupPDEFilter(const Problem& pb, double filterRadius);
 // Apply PDE filtering (element -> node (sum/8), solve, node -> element (sum/8))
-void ApplyPDEFilter(const Problem& pb, const PDEFilter& pf, const std::vector<double>& srcEle, std::vector<double>& dstEle);
+void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<double>& srcEle, std::vector<double>& dstEle);
 
 // Entry points
 void InitialSettings(GlobalParams& out);
