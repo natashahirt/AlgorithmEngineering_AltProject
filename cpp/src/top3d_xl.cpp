@@ -682,6 +682,36 @@ static MGLevel build_structured_level(int nx, int ny, int nz, int span) {
 	return L;
 }
 
+// Heuristic: adapt MG level count to keep coarsest DOFs <= NlimitDofs and stop when tiny
+static int ComputeAdaptiveMaxLevels(const Problem& pb, bool nonDyadic, int cap, int NlimitDofs) {
+	int nx = pb.mesh.resX;
+	int ny = pb.mesh.resY;
+	int nz = pb.mesh.resZ;
+	int levels = 1; // include finest
+
+	for (int li=1; li<cap; ++li) {
+		int span = (li==1 && nonDyadic ? 4 : 2);
+		// Require exact divisibility (to match structured transfers)
+		if (nx % span != 0 || ny % span != 0 || nz % span != 0) break;
+
+		int nnx = nx / span, nny = ny / span, nnz = nz / span;
+		if (nnx < 1 || nny < 1 || nnz < 1) break;
+
+		long long nodes = 1LL*(nnx+1)*(nny+1)*(nnz+1);
+		long long dofs  = 3LL * nodes;
+		// Stop before exceeding coarsest dense factorization limit
+		if (dofs > NlimitDofs) break;
+
+		// Accept this level
+		nx = nnx; ny = nny; nz = nnz;
+		levels++;
+
+		// Mirror MATLAB's guard: stop when very small
+		if (std::min({nx,ny,nz}) <= 2) break;
+	}
+	return levels;
+}
+
 void BuildMGHierarchy(const Problem& pb, bool nonDyadic, MGHierarchy& H, int maxLevels) {
 	H.levels.clear();
 	H.nonDyadic = nonDyadic;
@@ -855,7 +885,10 @@ const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
 }
 
 static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
-                                  const std::vector<double>& diagFine, std::vector<double>& diagCoarse) {
+								  const std::vector<double>& diagFine,
+								  const std::vector<uint8_t>& fineFixedMask,
+								  const std::vector<uint8_t>& coarseFixedMask,
+								  std::vector<double>& diagCoarse) {
     const int span = Lc.spanWidth;
     const int grid = span+1;
 
@@ -887,7 +920,20 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 							};
 							for (int a=0;a<8;a++) {
 								double w2 = W[a]*W[a];
-								for (int c=0;c<3;c++) { diagCoarse[3*cidx[a]+c] += w2 * diagFine[3*fn+c]; wsum[3*cidx[a]+c] += w2; }
+								for (int c=0;c<3;c++) {
+									const int fineD = 3*fn + c;
+									const int coarseD = 3*cidx[a] + c;
+									if (coarseFixedMask[coarseD]) {
+										// We'll set fixed coarse diagonals later; skip accumulation
+										continue;
+									}
+									if (fineFixedMask[fineD]) {
+										// Skip fixed fine contributions to avoid inflating neighboring coarse diagonals
+										continue;
+									}
+									diagCoarse[coarseD] += w2 * diagFine[fineD];
+									wsum[coarseD] += w2;
+								}
 							}
 						}
 					}
@@ -895,22 +941,41 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 			}
 		}
 	}
-	for (size_t i=0;i<diagCoarse.size();++i) if (wsum[i]>0) diagCoarse[i] /= wsum[i];
-	for (double& v : diagCoarse) if (!(v>0.0)) v = 1.0;
+	for (size_t i=0;i<diagCoarse.size();++i) {
+		if (coarseFixedMask[i]) {
+			diagCoarse[i] = 1.0;
+		} else if (wsum[i]>0) {
+			diagCoarse[i] /= wsum[i];
+			if (!(diagCoarse[i] > 0.0)) diagCoarse[i] = 1.0;
+		} else {
+			diagCoarse[i] = 1.0;
+		}
+	}
 }
 
 static void MG_BuildDiagonals(const Problem& pb, const MGHierarchy& H,
+							   const std::vector<std::vector<uint8_t>>& fixedMasks,
 							   const std::vector<double>& eleModulus,
 							   std::vector<std::vector<double>>& diagLevels) {
 	diagLevels.resize(H.levels.size());
 	ComputeJacobiDiagonalFull(pb, eleModulus, diagLevels[0]);
+	// Impose BCs at finest level on the diagonal
+	{
+		const auto& mask0 = fixedMasks[0];
+		for (size_t d=0; d<diagLevels[0].size() && d<mask0.size(); ++d) {
+			if (mask0[d]) diagLevels[0][d] = 1.0;
+		}
+	}
 	for (size_t l=0; l+1<H.levels.size(); ++l) {
-		MG_CoarsenDiagonal(H.levels[l+1], H.levels[l], diagLevels[l], diagLevels[l+1]);
+		MG_CoarsenDiagonal(H.levels[l+1], H.levels[l],
+			diagLevels[l],
+			fixedMasks[l],
+			fixedMasks[l+1],
+			diagLevels[l+1]);
 	}
 }
 
 // ===== Coarsest-level assembly and Cholesky (to mirror MATLAB direct solve) =====
-// (removed old unmodulated coarsest assembly)
 
 static bool chol_spd_inplace(std::vector<double>& A, int N) {
 	for (int i=0;i<N;i++) {
@@ -946,8 +1011,6 @@ static void chol_solve_lower(const std::vector<double>& L,
 	}
 }
 
-// (removed old on-the-fly MG preconditioner; static variant is used instead)
-
 // ===== Static MG context and Galerkin coarsest assembly =====
 // Build coarsest-level K via P^T * K_fine * P with fine-level BC masking
 
@@ -955,7 +1018,16 @@ static void chol_solve_lower(const std::vector<double>& L,
 static void MG_BuildStaticOnce(const Problem& pb, const MGPrecondConfig& cfg,
 								  MGHierarchy& H, std::vector<std::vector<uint8_t>>& fixedMasks) {
 	H.levels.clear();
-	BuildMGHierarchy(pb, cfg.nonDyadic, H, cfg.maxLevels);
+	const int NlimitDofs = 200000;
+	int adaptiveMax = ComputeAdaptiveMaxLevels(pb, cfg.nonDyadic, cfg.maxLevels, NlimitDofs);
+	BuildMGHierarchy(pb, cfg.nonDyadic, H, adaptiveMax);
+	// One-line debug print (enable by setting env TOP3D_MG_DEBUG to any value)
+	if (std::getenv("TOP3D_MG_DEBUG")) {
+		const auto& Lc = H.levels.back();
+		std::cout << "[MG] levels=" << H.levels.size()
+				  << " coarsest=" << Lc.resX << "x" << Lc.resY << "x" << Lc.resZ
+				  << " dofs=" << (3 * Lc.numNodes) << "\n";
+	}
 	MG_BuildFixedMasks(pb, H, fixedMasks);
 }
 
@@ -1088,7 +1160,7 @@ Preconditioner MakeMGDiagonalPreconditionerFromStatic(const Problem& pb,
 														  const MGPrecondConfig& cfg) {
 	// 1) Build per-level diagonals
 	std::vector<std::vector<double>> diag;
-	MG_BuildDiagonals(pb, H, eleModulus, diag);
+	MG_BuildDiagonals(pb, H, fixedMasks, eleModulus, diag);
 
 	// 2) Build aggregated Ee at coarsest level and factorize
 	std::vector<double> Lcoarse; int Ncoarse = 0;
