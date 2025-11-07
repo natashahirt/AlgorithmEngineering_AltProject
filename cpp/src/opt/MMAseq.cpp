@@ -39,7 +39,7 @@ struct MMAContext {
 	void init_sizes(int mm, int nn) {
 		m = mm; n = nn;
 		a.assign(m, 0.0);
-		c.assign(m, 1000.0);
+		c.assign(m, 100.0);
 		d.assign(m, 0.0);
 		y.assign(m, 0.0);
 		lam.assign(m, 0.0);

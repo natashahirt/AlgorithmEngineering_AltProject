@@ -15,7 +15,7 @@ module load cmake/3.27.9
 cd /home/nhirt/AlgorithmEngineering_AltProject
 
 MODE="LOCAL"
-PARAMS="12 24 12 0.5 30 1.7320508075688772 6"
+PARAMS="80 160 80 0.5 150 1.7320508075688772 12"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl

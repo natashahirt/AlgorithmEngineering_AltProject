@@ -1488,12 +1488,38 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
+	// Per-element capacity (fixed) for LVF normalization (matches MATLAB PIO)
+	std::vector<double> volMaxList(ne, Ve0);
+	// MMA state (active elements exclude passives)
+	std::vector<int> activeIdx;
+	activeIdx.reserve(ne);
+	{
+		std::vector<uint8_t> isPassive(ne, 0);
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) isPassive[pe] = 1;
+		}
+		for (int i=0;i<ne;i++) if (!isPassive[i]) activeIdx.push_back(i);
+	}
+	std::vector<double> xold1(activeIdx.size(), Ve0), xold2(activeIdx.size(), Ve0);
 	// Build MG hierarchy and fixed masks once; reuse across solves
 	MGPrecondConfig mgcfgStatic_ltv; mgcfgStatic_ltv.nonDyadic = true; mgcfgStatic_ltv.maxLevels = 5; mgcfgStatic_ltv.weight = 0.6;
 	MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_ltv, H, fixedMasks);
     
-	double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
+    double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
+    // Fully solid reference compliance (for ce normalization like MATLAB PIO)
+    double CsolidRef = 0.0;
+    {
+        std::vector<double> eleSolid(ne, pb.params.youngsModulus);
+        std::vector<double> U(pb.mesh.numDOFs, 0.0);
+        std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+        std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
+        MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+        auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleSolid, mgcfg);
+        PCG_free(pb, eleSolid, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+        scatter_from_free(pb, uFree, U);
+        std::vector<double> ceRef; CsolidRef = ComputeCompliance(pb, eleSolid, U, ceRef);
+    }
 	for (int it=0; it<nLoop; ++it) {
 		loopbeta++;
 		// SIMP modulus
@@ -1517,21 +1543,29 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
         }
 		scatter_from_free(pb, uFreeWarm, U);
 		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
-		// Compliance sensitivities dc = -dE/drho * ce_norm (we use ce raw here as solid ref omitted)
-		std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
+        // Compliance sensitivities dc = -dE/drho * ceNorm (normalize by CsolidRef like MATLAB)
+        std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
 		std::vector<double> dc(ne);
-		for (int e=0;e<ne;e++) {
-			double dE = pb.params.simpPenalty * std::pow(std::max(1e-9,xPhys[e]), pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-			dc[e] = - dE * ce[e];
-		}
+        for (int e=0;e<ne;e++) {
+            double dE = pb.params.simpPenalty * std::pow(std::max(1e-9,xPhys[e]), pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+            double ceNorm = (CsolidRef > 0.0 ? ce[e] / CsolidRef : ce[e]);
+            dc[e] = - dE * ceNorm;
+        }
 		// Local Volume Fraction via PDE filter
 		std::vector<double> xHat; ApplyPDEFilter(pb, pfLVF, xPhys, xHat);
-		double accum=0.0; for (int e=0;e<ne;e++) accum += std::pow(xHat[e], p);
+		double accum=0.0; for (int e=0;e<ne;e++) {
+			double ratio = xHat[e] / std::max(1e-12, volMaxList[e]);
+			accum += std::pow(ratio, p);
+		}
 		double f = std::pow(accum / ne, 1.0/p) - 1.0; // <= 0
-		// df/dx via chain: df/dxHat * dxHat/dxPhys (apply filters twice like MATLAB); approximate df/dxPhys by filtering gradient once
+		// df/dx via chain: df/dxHat * dxHat/dxPhys; approximate df/dxPhys by filtering gradient once
 		std::vector<double> dfdx_hat(ne);
 		double coeff = std::pow(accum/ne, 1.0/p - 1.0) / ne;
-		for (int e=0;e<ne;e++) dfdx_hat[e] = coeff * p * std::pow(std::max(1e-9,xHat[e]), p-1);
+		for (int e=0;e<ne;e++) {
+			double vcap = std::max(1e-12, volMaxList[e]);
+			double ratio = xHat[e] / vcap;
+			dfdx_hat[e] = coeff * p * std::pow(std::max(1e-12, ratio), p-1) * (1.0 / vcap);
+		}
 		std::vector<double> dfdx_phys; ApplyPDEFilter(pb, pfLVF, dfdx_hat, dfdx_phys);
 		// Heaviside projection and its derivative wrt xTilde
 		auto H = [&](double v){ return (std::tanh(beta*eta) + std::tanh(beta*(v-eta))) / (std::tanh(beta*eta) + std::tanh(beta*(1-eta))); };
@@ -1542,25 +1576,35 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 		for (int e=0;e<ne;e++) dc_filt[e] *= dx[e];
 		std::vector<double> dfdx_filt; ApplyPDEFilter(pb, pfFilter, dfdx_phys, dfdx_filt);
 		for (int e=0;e<ne;e++) dfdx_filt[e] *= dx[e];
-		// MMA-like OC update with one constraint: minimize c s.t. g=f<=0 and 0<=x<=1
-		double l1=0.0, l2=1e9; double move=0.1; std::vector<double> xnew(ne);
-		while ((l2-l1)/(l1+l2) > 1e-6) {
-			double lm = 0.5*(l1+l2);
-			double volg=0.0;
-			for (int e=0;e<ne;e++) {
-				double step = -dc_filt[e] / std::max(1e-16, lm*dfdx_filt[e]);
-				double xe = std::clamp(x[e]*std::sqrt(std::max(0.1, step)), x[e]-move, x[e]+move);
-				xnew[e] = std::clamp(xe, 0.0, 1.0);
-				volg += dfdx_filt[e] * (xnew[e]-x[e]);
-			}
-			// Enforce passive elements during update
-			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
-			}
-			if (f + volg > 0) l1 = lm; else l2 = lm;
+		// MMA update (m=1 constraint over active elements)
+		const int mcons = 1;
+		const int nvars = (int)activeIdx.size();
+		std::vector<double> xvalM(nvars), xminM(nvars), xmaxM(nvars), df0dxM(nvars), dg_colMajor(nvars);
+		for (int i=0;i<nvars;i++) {
+			int e = activeIdx[i];
+			xvalM[i] = x[e];
+			df0dxM[i] = dc_filt[e];
+			dg_colMajor[i] = dfdx_filt[e];
 		}
-		double change=0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
-		x.swap(xnew);
+		const double move = 0.1;
+		for (int i=0;i<nvars;i++) {
+			double lo = std::max(0.0, xvalM[i] - move);
+			double hi = std::min(1.0, xvalM[i] + move);
+			xminM[i] = lo; xmaxM[i] = hi;
+		}
+		std::vector<double> gx_col(1, f);
+		std::vector<double> xmma;
+		top3d::mma::MMAseq(mcons, nvars, xvalM, xminM, xmaxM, xold1, xold2, df0dxM, gx_col, dg_colMajor, xmma);
+		double change=0.0;
+		for (int i=0;i<nvars;i++) {
+			int e = activeIdx[i];
+			change = std::max(change, std::abs(xmma[i] - x[e]));
+			x[e] = std::clamp(xmma[i], 0.0, 1.0);
+		}
+		// Enforce passive elements
+		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
+			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) x[pe] = 1.0;
+		}
 		// Update xTilde and xPhys
 		ApplyPDEFilter(pb, pfFilter, x, xTilde);
 		for (int e=0;e<ne;e++) xPhys[e] = H(xTilde[e]);
@@ -1575,8 +1619,17 @@ void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double 
 	// Exports
 	const std::string stlDir = out_stl_dir_for_cwd();
 	ensure_out_dir(stlDir);
+	// Adapt iso based on density distribution to avoid empty STL when densities are uniformly low
+	double minVal = 1.0, maxVal = 0.0, sumVal = 0.0; int cntGE03 = 0;
+	for (double v : xPhys) { minVal = std::min(minVal, v); maxVal = std::max(maxVal, v); sumVal += v; if (v >= 0.3) cntGE03++; }
+	double meanVal = sumVal / std::max(1, (int)xPhys.size());
+	double fracGE03 = (double)cntGE03 / std::max(1, (int)xPhys.size());
+	float iso = 0.3f;
+	if (maxVal < 0.3) iso = std::max(0.05f, 0.5f * (float)maxVal);
+	else if (fracGE03 < 0.01) iso = 0.2f;
+	std::cout << "Density stats -> min:" << minVal << " max:" << maxVal << " mean:" << meanVal << " frac>=0.3:" << fracGE03 << " iso:" << iso << "\n";
 	std::string stlFilename = generate_unique_filename("LOCAL");
-	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
+	export_surface_stl(pb, xPhys, stlDir + stlFilename, iso);
 	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
 	std::cout << "\nDone.\n";
 }
