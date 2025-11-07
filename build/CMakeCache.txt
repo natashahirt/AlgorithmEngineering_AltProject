@@ -198,6 +198,9 @@ TOP3D_XL_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 TOP3D_XL_SOURCE_DIR:STATIC=/home/nhirt/AlgorithmEngineering_AltProject/cpp
 
+//The directory containing a CMake configuration file for VTK.
+VTK_DIR:PATH=VTK_DIR-NOTFOUND
+
 
 ########################
 # INTERNAL cache entries

@@ -69,28 +69,28 @@ include CMakeFiles/top3d_xl_cli.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/top3d_xl_cli.dir/flags.make
 
-CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: CMakeFiles/top3d_xl_cli.dir/flags.make
-CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/main.cpp
-CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o: CMakeFiles/top3d_xl_cli.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o -MF CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o.d -o CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/main.cpp
+CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o: CMakeFiles/top3d_xl_cli.dir/flags.make
+CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/apps/top3d_xl_cli/main.cpp
+CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o: CMakeFiles/top3d_xl_cli.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o -MF CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o.d -o CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/apps/top3d_xl_cli/main.cpp
 
-CMakeFiles/top3d_xl_cli.dir/src/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl_cli.dir/src/main.cpp.i"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/main.cpp > CMakeFiles/top3d_xl_cli.dir/src/main.cpp.i
+CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/apps/top3d_xl_cli/main.cpp > CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.i
 
-CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/main.cpp -o CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s
+CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/apps/top3d_xl_cli/main.cpp -o CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.s
 
 # Object files for target top3d_xl_cli
 top3d_xl_cli_OBJECTS = \
-"CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o"
+"CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o"
 
 # External object files for target top3d_xl_cli
 top3d_xl_cli_EXTERNAL_OBJECTS =
 
-top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o
+top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o
 top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/build.make
 top3d_xl_cli: libtop3d_xl.a
 top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/link.txt
