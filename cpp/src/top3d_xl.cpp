@@ -1415,7 +1415,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		}
 		auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
 		
-		// OC update with move limits
+		// OC update with move limits o
 		double l1=0.0, l2=1e9;
 		double move=0.2;
 		std::vector<double> xnew(ne, 0.0);

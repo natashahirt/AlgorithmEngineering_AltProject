@@ -5,6 +5,12 @@
 #include <numeric>
 #include <limits>
 
+// This file implements a sequential MMA subproblem and solver that mirrors
+// the PETSc TopOpt implementation by Aage & Lazarov. See:
+// - MMA.h: https://github.com/topopt/TopOpt_in_PETSc/blob/master/MMA.h
+// - MMA.cc: https://github.com/topopt/TopOpt_in_PETSc/blob/master/MMA.cc
+// License: https://github.com/topopt/TopOpt_in_PETSc/blob/master/lesser.txt
+
 namespace top3d {
 namespace mma {
 
@@ -16,6 +22,8 @@ struct MMAContext {
 	double asyminit = 0.5;
 	double asymdec  = 0.7;
 	double asyminc  = 1.2;
+	int RobustAsymptotesType = 0; // 0 default, 1 robust
+	bool constraintModification = false; // PETSc default = false
 	std::vector<double> a, c, d;
 	std::vector<double> y, lam, mu, grad, s;
 	double z = 0.0;
@@ -26,11 +34,12 @@ struct MMAContext {
 	std::vector<double> xo1, xo2, xVal;
 	std::vector<double> pjlam, qjlam;
 	std::vector<std::vector<double>> Hess;
+	int k = 0; // iteration counter used for asymptote initialization
 
 	void init_sizes(int mm, int nn) {
 		m = mm; n = nn;
 		a.assign(m, 0.0);
-		c.assign(m, 100.0);
+		c.assign(m, 1000.0);
 		d.assign(m, 0.0);
 		y.assign(m, 0.0);
 		lam.assign(m, 0.0);
@@ -59,9 +68,44 @@ struct MMAContext {
 				const std::vector<std::vector<double>>& dgdx,
 				const std::vector<double>& xmin,
 				const std::vector<double>& xmax) {
+		k++;
+		// Initialize asymptotes
 		for (int j=0;j<n;j++) {
 			L[j] = xVal[j] - asyminit*(xmax[j] - xmin[j]);
 			U[j] = xVal[j] + asyminit*(xmax[j] - xmin[j]);
+		}
+		// Dynamic asymptote update for k>2 using xo1/xo2, mirroring PETSc logic
+		if (k > 2) {
+			for (int i=0;i<n;i++) {
+				double helpvar = (xVal[i] - xo1[i]) * (xo1[i] - xo2[i]);
+				double gamma = 1.0;
+				if (helpvar < 0.0) gamma = asymdec;
+				else if (helpvar > 0.0) gamma = asyminc;
+				L[i] = xVal[i] - gamma * (xo1[i] - L[i]);
+				U[i] = xVal[i] + gamma * (U[i] - xo1[i]);
+				double xmi = std::max(1.0e-5, xmax[i] - xmin[i]);
+				if (RobustAsymptotesType == 0) {
+					L[i] = std::max(L[i], xVal[i] - 10.0 * xmi);
+					L[i] = std::min(L[i], xVal[i] - 1.0e-2 * xmi);
+					U[i] = std::max(U[i], xVal[i] + 1.0e-2 * xmi);
+					U[i] = std::min(U[i], xVal[i] + 10.0 * xmi);
+				} else if (RobustAsymptotesType == 1) {
+					L[i] = std::max(L[i], xVal[i] - 100.0 * xmi);
+					L[i] = std::min(L[i], xVal[i] - 1.0e-4 * xmi);
+					U[i] = std::max(U[i], xVal[i] + 1.0e-4 * xmi);
+					U[i] = std::min(U[i], xVal[i] + 100.0 * xmi);
+					double xbmin = xmin[i] - 1.0e-5;
+					double xbmax = xmax[i] + 1.0e-5;
+					if (xVal[i] < xbmin) {
+						L[i] = xVal[i] - (xbmax - xVal[i]) / 0.9;
+						U[i] = xVal[i] + (xbmax - xVal[i]) / 0.9;
+					}
+					if (xVal[i] > xbmax) {
+						L[i] = xVal[i] - (xVal[i] - xbmin) / 0.9;
+						U[i] = xVal[i] + (xVal[i] - xbmin) / 0.9;
+					}
+				}
+			}
 		}
 		const double feps = 1.0e-6;
 		for (int j=0;j<n;j++) {
@@ -81,8 +125,14 @@ struct MMAContext {
 			for (int j=0;j<n;j++) {
 				double gp = std::max(0.0, dgdx[i][j]);
 				double gm = std::max(0.0, -dgdx[i][j]);
-				pij[i][j] = (U[j]-xVal[j])*(U[j]-xVal[j]) * gp;
-				qij[i][j] = (xVal[j]-L[j])*(xVal[j]-L[j]) * gm;
+				if (constraintModification) {
+					double denom = std::max(1e-16, U[j]-L[j]);
+					pij[i][j] = (U[j]-xVal[j])*(U[j]-xVal[j])*(gp + 0.001*std::abs(dgdx[i][j]) + 0.5*feps/denom);
+					qij[i][j] = (xVal[j]-L[j])*(xVal[j]-L[j])*(gm + 0.001*std::abs(dgdx[i][j]) + 0.5*feps/denom);
+				} else {
+					pij[i][j] = (U[j]-xVal[j])*(U[j]-xVal[j]) * gp;
+					qij[i][j] = (xVal[j]-L[j])*(xVal[j]-L[j]) * gm;
+				}
 			}
 		}
 		for (int i=0;i<m;i++) {
@@ -171,7 +221,7 @@ struct MMAContext {
 			for (int r=0;r<m;r++) for (int c=0;c<m;c++) Hess[r][c] -= 10.0 * a[r] * a[c];
 		}
 		double tr=0.0; for (int i=0;i<m;i++) tr += Hess[i][i];
-		double corr = 1e-4 * (tr / std::max(1, m));
+		double corr = 1e-4 * (tr / double(m));
 		if (-1.0*corr < 1.0e-7) corr = -1.0e-7;
 		for (int i=0;i<m;i++) Hess[i][i] += corr;
 	}
@@ -184,44 +234,45 @@ struct MMAContext {
 		double epsi = 1.0;
 		double err  = 1.0;
 
-		auto chol_solve = [&](std::vector<std::vector<double>>& A, std::vector<double>& rhs) {
-			int M = (int)A.size();
-			for (int i=0;i<M;i++) {
-				for (int j=0;j<=i;j++) {
-					double sum = A[i][j];
-					for (int k=0;k<j;k++) sum -= A[i][k]*A[j][k];
-					if (i==j) A[i][j] = std::sqrt(std::max(1e-16, sum));
-					else A[i][j] = sum / A[j][j];
+		auto Factorize = [&](std::vector<double>& K, int nn) {
+			for (int ss = 0; ss < nn - 1; ss++) {
+				for (int i = ss + 1; i < nn; i++) {
+					K[i*nn + ss] = K[i*nn + ss] / std::max(1e-16, K[ss*nn + ss]);
+					for (int j = ss + 1; j < nn; j++) {
+						K[i*nn + j] = K[i*nn + j] - K[i*nn + ss] * K[ss*nn + j];
+					}
 				}
-				for (int j=i+1;j<M;j++) A[i][j] = 0.0;
-			}
-			std::vector<double> y(rhs.size(), 0.0);
-			for (int i=0;i<M;i++) {
-				double sum = rhs[i];
-				for (int k=0;k<i;k++) sum -= A[i][k]*y[k];
-				y[i] = sum / A[i][i];
-			}
-			for (int i=M-1;i>=0;i--) {
-				double sum = y[i];
-				for (int k=i+1;k<M;k++) sum -= A[k][i]*rhs[k];
-				rhs[i] = sum / A[i][i];
 			}
 		};
 
-		auto DualResidual = [&](double epsi)->double {
-			std::vector<double> res(2*m, 0.0);
-			for (int i=0;i<m;i++) res[i] = -b[i] - a[i]*z - y[i] + mu[i];
-			for (int i=0;i<m;i++) res[m+i] = mu[i]*lam[i] - epsi;
-			for (int i=0;i<m;i++) {
-				double ssum=0.0;
-				for (int j=0;j<n;j++) {
-					ssum += pij[i][j]/std::max(1e-16, U[j]-xVal[j]) + qij[i][j]/std::max(1e-16, xVal[j]-L[j]);
-				}
-				res[i] += ssum;
+		auto Solve = [&](std::vector<double>& K, std::vector<double>& x, int nn) {
+			for (int i = 1; i < nn; i++) {
+				double a = 0.0;
+				for (int j = 0; j < i; j++) a -= K[i*nn + j] * x[j];
+				x[i] += a;
 			}
-			double nrm=0.0;
-			for (int i=0;i<2*m;i++) nrm = std::max(nrm, std::abs(res[i]));
-			return nrm;
+			x[nn - 1] = x[nn - 1] / std::max(1e-16, K[(nn - 1)*nn + (nn - 1)]);
+			for (int i = nn - 2; i >= 0; i--) {
+				double a = x[i];
+				for (int j = i + 1; j < nn; j++) a -= K[i*nn + j] * x[j];
+				x[i] = a / std::max(1e-16, K[i*nn + i]);
+			}
+		};
+
+		auto DualResidual = [&](double epsi_local)->double {
+			std::vector<double> res(2*m, 0.0);
+			for (int j = 0; j < m; j++) {
+				for (int i = 0; i < n; i++) {
+					res[j] += pij[j][i]/std::max(1e-16, U[i]-xVal[i]) + qij[j][i]/std::max(1e-16, xVal[i]-L[i]);
+				}
+			}
+			for (int j=0;j<m;j++) {
+				res[j] += -b[j] - a[j]*z - y[j] + mu[j];
+				res[m+j] = mu[j]*lam[j] - epsi_local;
+			}
+			double nrI = 0.0;
+			for (int i=0;i<2*m;i++) nrI = std::max(nrI, std::abs(res[i]));
+			return nrI;
 		};
 
 		while (epsi > tol) {
@@ -233,17 +284,23 @@ struct MMAContext {
 				DualGrad();
 				for (int i=0;i<m;i++) grad[i] = -1.0*grad[i] - epsi/std::max(1e-16, lam[i]);
 				DualHess();
-				std::vector<std::vector<double>> Hc = Hess;
+				// Flatten Hess for in-place LU factorization as in PETSc code
+				std::vector<double> Hflat(m*m, 0.0);
+				for (int r=0;r<m;r++) for (int c=0;c<m;c++) Hflat[r*m + c] = Hess[r][c];
 				std::vector<double> step = grad;
-				chol_solve(Hc, step);
+				Factorize(Hflat, m);
+				Solve(Hflat, step, m);
 				for (int i=0;i<m;i++) s[i] = step[i];
 				for (int i=0;i<m;i++) s[m+i] = -mu[i] + epsi/std::max(1e-16, lam[i]) - s[i]*mu[i]/std::max(1e-16, lam[i]);
+				// Dual line search exactly as PETSc
 				double theta = 1.005;
 				for (int i=0;i<m;i++) {
-					if (s[i]    < 0.0) theta = std::min(theta, -1.01*s[i]/std::max(1e-16, lam[i]));
-					if (s[m+i]  < 0.0) theta = std::min(theta, -1.01*s[m+i]/std::max(1e-16, mu[i]));
+					double t1 = -1.01*s[i]   / std::max(1e-16, lam[i]);
+					double t2 = -1.01*s[i+m] / std::max(1e-16, mu[i]);
+					if (theta < t1) theta = t1;
+					if (theta < t2) theta = t2;
 				}
-				theta = 1.0/std::max(1e-16, theta);
+				theta = 1.0 / theta;
 				for (int i=0;i<m;i++) { lam[i] += theta*s[i]; mu[i] += theta*s[m+i]; }
 				XYZofLAMBDA();
 				err = DualResidual(epsi);

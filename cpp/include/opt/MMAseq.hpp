@@ -3,8 +3,14 @@
 namespace top3d {
 namespace mma {
 
-// Exact port of MATLAB's MMAseq used in TOP3D_XL.m.
-// Arguments mirror the MATLAB call:
+// Sequential MMA subproblem and solver mirroring the PETSc TopOpt MMA implementation.
+// Source:
+// - MMA.h: https://github.com/topopt/TopOpt_in_PETSc/blob/master/MMA.h
+// - MMA.cc: https://github.com/topopt/TopOpt_in_PETSc/blob/master/MMA.cc
+// License:
+// - https://github.com/topopt/TopOpt_in_PETSc/blob/master/lesser.txt
+//
+// Arguments mirror the MATLAB TOP3D_XL usage:
 // MMAseq(m, n, xval, xmin, xmax, xold1, xold2, dfdx_row, gx_col, dgdx_colMajor, xnew_out)
 // - dfdx_row: size n (row vector of objective gradient)
 // - gx_col: size m (column vector of constraint values g(x) <= 0)

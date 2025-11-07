@@ -145,7 +145,7 @@ function TOP3D_XL_TO(inputModel, V0, nLoop, rMin)
 		itimeDensityFiltering = toc(tPDEfilteringClock);
 
 		tOptimizationClock = tic;
-		%%5.4 solve the optimization probelm
+		%%5.4 solve the optimization probelm (OPTIMALITY CRITERIA OC)
 		fval = mean(xPhys(:))-V0;
 		l1 = 0; l2 = 1e9; move = 0.2;
 		while (l2-l1)/(l1+l2) > 1e-6
