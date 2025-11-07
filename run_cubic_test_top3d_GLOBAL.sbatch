@@ -33,6 +33,7 @@ echo "Output file: $OUTPUT_FILE"
 echo "Error file: $ERROR_FILE"
 echo "Latest log: $LOG_FILE"
 echo "STL dir: out/stl/"
+echo "NODELIST: ${SLURM_JOB_NODELIST:-$SLURM_NODELIST}"
 
 if [ ! -f build/top3d_xl_cli ]; then
   echo "Building top3d_xl_cli..."

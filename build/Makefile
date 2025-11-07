@@ -190,6 +190,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/opt/MMAseq.o: src/opt/MMAseq.cpp.o
+.PHONY : src/opt/MMAseq.o
+
+# target to build an object file
+src/opt/MMAseq.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/opt/MMAseq.cpp.o
+.PHONY : src/opt/MMAseq.cpp.o
+
+src/opt/MMAseq.i: src/opt/MMAseq.cpp.i
+.PHONY : src/opt/MMAseq.i
+
+# target to preprocess a source file
+src/opt/MMAseq.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/opt/MMAseq.cpp.i
+.PHONY : src/opt/MMAseq.cpp.i
+
+src/opt/MMAseq.s: src/opt/MMAseq.cpp.s
+.PHONY : src/opt/MMAseq.s
+
+# target to generate assembly for a file
+src/opt/MMAseq.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/opt/MMAseq.cpp.s
+.PHONY : src/opt/MMAseq.cpp.s
+
 src/top3d_xl.o: src/top3d_xl.cpp.o
 .PHONY : src/top3d_xl.o
 
@@ -278,6 +302,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/opt/MMAseq.o"
+	@echo "... src/opt/MMAseq.i"
+	@echo "... src/opt/MMAseq.s"
 	@echo "... src/top3d_xl.o"
 	@echo "... src/top3d_xl.i"
 	@echo "... src/top3d_xl.s"

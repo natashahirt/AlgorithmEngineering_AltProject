@@ -45,6 +45,7 @@ echo "Output file: $OUTPUT_FILE"
 echo "Error file: $ERROR_FILE"
 echo "Latest log: $LOG_FILE (tail -f $LOG_FILE)"
 echo "STL out: out/stl/"
+echo "NODELIST: ${SLURM_JOB_NODELIST:-$SLURM_NODELIST}"
 echo ""
 
 # Build if needed

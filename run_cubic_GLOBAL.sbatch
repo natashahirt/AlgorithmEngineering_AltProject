@@ -45,6 +45,7 @@ echo "Output file: $OUTPUT_FILE"
 echo "Error file: $ERROR_FILE"
 echo "Latest log: $LOG_FILE (use 'tail -f $LOG_FILE' to monitor)"
 echo "STL files will be saved to: out/stl/"
+echo "NODELIST: ${SLURM_JOB_NODELIST:-$SLURM_NODELIST}"
 echo ""
 
 # Build if executable doesn't exist

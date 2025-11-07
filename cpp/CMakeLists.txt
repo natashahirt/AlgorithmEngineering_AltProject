@@ -10,8 +10,12 @@ add_library(top3d_xl
     src/topvoxel.cpp
     src/io_export.cpp
     src/voxel_surface.cpp
+    src/opt/MMAseq.cpp
 )
 target_include_directories(top3d_xl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_sources(top3d_xl PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/multigrid_padding.hpp
+)
 
 add_executable(top3d_xl_cli
     src/main.cpp

@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include "io_export.hpp"
 #include "voxel_surface.hpp"
+#include "opt/MMAseq.hpp"
+#include "multigrid_padding.hpp"
 
 namespace top3d {
 
@@ -146,17 +148,35 @@ static void build_cuboid_voxel(bool value, int nely, int nelx, int nelz, std::ve
 
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	CartesianMesh& mesh = pb.mesh;
-	mesh.resX = nelx;
-	mesh.resY = nely;
-	mesh.resZ = nelz;
 	mesh.eleSize = {1.0,1.0,1.0};
 
-	std::vector<uint8_t> voxelized;
-	build_cuboid_voxel(true, nely, nelx, nelz, voxelized);
+    // Mirror MATLAB padding: compute levels and pad dims to multiples of 2^L
+    const std::uint64_t numSolidVoxels = static_cast<std::uint64_t>(nely) * static_cast<std::uint64_t>(nelx) * static_cast<std::uint64_t>(nelz);
+    const auto pad = top3d::compute_adjusted_dims(static_cast<std::uint64_t>(nelx),
+                                                  static_cast<std::uint64_t>(nely),
+                                                  static_cast<std::uint64_t>(nelz),
+                                                  numSolidVoxels);
+    mesh.resX = static_cast<int>(pad.adjustedNelx);
+    mesh.resY = static_cast<int>(pad.adjustedNely);
+    mesh.resZ = static_cast<int>(pad.adjustedNelz);
 
-	const int nx = nelx;
-	const int ny = nely;
-	const int nz = nelz;
+    const int nx = mesh.resX;
+    const int ny = mesh.resY;
+    const int nz = mesh.resZ;
+
+    // Build padded voxel volume: original region = solid (1), padded region = void (0)
+    std::vector<uint8_t> voxelized;
+    voxelized.assign(static_cast<size_t>(nx) * static_cast<size_t>(ny) * static_cast<size_t>(nz), static_cast<uint8_t>(0));
+    for (int z=0; z<nelz; ++z) {
+        for (int x=0; x<nelx; ++x) {
+            const int in_plane_out = ny * (x + nx * z);
+            for (int y=0; y<nely; ++y) {
+                // Our storage uses index with Y flipped: fullIdx = ny*nx*z + ny*x + (ny-1 - y)
+                const int idx = in_plane_out + (ny - 1 - y);
+                voxelized[idx] = static_cast<uint8_t>(1);
+            }
+        }
+    }
 
 	// Identify solid elements
 	mesh.eleMapBack.clear();
@@ -1312,6 +1332,9 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	std::vector<double> ce(ne, 0.0);
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
+	// MMA old vectors (mirror MATLAB usage)
+	std::vector<double> xold1 = x;
+	std::vector<double> xold2 = x;
 
 	// Solve fully solid for reference
 	{
@@ -1365,21 +1388,22 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		
 		// Compliance and sensitivities
 		auto tOptStart = std::chrono::steady_clock::now();
-		double C = ComputeCompliance(pb, eleMod, U, ce);
-		// Normalized reporting to mirror MATLAB: ceNorm = ce / CsolidRef; cObj = sum(Ee*ceNorm); Cdisp = cObj*CsolidRef
-		double cObjNorm = 0.0;
-		if (CsolidRef > 0) {
-			for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * (ce[e] / CsolidRef);
-		} else {
-			for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * ce[e];
-		}
-		double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
-		std::vector<double> dc(ne, 0.0);
-		for (int e=0;e<ne;e++) {
-			double rho = std::clamp(xPhys[e], 0.0, 1.0);
-			double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-			dc[e] = - dEdrho * ce[e];
-		}
+        double C = ComputeCompliance(pb, eleMod, U, ce);
+        // Normalized reporting to mirror MATLAB: ceNorm = ce / CsolidRef; cObj = sum(Ee*ceNorm); Cdisp = cObj*CsolidRef
+        double cObjNorm = 0.0;
+        if (CsolidRef > 0) {
+            for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * (ce[e] / CsolidRef);
+        } else {
+            for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * ce[e];
+        }
+        double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
+        std::vector<double> dc(ne, 0.0);
+        for (int e=0;e<ne;e++) {
+            double rho = std::clamp(xPhys[e], 0.0, 1.0);
+            double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+            double ceNorm = (CsolidRef > 0 ? ce[e] / CsolidRef : ce[e]);
+            dc[e] = - dEdrho * ceNorm;
+        }
 		
 		// PDE filter on dc (ft=1): filter(x.*dc)./max(1e-3,x)
 		auto tFilterStart = std::chrono::steady_clock::now();
@@ -1391,14 +1415,14 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		}
 		auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
 		
-        // OC update with move limits
+		// OC update with move limits
 		double l1=0.0, l2=1e9;
 		double move=0.2;
 		std::vector<double> xnew(ne, 0.0);
 		while ((l2-l1)/(l1+l2) > 1e-6) {
 			double lmid = 0.5*(l1+l2);
 			for (int e=0;e<ne;e++) {
-                double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
+				double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
 				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
 				xnew[e] = std::clamp(xe, 0.0, 1.0);
 			}
@@ -1406,7 +1430,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
 				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
 			}
-            double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
+			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
 			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 		}
 		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));

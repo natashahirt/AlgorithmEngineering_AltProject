@@ -1,1 +1,0 @@
-/var/spool/slurmd/job5917497/slurm_script: line 60: 3494046 Segmentation fault      (core dumped) ./build/top3d_xl_cli "$MODE" "$FILE" $PARAMS
