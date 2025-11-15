@@ -14,10 +14,9 @@
 #include <string>
 #include <fstream>
 #include <stdexcept>
-#include "top3d_xl/io/export.hpp"
+#include "top3d_xl/export.hpp"
 #include "top3d_xl/geometry/voxel_surface.hpp"
-#include "top3d_xl/optimization/MMAseq.hpp"
-#include "top3d_xl/mesh/multigrid_padding.hpp"
+#include "top3d_xl/multigrid_padding.hpp"
 
 namespace top3d {
 
@@ -142,10 +141,6 @@ std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize) {
 	return Ke;
 }
 
-static void build_cuboid_voxel(bool value, int nely, int nelx, int nelz, std::vector<uint8_t>& vox) {
-	vox.assign(nelx*nely*nelz, static_cast<uint8_t>(value?1:0));
-}
-
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	CartesianMesh& mesh = pb.mesh;
 	mesh.eleSize = {1.0,1.0,1.0};
@@ -265,8 +260,6 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	pb.freeDofIndex.clear();
 }
 
-// moved to topvoxel.cpp
-
 void ApplyBoundaryConditions(Problem& pb) {
     const int ny = pb.mesh.resY;
     const int nx = pb.mesh.resX;
@@ -277,62 +270,33 @@ void ApplyBoundaryConditions(Problem& pb) {
     std::fill(pb.isFreeDOF.begin(), pb.isFreeDOF.end(), 1);
     std::fill(pb.F.begin(), pb.F.end(), 0.0);
 
-    // Prefer external BC/loads if present
-    bool usedExternal = false;
-    if (pb.extBC || pb.extLoads) {
-        usedExternal = true;
-        if (pb.extBC) {
-            for (auto f : pb.extBC->fixations) {
-                int full = f[0]-1; if (full < 0) continue;
-                if (full >= (int)pb.mesh.nodMapForward.size()) continue;
-                int n = pb.mesh.nodMapForward[full]; if (n < 0 || n >= pb.mesh.numNodes) continue;
-                if (f[1]) pb.isFreeDOF[idx_dof(n,0)] = 0;
-                if (f[2]) pb.isFreeDOF[idx_dof(n,1)] = 0;
-                if (f[3]) pb.isFreeDOF[idx_dof(n,2)] = 0;
-            }
-        }
-        if (pb.extLoads && !pb.extLoads->cases.empty()) {
-            const auto& lc = pb.extLoads->cases.front();
-            for (auto rec : lc) {
-                int full = int(rec[0]) - 1; if (full < 0) continue;
-                if (full >= (int)pb.mesh.nodMapForward.size()) continue;
-                int n = pb.mesh.nodMapForward[full]; if (n < 0 || n>=pb.mesh.numNodes) continue;
-                pb.F[idx_dof(n,0)] += rec[1];
-                pb.F[idx_dof(n,1)] += rec[2];
-                pb.F[idx_dof(n,2)] += rec[3];
-            }
-        }
-    }
+	// Built-in demo BCs as fallback
+	std::vector<int> fixedNodes;
+	for (int iz=0; iz<nnz; ++iz) {
+		for (int iy=0; iy<nny; ++iy) {
+			int node = nnx*nny*iz + nnx*iy + 0;
+			fixedNodes.push_back(node);
+		}
+	}
+	for (int n : fixedNodes) {
+		pb.isFreeDOF[idx_dof(n,0)] = 0;
+		pb.isFreeDOF[idx_dof(n,1)] = 0;
+		pb.isFreeDOF[idx_dof(n,2)] = 0;
+	}
 
-    if (!usedExternal) {
-        // Built-in demo BCs as fallback
-        std::vector<int> fixedNodes;
-        for (int iz=0; iz<nnz; ++iz) {
-            for (int iy=0; iy<nny; ++iy) {
-                int node = nnx*nny*iz + nnx*iy + 0;
-                fixedNodes.push_back(node);
-            }
-        }
-        for (int n : fixedNodes) {
-            pb.isFreeDOF[idx_dof(n,0)] = 0;
-            pb.isFreeDOF[idx_dof(n,1)] = 0;
-            pb.isFreeDOF[idx_dof(n,2)] = 0;
-        }
-
-        std::vector<int> loadedNodes;
-        int count=0;
-        for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
-            for (int iy=0; iy<nny; ++iy) {
-                int node = nnx*nny*iz + nnx*iy + nx;
-                loadedNodes.push_back(node);
-                ++count;
-            }
-        }
-        if (count>0) {
-            double fz = -1.0/static_cast<double>(count);
-            for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
-        }
-    }
+	std::vector<int> loadedNodes;
+	int count=0;
+	for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
+		for (int iy=0; iy<nny; ++iy) {
+			int node = nnx*nny*iz + nnx*iy + nx;
+			loadedNodes.push_back(node);
+			++count;
+		}
+	}
+	if (count>0) {
+		double fz = -1.0/static_cast<double>(count);
+		for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
+	}
 
     // Fix DOFs on nodes not connected to any element (void nodes)
     {
@@ -1332,17 +1296,6 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	std::vector<double> ce(ne, 0.0);
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
-	// MMA state (active elements exclude passives)
-	std::vector<int> activeIdx;
-	activeIdx.reserve(ne);
-	{
-		std::vector<uint8_t> isPassive(ne, 0);
-		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) isPassive[pe] = 1;
-		}
-		for (int i=0;i<ne;i++) if (!isPassive[i]) activeIdx.push_back(i);
-	}
-	std::vector<double> xold1(activeIdx.size(), V0), xold2(activeIdx.size(), V0);
 
 	// Solve fully solid for reference
 	{
@@ -1434,27 +1387,13 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
 				xnew[e] = std::clamp(xe, 0.0, 1.0);
 			}
-			// Enforce passive elements (if provided externally)
-			if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-				for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xnew[pe] = 1.0;
-			}
 			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
 			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 		}
 		change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
 		x.swap(xnew);
 		xPhys = x; // no filter in this minimal port
-		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0;
-		}
 
-
-		/*
-		// MMA update (disabled; kept for reference)
-		{
-			// ... MMA code ...
-		}
-		*/
 		sharpness = 4.0 * std::accumulate(xPhys.begin(), xPhys.end(), 0.0, 
 			[](double sum, double val) { return sum + val * (1.0 - val); }) / static_cast<double>(ne);
 		auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
@@ -1490,162 +1429,6 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	// export_volume_nifti(pb, xPhys, outDir + "DesignVolume.nii");
 	std::string stlFilename = generate_unique_filename("GLOBAL");
 	export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
-	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
-	std::cout << "\nDone.\n";
-}
-
-// ===== LOCAL (PIO) =====
-void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double rMin, double rHat) {
-	Problem pb; InitialSettings(pb.params);
-	CreateVoxelFEAmodel_Cuboid(pb, nely, nelx, nelz);
-	ApplyBoundaryConditions(pb);
-	const int ne = pb.mesh.numElements;
-	std::vector<double> x(ne, Ve0), xTilde(ne, Ve0), xPhys(ne, Ve0);
-	std::vector<double> eleMod(ne, pb.params.youngsModulus);
-	PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
-	PDEFilter pfLVF = SetupPDEFilter(pb, rHat);
-	// Per-element capacity (fixed) for LVF normalization (matches MATLAB PIO)
-	std::vector<double> volMaxList(ne, Ve0);
-	// MMA state (active elements exclude passives)
-	std::vector<int> activeIdx;
-	activeIdx.reserve(ne);
-	{
-		std::vector<uint8_t> isPassive(ne, 0);
-		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) isPassive[pe] = 1;
-		}
-		for (int i=0;i<ne;i++) if (!isPassive[i]) activeIdx.push_back(i);
-	}
-	std::vector<double> xold1(activeIdx.size(), Ve0), xold2(activeIdx.size(), Ve0);
-	// Build MG hierarchy and fixed masks once; reuse across solves
-	MGPrecondConfig mgcfgStatic_ltv; mgcfgStatic_ltv.nonDyadic = true; mgcfgStatic_ltv.maxLevels = 5; mgcfgStatic_ltv.weight = 0.6;
-	MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; MG_BuildStaticOnce(pb, mgcfgStatic_ltv, H, fixedMasks);
-    
-    double beta = 1.0, eta = 0.5; int p = 16, pMax = 128; int loopbeta=0;
-	std::vector<double> uFreeWarm; // warm-start buffer for PCG
-    // Fully solid reference compliance (for ce normalization like MATLAB PIO)
-    double CsolidRef = 0.0;
-    {
-        std::vector<double> eleSolid(ne, pb.params.youngsModulus);
-        std::vector<double> U(pb.mesh.numDOFs, 0.0);
-        std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-        std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
-        MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-        auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleSolid, mgcfg);
-        PCG_free(pb, eleSolid, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
-        scatter_from_free(pb, uFree, U);
-        std::vector<double> ceRef; CsolidRef = ComputeCompliance(pb, eleSolid, U, ceRef);
-    }
-	for (int it=0; it<nLoop; ++it) {
-		loopbeta++;
-		// SIMP modulus
-		for (int e=0;e<ne;e++) {
-			eleMod[e] = pb.params.youngsModulusMin + std::pow(xPhys[e], pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-		}
-		// Solve KU=F
-		auto tSolveStart = std::chrono::steady_clock::now();
-		std::vector<double> U(pb.mesh.numDOFs, 0.0);
-		std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-		if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
-		// Use MG with static hierarchy; per-iter diagonals and SIMP-modulated coarsest
-		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
-        PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
-        if (!std::all_of(uFreeWarm.begin(), uFreeWarm.end(), [](double v){ return std::isfinite(v); })) {
-            MGPrecondConfig mgdiag = mgcfg; mgdiag.maxLevels = 1;
-            auto MG2 = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgdiag);
-            std::fill(uFreeWarm.begin(), uFreeWarm.end(), 0.0);
-            PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG2);
-        }
-		scatter_from_free(pb, uFreeWarm, U);
-		double tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
-        // Compliance sensitivities dc = -dE/drho * ceNorm (normalize by CsolidRef like MATLAB)
-        std::vector<double> ce; double C = ComputeCompliance(pb, eleMod, U, ce);
-		std::vector<double> dc(ne);
-        for (int e=0;e<ne;e++) {
-            double dE = pb.params.simpPenalty * std::pow(std::max(1e-9,xPhys[e]), pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-            double ceNorm = (CsolidRef > 0.0 ? ce[e] / CsolidRef : ce[e]);
-            dc[e] = - dE * ceNorm;
-        }
-		// Local Volume Fraction via PDE filter
-		std::vector<double> xHat; ApplyPDEFilter(pb, pfLVF, xPhys, xHat);
-		double accum=0.0; for (int e=0;e<ne;e++) {
-			double ratio = xHat[e] / std::max(1e-12, volMaxList[e]);
-			accum += std::pow(ratio, p);
-		}
-		double f = std::pow(accum / ne, 1.0/p) - 1.0; // <= 0
-		// df/dx via chain: df/dxHat * dxHat/dxPhys; approximate df/dxPhys by filtering gradient once
-		std::vector<double> dfdx_hat(ne);
-		double coeff = std::pow(accum/ne, 1.0/p - 1.0) / ne;
-		for (int e=0;e<ne;e++) {
-			double vcap = std::max(1e-12, volMaxList[e]);
-			double ratio = xHat[e] / vcap;
-			dfdx_hat[e] = coeff * p * std::pow(std::max(1e-12, ratio), p-1) * (1.0 / vcap);
-		}
-		std::vector<double> dfdx_phys; ApplyPDEFilter(pb, pfLVF, dfdx_hat, dfdx_phys);
-		// Heaviside projection and its derivative wrt xTilde
-		auto H = [&](double v){ return (std::tanh(beta*eta) + std::tanh(beta*(v-eta))) / (std::tanh(beta*eta) + std::tanh(beta*(1-eta))); };
-		auto dH = [&](double v){ double th = std::tanh(beta*(v-eta)); double den = (std::tanh(beta*eta) + std::tanh(beta*(1-eta))); return beta*(1-th*th)/den; };
-		std::vector<double> dx(ne); for (int e=0;e<ne;e++) dx[e] = dH(xTilde[e]);
-		// Filter dc and dfdx to design space via PDE filter and chain with dH
-		std::vector<double> dc_filt; ApplyPDEFilter(pb, pfFilter, std::vector<double>(dc.begin(), dc.end()), dc_filt);
-		for (int e=0;e<ne;e++) dc_filt[e] *= dx[e];
-		std::vector<double> dfdx_filt; ApplyPDEFilter(pb, pfFilter, dfdx_phys, dfdx_filt);
-		for (int e=0;e<ne;e++) dfdx_filt[e] *= dx[e];
-		// MMA update (m=1 constraint over active elements)
-		const int mcons = 1;
-		const int nvars = (int)activeIdx.size();
-		std::vector<double> xvalM(nvars), xminM(nvars), xmaxM(nvars), df0dxM(nvars), dg_colMajor(nvars);
-		for (int i=0;i<nvars;i++) {
-			int e = activeIdx[i];
-			xvalM[i] = x[e];
-			df0dxM[i] = dc_filt[e];
-			dg_colMajor[i] = dfdx_filt[e];
-		}
-		const double move = 0.1;
-		for (int i=0;i<nvars;i++) {
-			double lo = std::max(0.0, xvalM[i] - move);
-			double hi = std::min(1.0, xvalM[i] + move);
-			xminM[i] = lo; xmaxM[i] = hi;
-		}
-		std::vector<double> gx_col(1, f);
-		std::vector<double> xmma;
-		top3d::mma::MMAseq(mcons, nvars, xvalM, xminM, xmaxM, xold1, xold2, df0dxM, gx_col, dg_colMajor, xmma);
-		double change=0.0;
-		for (int i=0;i<nvars;i++) {
-			int e = activeIdx[i];
-			change = std::max(change, std::abs(xmma[i] - x[e]));
-			x[e] = std::clamp(xmma[i], 0.0, 1.0);
-		}
-		// Enforce passive elements
-		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) x[pe] = 1.0;
-		}
-		// Update xTilde and xPhys
-		ApplyPDEFilter(pb, pfFilter, x, xTilde);
-		for (int e=0;e<ne;e++) xPhys[e] = H(xTilde[e]);
-		if (pb.extBC && !pb.extBC->passiveCompact.empty()) {
-			for (int pe : pb.extBC->passiveCompact) if (pe>=0 && pe<ne) xPhys[pe] = 1.0;
-		}
-		if (beta < pMax && loopbeta >= 40) { beta *= 2.0; loopbeta = 0; }
-		std::cout << " It.:" << (it+1) << " Obj.:" << C << " Cons.:" << f << " CG:" << tSolveTime << "s\n";
-		if (change < 1e-4) break;
-	}
-	
-	// Exports
-	const std::string stlDir = out_stl_dir_for_cwd();
-	ensure_out_dir(stlDir);
-	// Adapt iso based on density distribution to avoid empty STL when densities are uniformly low
-	double minVal = 1.0, maxVal = 0.0, sumVal = 0.0; int cntGE03 = 0;
-	for (double v : xPhys) { minVal = std::min(minVal, v); maxVal = std::max(maxVal, v); sumVal += v; if (v >= 0.3) cntGE03++; }
-	double meanVal = sumVal / std::max(1, (int)xPhys.size());
-	double fracGE03 = (double)cntGE03 / std::max(1, (int)xPhys.size());
-	float iso = 0.3f;
-	if (maxVal < 0.3) iso = std::max(0.05f, 0.5f * (float)maxVal);
-	else if (fracGE03 < 0.01) iso = 0.2f;
-	std::cout << "Density stats -> min:" << minVal << " max:" << maxVal << " mean:" << meanVal << " frac>=0.3:" << fracGE03 << " iso:" << iso << "\n";
-	std::string stlFilename = generate_unique_filename("LOCAL");
-	export_surface_stl(pb, xPhys, stlDir + stlFilename, iso);
 	std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
 	std::cout << "\nDone.\n";
 }

@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o"
-  "CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o.d"
+  "CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o"
+  "CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o.d"
   "top3d_xl_cli"
   "top3d_xl_cli.pdb"
 )

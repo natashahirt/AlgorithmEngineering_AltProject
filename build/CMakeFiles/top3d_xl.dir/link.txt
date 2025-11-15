@@ -1,2 +1,2 @@
-/usr/bin/ar qc libtop3d_xl.a CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.o CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.o CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.o CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.o
+/usr/bin/ar qc libtop3d_xl.a CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
 /usr/bin/ranlib libtop3d_xl.a

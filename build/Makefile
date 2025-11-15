@@ -142,125 +142,77 @@ top3d_xl_cli/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/build
 .PHONY : top3d_xl_cli/fast
 
-src/apps/top3d_xl_cli/main.o: src/apps/top3d_xl_cli/main.cpp.o
-.PHONY : src/apps/top3d_xl_cli/main.o
+src/isosurface.o: src/isosurface.cpp.o
+.PHONY : src/isosurface.o
 
 # target to build an object file
-src/apps/top3d_xl_cli/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.o
-.PHONY : src/apps/top3d_xl_cli/main.cpp.o
+src/isosurface.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
+.PHONY : src/isosurface.cpp.o
 
-src/apps/top3d_xl_cli/main.i: src/apps/top3d_xl_cli/main.cpp.i
-.PHONY : src/apps/top3d_xl_cli/main.i
+src/isosurface.i: src/isosurface.cpp.i
+.PHONY : src/isosurface.i
 
 # target to preprocess a source file
-src/apps/top3d_xl_cli/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.i
-.PHONY : src/apps/top3d_xl_cli/main.cpp.i
+src/isosurface.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.i
+.PHONY : src/isosurface.cpp.i
 
-src/apps/top3d_xl_cli/main.s: src/apps/top3d_xl_cli/main.cpp.s
-.PHONY : src/apps/top3d_xl_cli/main.s
+src/isosurface.s: src/isosurface.cpp.s
+.PHONY : src/isosurface.s
 
 # target to generate assembly for a file
-src/apps/top3d_xl_cli/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/apps/top3d_xl_cli/main.cpp.s
-.PHONY : src/apps/top3d_xl_cli/main.cpp.s
+src/isosurface.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.s
+.PHONY : src/isosurface.cpp.s
 
-src/core/top3d_xl.o: src/core/top3d_xl.cpp.o
-.PHONY : src/core/top3d_xl.o
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
 
 # target to build an object file
-src/core/top3d_xl.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.o
-.PHONY : src/core/top3d_xl.cpp.o
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
 
-src/core/top3d_xl.i: src/core/top3d_xl.cpp.i
-.PHONY : src/core/top3d_xl.i
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-src/core/top3d_xl.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.i
-.PHONY : src/core/top3d_xl.cpp.i
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-src/core/top3d_xl.s: src/core/top3d_xl.cpp.s
-.PHONY : src/core/top3d_xl.s
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-src/core/top3d_xl.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.s
-.PHONY : src/core/top3d_xl.cpp.s
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
-src/geometry/isosurface.o: src/geometry/isosurface.cpp.o
-.PHONY : src/geometry/isosurface.o
+src/top3d_xl.o: src/top3d_xl.cpp.o
+.PHONY : src/top3d_xl.o
 
 # target to build an object file
-src/geometry/isosurface.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.o
-.PHONY : src/geometry/isosurface.cpp.o
+src/top3d_xl.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o
+.PHONY : src/top3d_xl.cpp.o
 
-src/geometry/isosurface.i: src/geometry/isosurface.cpp.i
-.PHONY : src/geometry/isosurface.i
-
-# target to preprocess a source file
-src/geometry/isosurface.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.i
-.PHONY : src/geometry/isosurface.cpp.i
-
-src/geometry/isosurface.s: src/geometry/isosurface.cpp.s
-.PHONY : src/geometry/isosurface.s
-
-# target to generate assembly for a file
-src/geometry/isosurface.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.s
-.PHONY : src/geometry/isosurface.cpp.s
-
-src/io/topvoxel.o: src/io/topvoxel.cpp.o
-.PHONY : src/io/topvoxel.o
-
-# target to build an object file
-src/io/topvoxel.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.o
-.PHONY : src/io/topvoxel.cpp.o
-
-src/io/topvoxel.i: src/io/topvoxel.cpp.i
-.PHONY : src/io/topvoxel.i
+src/top3d_xl.i: src/top3d_xl.cpp.i
+.PHONY : src/top3d_xl.i
 
 # target to preprocess a source file
-src/io/topvoxel.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.i
-.PHONY : src/io/topvoxel.cpp.i
+src/top3d_xl.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.i
+.PHONY : src/top3d_xl.cpp.i
 
-src/io/topvoxel.s: src/io/topvoxel.cpp.s
-.PHONY : src/io/topvoxel.s
-
-# target to generate assembly for a file
-src/io/topvoxel.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.s
-.PHONY : src/io/topvoxel.cpp.s
-
-src/optimization/MMAseq.o: src/optimization/MMAseq.cpp.o
-.PHONY : src/optimization/MMAseq.o
-
-# target to build an object file
-src/optimization/MMAseq.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.o
-.PHONY : src/optimization/MMAseq.cpp.o
-
-src/optimization/MMAseq.i: src/optimization/MMAseq.cpp.i
-.PHONY : src/optimization/MMAseq.i
-
-# target to preprocess a source file
-src/optimization/MMAseq.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.i
-.PHONY : src/optimization/MMAseq.cpp.i
-
-src/optimization/MMAseq.s: src/optimization/MMAseq.cpp.s
-.PHONY : src/optimization/MMAseq.s
+src/top3d_xl.s: src/top3d_xl.cpp.s
+.PHONY : src/top3d_xl.s
 
 # target to generate assembly for a file
-src/optimization/MMAseq.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.s
-.PHONY : src/optimization/MMAseq.cpp.s
+src/top3d_xl.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s
+.PHONY : src/top3d_xl.cpp.s
 
 # Help Target
 help:
@@ -272,21 +224,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... top3d_xl"
 	@echo "... top3d_xl_cli"
-	@echo "... src/apps/top3d_xl_cli/main.o"
-	@echo "... src/apps/top3d_xl_cli/main.i"
-	@echo "... src/apps/top3d_xl_cli/main.s"
-	@echo "... src/core/top3d_xl.o"
-	@echo "... src/core/top3d_xl.i"
-	@echo "... src/core/top3d_xl.s"
-	@echo "... src/geometry/isosurface.o"
-	@echo "... src/geometry/isosurface.i"
-	@echo "... src/geometry/isosurface.s"
-	@echo "... src/io/topvoxel.o"
-	@echo "... src/io/topvoxel.i"
-	@echo "... src/io/topvoxel.s"
-	@echo "... src/optimization/MMAseq.o"
-	@echo "... src/optimization/MMAseq.i"
-	@echo "... src/optimization/MMAseq.s"
+	@echo "... src/isosurface.o"
+	@echo "... src/isosurface.i"
+	@echo "... src/isosurface.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/top3d_xl.o"
+	@echo "... src/top3d_xl.i"
+	@echo "... src/top3d_xl.s"
 .PHONY : help
 
 

@@ -8,10 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/core/top3d_xl.cpp" "CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/core/top3d_xl.cpp.o.d"
-  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/geometry/isosurface.cpp" "CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/geometry/isosurface.cpp.o.d"
-  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io/topvoxel.cpp" "CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/io/topvoxel.cpp.o.d"
-  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/optimization/MMAseq.cpp" "CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/optimization/MMAseq.cpp.o.d"
+  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp" "CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o.d"
+  "/home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp" "CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o" "gcc" "CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

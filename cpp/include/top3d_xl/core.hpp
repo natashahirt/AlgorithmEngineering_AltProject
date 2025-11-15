@@ -7,7 +7,6 @@
 #include <functional>
 #include <cstdint>
 #include <optional>
-#include "top3d_xl/io/topvoxel.hpp"
 
 namespace top3d {
 
@@ -67,10 +66,6 @@ struct Problem {
 
     // Design variables
     std::vector<double> density;    // per element x, size = numElements
-    // Optional external model data / initial densities
-    std::vector<double> initialDensityFromFile; // optional per-element initial rho (compact)
-    std::optional<ExternalBC> extBC;
-    std::optional<ExternalLoads> extLoads;
 };
 
 struct PDEFilter {
@@ -135,9 +130,6 @@ double ComputeCompliance(const Problem& pb,
 
 // Run GLOBAL topology optimization (simplified, no PDE filter)
 void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin);
-
-// Run LOCAL (PIO) topology optimization with Heaviside + p-norm LVF
-void TOP3D_XL_LOCAL(int nely, int nelx, int nelz, double Ve0, int nLoop, double rMin, double rHat);
 
 // ================= Multigrid scaffolding (Step 2) =================
 struct MGLevel {
