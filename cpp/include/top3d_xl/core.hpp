@@ -33,6 +33,11 @@ struct CartesianMesh {
 	int resY = 0;
 	int resZ = 0;
 
+	// Original (pre-padding) element resolutions
+	int origResX = 0;
+	int origResY = 0;
+	int origResZ = 0;
+
 	std::array<double,3> eleSize {1.0,1.0,1.0};
 
 	int numElements = 0;

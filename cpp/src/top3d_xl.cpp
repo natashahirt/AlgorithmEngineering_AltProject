@@ -144,6 +144,10 @@ std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize) {
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	CartesianMesh& mesh = pb.mesh;
 	mesh.eleSize = {1.0,1.0,1.0};
+	// Record original resolutions (elements) before padding
+	mesh.origResX = nelx;
+	mesh.origResY = nely;
+	mesh.origResZ = nelz;
 
     // Mirror MATLAB padding: compute levels and pad dims to multiples of 2^L
     const std::uint64_t numSolidVoxels = static_cast<std::uint64_t>(nely) * static_cast<std::uint64_t>(nelx) * static_cast<std::uint64_t>(nelz);
@@ -265,6 +269,7 @@ void ApplyBoundaryConditions(Problem& pb) {
     const int nx = pb.mesh.resX;
     const int nz = pb.mesh.resZ;
     const int nnx = nx+1, nny=ny+1, nnz=nz+1;
+    const int origNx = pb.mesh.origResX; // original element count in X
 
     // Reset DOF masks and loads
     std::fill(pb.isFreeDOF.begin(), pb.isFreeDOF.end(), 1);
@@ -284,18 +289,22 @@ void ApplyBoundaryConditions(Problem& pb) {
 		pb.isFreeDOF[idx_dof(n,2)] = 0;
 	}
 
-	std::vector<int> loadedNodes;
-	int count=0;
-	for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
-		for (int iy=0; iy<nny; ++iy) {
-			int node = nnx*nny*iz + nnx*iy + nx;
-			loadedNodes.push_back(node);
-			++count;
+	// Apply loads on the right face of the original (pre-padding) domain: ix = origNx
+	{
+		std::vector<int> loadedNodes;
+		int count=0;
+		const int ixLoad = std::min(origNx, nnx-1); // guard
+		for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
+			for (int iy=0; iy<nny; ++iy) {
+				int node = nnx*nny*iz + nnx*iy + ixLoad;
+				loadedNodes.push_back(node);
+				++count;
+			}
 		}
-	}
-	if (count>0) {
-		double fz = -1.0/static_cast<double>(count);
-		for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
+		if (count>0) {
+			double fz = -1.0/static_cast<double>(count);
+			for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
+		}
 	}
 
     // Fix DOFs on nodes not connected to any element (void nodes)
@@ -1385,7 +1394,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			for (int e=0;e<ne;e++) {
 				double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
 				double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
-				xnew[e] = std::clamp(xe, 0.0, 1.0);
+				xe = std::clamp(xe, 0.0, 1.0);
+				xnew[e] = std::max(1.0e-3, xe);
 			}
 			double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
 			if (vol - V0 > 0) l1 = lmid; else l2 = lmid;

@@ -15,7 +15,7 @@ module load cmake/3.27.9
 cd /home/nhirt/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
-PARAMS="12 24 12 0.12 30"
+PARAMS="30 60 30 0.12 30"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl
