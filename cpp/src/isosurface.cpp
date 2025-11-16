@@ -1,4 +1,4 @@
-#include "top3d_xl/geometry/isosurface.hpp"
+#include "geometry/isosurface.hpp"
 #include <cmath>
 #include <cstdint>
 

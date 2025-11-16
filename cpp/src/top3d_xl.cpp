@@ -1,4 +1,4 @@
-#include "top3d_xl/core.hpp"
+#include "core.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -14,13 +14,11 @@
 #include <string>
 #include <fstream>
 #include <stdexcept>
-#include "top3d_xl/export.hpp"
-#include "top3d_xl/geometry/voxel_surface.hpp"
-#include "top3d_xl/multigrid_padding.hpp"
+#include "export.hpp"
+#include "geometry/voxel_surface.hpp"
+#include "multigrid_padding.hpp"
 
 namespace top3d {
-
-static inline int idx_dof(int nodeIdx, int comp) { return 3*nodeIdx + comp; }
 
 // forward declarations for exports
 static void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso);
@@ -237,6 +235,20 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 		}
 	}
 
+	// eDofMat (flattened DOF indices per element: 24 per element)
+	mesh.eDofMat.resize(mesh.numElements * 24);
+	for (int e=0; e<mesh.numElements; ++e) {
+		int nb = e*8;
+		int db = e*24;
+		for (int j=0;j<8;j++) {
+			int n = mesh.eNodMat[nb + j];
+			int d = 3*n;
+			mesh.eDofMat[db + 3*j + 0] = d + 0;
+			mesh.eDofMat[db + 3*j + 1] = d + 1;
+			mesh.eDofMat[db + 3*j + 2] = d + 2;
+		}
+	}
+
 	// Boundary nodes/elements identification
 	std::vector<int> nodDegree(mesh.numNodes, 0);
 	for (int e=0;e<mesh.numElements;e++) {
@@ -284,9 +296,9 @@ void ApplyBoundaryConditions(Problem& pb) {
 		}
 	}
 	for (int n : fixedNodes) {
-		pb.isFreeDOF[idx_dof(n,0)] = 0;
-		pb.isFreeDOF[idx_dof(n,1)] = 0;
-		pb.isFreeDOF[idx_dof(n,2)] = 0;
+		pb.isFreeDOF[3*n + 0] = 0;
+		pb.isFreeDOF[3*n + 1] = 0;
+		pb.isFreeDOF[3*n + 2] = 0;
 	}
 
 	// Apply loads on the right face of the original (pre-padding) domain: ix = origNx
@@ -303,7 +315,7 @@ void ApplyBoundaryConditions(Problem& pb) {
 		}
 		if (count>0) {
 			double fz = -1.0/static_cast<double>(count);
-			for (int n : loadedNodes) pb.F[idx_dof(n,2)] += fz;
+			for (int n : loadedNodes) pb.F[3*n + 2] += fz;
 		}
 	}
 
@@ -315,9 +327,9 @@ void ApplyBoundaryConditions(Problem& pb) {
             for (int j=0;j<8;j++) usedNode[pb.mesh.eNodMat[base+j]] = 1;
         }
         for (int n=0;n<pb.mesh.numNodes;n++) if (!usedNode[n]) {
-            pb.isFreeDOF[idx_dof(n,0)] = 0;
-            pb.isFreeDOF[idx_dof(n,1)] = 0;
-            pb.isFreeDOF[idx_dof(n,2)] = 0;
+            pb.isFreeDOF[3*n + 0] = 0;
+            pb.isFreeDOF[3*n + 1] = 0;
+            pb.isFreeDOF[3*n + 2] = 0;
         }
     }
 
@@ -328,39 +340,48 @@ void ApplyBoundaryConditions(Problem& pb) {
 
 void K_times_u_finest(const Problem& pb, const std::vector<double>& eleModulus,
 					   const std::vector<double>& uFull, std::vector<double>& yFull) {
-	const auto& mesh = pb.mesh;
-	yFull.assign(mesh.numDOFs, 0.0);
-	const auto& Ke = mesh.Ke;
+	// get constants from the problem statement
+	const auto& mesh = pb.mesh; 
+	const auto& Ke = mesh.Ke; 
+	// prep yFull vector (output of K * u)
+	if ((int)yFull.size() == mesh.numDOFs) {
+		std::fill(yFull.begin(), yFull.end(), 0.0);
+	} else {
+		yFull.assign(mesh.numDOFs, 0.0);
+	}
+	// element-local displacement buffer
+	alignas(64) std::array<double,24> ue{};
 
-	std::array<double,24> ue{};
-	std::array<double,24> fe{};
+	// generate pointers for u, y, and elements
+	const double* __restrict__ uPtr = uFull.data();
+	double* __restrict__ yPtr = yFull.data();
+	const int32_t* __restrict__ eDof = mesh.eDofMat.data();
+
 	for (int e=0; e<mesh.numElements; ++e) {
-		// Gather element DOFs (8 nodes x 3 comps)
-		for (int j=0;j<8;j++) {
-			int n = mesh.eNodMat[e*8 + j];
-			ue[3*j+0] = uFull[idx_dof(n,0)];
-			ue[3*j+1] = uFull[idx_dof(n,1)];
-			ue[3*j+2] = uFull[idx_dof(n,2)];
+		const double Ee = eleModulus[e];
+		if (Ee <= 1.0e-16) continue;
+		// gather element DOFs (8 nodes x 3 comps) from uFull global displacement vector
+		{
+			const int32_t* __restrict__ dptr = &eDof[e*24];
+			for (int j=0;j<8;j++) {
+				ue[3*j+0] = uPtr[dptr[3*j+0]];
+				ue[3*j+1] = uPtr[dptr[3*j+1]];
+				ue[3*j+2] = uPtr[dptr[3*j+2]];
+			}
 		}
-		// fe = (Ee*Ke) * ue
-		std::fill(fe.begin(), fe.end(), 0.0);
-		double Ee = eleModulus[e];
-		for (int i=0;i<24;i++) {
-			double sum=0.0;
-			const double* Ki = &Ke[i*24];
-			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-			fe[i] = Ee * sum;
-		}
-		// Scatter to global yFull
-		for (int j=0;j<8;j++) {
-			int n = mesh.eNodMat[e*8 + j];
-			yFull[idx_dof(n,0)] += fe[3*j+0];
-			yFull[idx_dof(n,1)] += fe[3*j+1];
-			yFull[idx_dof(n,2)] += fe[3*j+2];
+		// direct scatter: y[dof_i] += Ee * (Ke[i,:] · ue)
+		{
+			const int32_t* __restrict__ dptr = &eDof[e*24];
+			for (int i=0;i<24;i++) {
+				const double* __restrict__ Ki = &Ke[i*24];
+				double sum = 0.0;
+				#pragma omp simd reduction(+:sum)
+				for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
+				yPtr[dptr[i]] += Ee * sum;
+			}
 		}
 	}
-	// Impose Dirichlet by zeroing rows (simple but adequate for operator on free subspace wrapper)
-	for (int i=0;i<mesh.numDOFs;i++) if (!pb.isFreeDOF[i]) yFull[i] = 0.0;
+	// No Dirichlet row zeroing (callers on free subspace don't require)
 }
 
 static void restrict_to_free(const Problem& pb, const std::vector<double>& full, std::vector<double>& freev) {
@@ -378,50 +399,65 @@ int PCG_free(const Problem& pb,
 			  const std::vector<double>& bFree,
 			  std::vector<double>& xFree,
 			  double tol, int maxIt,
-			  Preconditioner M) {
-    std::vector<double> r = bFree;
-    std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
-    // r = b - A*x (if nonzero initial guess)
-    if (!xFree.empty()) {
-        std::vector<double> xfull(pb.mesh.numDOFs, 0.0), yfull;
-        scatter_from_free(pb, xFree, xfull);
-        K_times_u_finest(pb, eleModulus, xfull, yfull);
-        std::vector<double> yfree; restrict_to_free(pb, yfull, yfree);
-        for (size_t i=0;i<r.size();++i) r[i] -= yfree[i];
-    }
-    if (xFree.empty()) xFree.assign(r.size(), 0.0);
-    // z0 and p0
-    if (M) M(r, z); else z = r;
-    double rz_old = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
-    p = z;
+			  Preconditioner M,
+			  std::vector<double>* xfull,
+			  std::vector<double>* yfull,
+			  std::vector<double>* pfull,
+			  std::vector<double>* Apfull,
+			  std::vector<double>* freeTmp) {
+	std::vector<double> r = bFree;
+	std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
 
-    const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
-    for (int it=0; it<maxIt; ++it) {
-        // Ap = A*p
-        std::vector<double> pfull(pb.mesh.numDOFs, 0.0), Apfull;
-        scatter_from_free(pb, p, pfull);
-        K_times_u_finest(pb, eleModulus, pfull, Apfull);
-        std::vector<double> Apfree; restrict_to_free(pb, Apfull, Apfree);
-        Ap.swap(Apfree);
+	// Acquire buffers (use provided or local)
+	std::vector<double> xfull_loc, yfull_loc, pfull_loc, Apfull_loc, freeTmp_loc;
+	auto& X = xfull ? *xfull : (xfull_loc = std::vector<double>(pb.mesh.numDOFs, 0.0), xfull_loc);
+	auto& Y = yfull ? *yfull : (yfull_loc = std::vector<double>(pb.mesh.numDOFs, 0.0), yfull_loc);
+	auto& P = pfull ? *pfull : (pfull_loc = std::vector<double>(pb.mesh.numDOFs, 0.0), pfull_loc);
+	auto& A = Apfull ? *Apfull : (Apfull_loc = std::vector<double>(pb.mesh.numDOFs, 0.0), Apfull_loc);
+	auto& F = freeTmp ? *freeTmp : (freeTmp_loc = std::vector<double>(pb.freeDofIndex.size(), 0.0), freeTmp_loc);
+	if ((int)X.size() != pb.mesh.numDOFs) X.assign(pb.mesh.numDOFs, 0.0);
+	if ((int)Y.size() != pb.mesh.numDOFs) Y.assign(pb.mesh.numDOFs, 0.0);
+	if ((int)P.size() != pb.mesh.numDOFs) P.assign(pb.mesh.numDOFs, 0.0);
+	if ((int)A.size() != pb.mesh.numDOFs) A.assign(pb.mesh.numDOFs, 0.0);
+	if ((int)F.size() != (int)pb.freeDofIndex.size()) F.assign(pb.freeDofIndex.size(), 0.0);
 
-        double denom = std::max(1e-30, std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0));
-        double alpha = rz_old / denom;
+	// r = b - A*x (if nonzero initial guess)
+	if (!xFree.empty()) {
+		std::fill(X.begin(), X.end(), 0.0);
+		scatter_from_free(pb, xFree, X);
+		K_times_u_finest(pb, eleModulus, X, Y);
+		restrict_to_free(pb, Y, F);
+		for (size_t i=0;i<r.size();++i) r[i] -= F[i];
+	}
+	if (xFree.empty()) xFree.assign(r.size(), 0.0);
 
-        for (size_t i=0;i<xFree.size();++i) xFree[i] += alpha * p[i];
-        for (size_t i=0;i<r.size();++i)     r[i]     -= alpha * Ap[i];
+	if (M) M(r, z); else z = r;
+	double rz_old = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+	p = z;
 
-        double res = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0)) / std::max(1e-30, normb);
-        if (res < tol) return it+1;
+	const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
+	for (int it=0; it<maxIt; ++it) {
+		std::fill(P.begin(), P.end(), 0.0);
+		scatter_from_free(pb, p, P);
+		K_times_u_finest(pb, eleModulus, P, A);
+		restrict_to_free(pb, A, Ap);
 
-        // z_{k+1}
-        if (M) M(r, z); else z = r;
-        double rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+		double denom = std::max(1e-30, std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0));
+		double alpha = rz_old / denom;
 
-        double beta = rz_new / std::max(1e-30, rz_old);
-        for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
-        rz_old = rz_new;
-    }
-    return maxIt;
+		for (size_t i=0;i<xFree.size();++i) xFree[i] += alpha * p[i];
+		for (size_t i=0;i<r.size();++i)     r[i]     -= alpha * Ap[i];
+
+		double res = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0)) / std::max(1e-30, normb);
+		if (res < tol) return it+1;
+
+		if (M) M(r, z); else z = r;
+		double rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+		double beta = rz_new / std::max(1e-30, rz_old);
+		for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
+		rz_old = rz_new;
+	}
+	return maxIt;
 }
 
 
@@ -434,15 +470,18 @@ double ComputeCompliance(const Problem& pb,
 	ceList.assign(mesh.numElements, 0.0);
 	std::array<double,24> ue{};
 	for (int e=0;e<mesh.numElements;e++) {
-		for (int j=0;j<8;j++) {
-			int n = mesh.eNodMat[e*8 + j];
-			ue[3*j+0] = uFull[idx_dof(n,0)];
-			ue[3*j+1] = uFull[idx_dof(n,1)];
-			ue[3*j+2] = uFull[idx_dof(n,2)];
+		{
+			const int32_t* __restrict__ dptr = &mesh.eDofMat[e*24];
+			for (int j=0;j<8;j++) {
+				ue[3*j+0] = uFull[dptr[3*j+0]];
+				ue[3*j+1] = uFull[dptr[3*j+1]];
+				ue[3*j+2] = uFull[dptr[3*j+2]];
+			}
 		}
 		double tmp[24];
 		for (int i=0;i<24;i++) {
 			double sum=0.0; const double* Ki = &Ke[i*24];
+			#pragma omp simd reduction(+:sum)
 			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
 			tmp[i] = sum;
 		}
@@ -1306,6 +1345,13 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 	std::vector<double> eleMod(ne, pb.params.youngsModulus);
 	std::vector<double> uFreeWarm; // warm-start buffer for PCG
 
+	// Initialize reused vectors
+	std::vector<double> xfull(pb.mesh.numDOFs, 0.0);
+	std::vector<double> yfull(pb.mesh.numDOFs, 0.0);
+	std::vector<double> pfull(pb.mesh.numDOFs, 0.0);
+	std::vector<double> Apfull(pb.mesh.numDOFs, 0.0);
+	std::vector<double> freeTmp(pb.freeDofIndex.size(), 0.0);
+
 	// Solve fully solid for reference
 	{
 		tStart = std::chrono::steady_clock::now();
@@ -1315,7 +1361,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
-        int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG);
+        int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG,
+			&xfull, &yfull, &pfull, &Apfull, &freeTmp);
 		scatter_from_free(pb, uFree, U);
 		double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 		CsolidRef = Csolid;
@@ -1352,7 +1399,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		// Reuse static MG context for current SIMP-modified modulus
 		MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 		auto MG = MakeMGDiagonalPreconditionerFromStatic(pb, H, fixedMasks, eleMod, mgcfg);
-        int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG);
+        int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG,
+			&xfull, &yfull, &pfull, &Apfull, &freeTmp);
 		scatter_from_free(pb, uFreeWarm, U);
 		auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 		

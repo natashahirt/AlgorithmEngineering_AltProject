@@ -3,7 +3,7 @@
 
 CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
  /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/geometry/isosurface.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/geometry/isosurface.hpp
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/array
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/alloc_traits.h
@@ -125,10 +125,10 @@ CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
 
 CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o
  /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/core.hpp
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/export.hpp
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/geometry/voxel_surface.hpp
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/multigrid_padding.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/core.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/export.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/geometry/voxel_surface.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid_padding.hpp
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/algorithm
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/array
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h

@@ -54,6 +54,8 @@ struct CartesianMesh {
 
 	// Element to node connectivity (compact indices), shape: numElements x 8
 	std::vector<int32_t> eNodMat; // stored row-major: [ele][8]
+	// Element to global DOF connectivity, shape: numElements x 24 (8 nodes x 3 dofs)
+	std::vector<int32_t> eDofMat; // stored row-major: [ele][24]
 
 	// Element stiffness (24x24) for unit modulus
 	std::array<double,24*24> Ke{};
@@ -101,6 +103,15 @@ void ApplyBoundaryConditions(Problem& pb);
 std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize);
 
 // Matrix-free K·u product on finest level
+/**
+Apply global stiffness operator to displacement vector. This makes use of the fact that
+every element at the finest level has the same Ke matrix (24x24, because 8 nodes * 3 DoFs)
+so we only need to store one version of it. 
+- Compute yFull = K(uFull) where yFull = output vector and uFull = global displacement vector
+  yFull is the internal forces within each element. At equilibrium, Ku = yFull = F
+  So residual is r = F - yFull, which we're trying to minimize over the course of the optimization
+- need ue (element-local displacement vector from uFull) and fe (element-local force vector = Ee * Ke * ue)
+*/
 void K_times_u_finest(const Problem& pb, const std::vector<double>& eleModulus,
 				   const std::vector<double>& uFull, std::vector<double>& yFull);
 
@@ -118,7 +129,12 @@ int PCG_free(const Problem& pb,
 		  const std::vector<double>& bFree,
 		  std::vector<double>& xFree,
 		  double tol, int maxIt,
-		  Preconditioner M = Preconditioner{});
+		  Preconditioner M = Preconditioner{},
+		  std::vector<double>* xfull = nullptr,
+		  std::vector<double>* yfull = nullptr,
+		  std::vector<double>* pfull = nullptr,
+		  std::vector<double>* Apfull = nullptr,
+		  std::vector<double>* freeTmp = nullptr);
 
 // Optional: Multigrid preconditioner config (diagonal-only V-cycle)
 struct MGPrecondConfig {

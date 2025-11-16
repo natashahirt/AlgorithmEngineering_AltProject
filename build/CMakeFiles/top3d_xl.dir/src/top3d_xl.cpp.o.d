@@ -1,7 +1,7 @@
 CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o: \
  /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp \
  /usr/include/stdc-predef.h \
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/core.hpp \
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/core.hpp \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/vector \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/bits/stl_algobase.h \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -227,8 +227,8 @@ CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o: \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu/bits/basic_file.h \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu/bits/c++io.h \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/bits/fstream.tcc \
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/export.hpp \
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/export.hpp \
  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/cstring \
  /usr/include/string.h /usr/include/strings.h \
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/geometry/voxel_surface.hpp \
- /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/top3d_xl/multigrid_padding.hpp
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/geometry/voxel_surface.hpp \
+ /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid_padding.hpp
