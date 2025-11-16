@@ -186,8 +186,9 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 		}
 	}
 	mesh.numElements = static_cast<int>(mesh.eleMapBack.size());
-	mesh.eleMapForward.assign(nx*ny*nz, 0);
-	for (int i=0;i<mesh.numElements;i++) mesh.eleMapForward[ mesh.eleMapBack[i] ] = i+1;
+	mesh.eleMapForward.assign(nx*ny*nz, -1);
+	for (int i=0;i<mesh.numElements;i++) 
+		mesh.eleMapForward[ mesh.eleMapBack[i] ] = i;
 
 	// Node numbering on full grid
 	const int nnx = nx+1, nny = ny+1, nnz = nz+1;
@@ -195,7 +196,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	mesh.numDOFs = mesh.numNodes*3;
 
 	mesh.nodMapBack.resize(mesh.numNodes);
-	std::iota(mesh.nodMapBack.begin(), mesh.nodMapBack.end(), 1);
+	std::iota(mesh.nodMapBack.begin(), mesh.nodMapBack.end(), 0);
 	mesh.nodMapForward.resize(mesh.numNodes);
 	for (int i=0;i<mesh.numNodes;i++) mesh.nodMapForward[i] = i;
 
@@ -207,8 +208,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 			for (int ey=0; ey<ny; ++ey) {
 				int fullIdx = ny*nx*ez + ny*ex + (ny-1 - ey);
 				int comp = mesh.eleMapForward[fullIdx];
-				if (comp==0) continue;
-				int eComp = comp-1;
+				if (comp < 0) continue;
 				auto nodeIndex = [&](int ix,int iy,int iz){
 					return (nnx*nny*iz + nnx*iy + ix);
 				};
@@ -221,7 +221,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 				int n6 = nodeIndex(ex+1, ny-ey,   ez+1);
 				int n7 = nodeIndex(ex+1, ny-ey-1, ez+1);
 				int n8 = nodeIndex(ex,   ny-ey-1, ez+1);
-				int base = eComp*8;
+				int base = comp*8;
 				mesh.eNodMat[base+0] = n1;
 				mesh.eNodMat[base+1] = n2;
 				mesh.eNodMat[base+2] = n3;
