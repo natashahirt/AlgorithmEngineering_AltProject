@@ -440,19 +440,37 @@ int PCG_free(const Problem& pb,
 		std::fill(P.begin(), P.end(), 0.0);
 		scatter_from_free(pb, p, P);
 		K_times_u_finest(pb, eleModulus, P, A);
-		restrict_to_free(pb, A, Ap);
 
-		double denom = std::max(1e-30, std::inner_product(p.begin(), p.end(), Ap.begin(), 0.0));
+		// Fused restrict (A -> Ap) and denom = p·Ap
+		double denom = 0.0;
+		Ap.resize(p.size());
+		for (size_t i=0;i<p.size();++i) {
+			int gi = pb.freeDofIndex[i];
+			double api = A[gi];
+			Ap[i] = api;
+			denom += p[i] * api;
+		}
+		denom = std::max(1e-30, denom);
 		double alpha = rz_old / denom;
 
-		for (size_t i=0;i<xFree.size();++i) xFree[i] += alpha * p[i];
-		for (size_t i=0;i<r.size();++i)     r[i]     -= alpha * Ap[i];
-
-		double res = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0)) / std::max(1e-30, normb);
+		// Fused updates of x and r and residual norm
+		double rnorm2 = 0.0;
+		for (size_t i=0;i<p.size();++i) {
+			xFree[i] += alpha * p[i];
+			r[i]     -= alpha * Ap[i];
+			rnorm2   += r[i] * r[i];
+		}
+		double res = std::sqrt(rnorm2) / std::max(1e-30, normb);
 		if (res < tol) return it+1;
 
 		if (M) M(r, z); else z = r;
-		double rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+		double rz_new;
+		if (M) {
+			rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+		} else {
+			// z == r
+			rz_new = rnorm2;
+		}
 		double beta = rz_new / std::max(1e-30, rz_old);
 		for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
 		rz_old = rz_new;
