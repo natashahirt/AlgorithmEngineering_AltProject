@@ -6,21 +6,36 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(top3d_xl
-    src/top3d_xl.cpp
-    src/isosurface.cpp
+    src/core.cpp
+    src/fea.cpp
+    src/solver.cpp
+    src/filter.cpp
+    src/multigrid/hierarchy.cpp
+    src/multigrid/transfers.cpp
+    src/multigrid/masks.cpp
+    src/multigrid/diagonal.cpp
+    src/multigrid/coarsest.cpp
+    src/multigrid/preconditioner.cpp
+    src/io.cpp
+    src/driver.cpp
 )
 
 target_include_directories(top3d_xl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_sources(top3d_xl PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/core.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/multigrid_padding.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/export.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/geometry/voxel_surface.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/geometry/isosurface.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/fea.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/solver.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/filter.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/io.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/driver.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/multigrid/multigrid.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/multigrid/padding.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/geometry_out/export_stl.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/geometry_out/voxel_surface.hpp
 )
 
 add_executable(top3d_xl_cli
-    src/main.cpp
+    apps/top3d_cli.cpp
 )
 
 target_link_libraries(top3d_xl_cli PRIVATE top3d_xl)

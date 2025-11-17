@@ -142,77 +142,317 @@ top3d_xl_cli/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/build
 .PHONY : top3d_xl_cli/fast
 
-src/isosurface.o: src/isosurface.cpp.o
-.PHONY : src/isosurface.o
+apps/top3d_cli.o: apps/top3d_cli.cpp.o
+.PHONY : apps/top3d_cli.o
 
 # target to build an object file
-src/isosurface.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
-.PHONY : src/isosurface.cpp.o
+apps/top3d_cli.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/apps/top3d_cli.cpp.o
+.PHONY : apps/top3d_cli.cpp.o
 
-src/isosurface.i: src/isosurface.cpp.i
-.PHONY : src/isosurface.i
+apps/top3d_cli.i: apps/top3d_cli.cpp.i
+.PHONY : apps/top3d_cli.i
 
 # target to preprocess a source file
-src/isosurface.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.i
-.PHONY : src/isosurface.cpp.i
+apps/top3d_cli.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/apps/top3d_cli.cpp.i
+.PHONY : apps/top3d_cli.cpp.i
 
-src/isosurface.s: src/isosurface.cpp.s
-.PHONY : src/isosurface.s
+apps/top3d_cli.s: apps/top3d_cli.cpp.s
+.PHONY : apps/top3d_cli.s
 
 # target to generate assembly for a file
-src/isosurface.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/isosurface.cpp.s
-.PHONY : src/isosurface.cpp.s
+apps/top3d_cli.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/apps/top3d_cli.cpp.s
+.PHONY : apps/top3d_cli.cpp.s
 
-src/main.o: src/main.cpp.o
-.PHONY : src/main.o
+src/core.o: src/core.cpp.o
+.PHONY : src/core.o
 
 # target to build an object file
-src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+src/core.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core.cpp.o
+.PHONY : src/core.cpp.o
 
-src/main.i: src/main.cpp.i
-.PHONY : src/main.i
+src/core.i: src/core.cpp.i
+.PHONY : src/core.i
 
 # target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
+src/core.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core.cpp.i
+.PHONY : src/core.cpp.i
 
-src/main.s: src/main.cpp.s
-.PHONY : src/main.s
+src/core.s: src/core.cpp.s
+.PHONY : src/core.s
 
 # target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl_cli.dir/build.make CMakeFiles/top3d_xl_cli.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+src/core.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/core.cpp.s
+.PHONY : src/core.cpp.s
 
-src/top3d_xl.o: src/top3d_xl.cpp.o
-.PHONY : src/top3d_xl.o
+src/driver.o: src/driver.cpp.o
+.PHONY : src/driver.o
 
 # target to build an object file
-src/top3d_xl.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o
-.PHONY : src/top3d_xl.cpp.o
+src/driver.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/driver.cpp.o
+.PHONY : src/driver.cpp.o
 
-src/top3d_xl.i: src/top3d_xl.cpp.i
-.PHONY : src/top3d_xl.i
+src/driver.i: src/driver.cpp.i
+.PHONY : src/driver.i
 
 # target to preprocess a source file
-src/top3d_xl.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.i
-.PHONY : src/top3d_xl.cpp.i
+src/driver.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/driver.cpp.i
+.PHONY : src/driver.cpp.i
 
-src/top3d_xl.s: src/top3d_xl.cpp.s
-.PHONY : src/top3d_xl.s
+src/driver.s: src/driver.cpp.s
+.PHONY : src/driver.s
 
 # target to generate assembly for a file
-src/top3d_xl.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s
-.PHONY : src/top3d_xl.cpp.s
+src/driver.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/driver.cpp.s
+.PHONY : src/driver.cpp.s
+
+src/fea.o: src/fea.cpp.o
+.PHONY : src/fea.o
+
+# target to build an object file
+src/fea.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/fea.cpp.o
+.PHONY : src/fea.cpp.o
+
+src/fea.i: src/fea.cpp.i
+.PHONY : src/fea.i
+
+# target to preprocess a source file
+src/fea.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/fea.cpp.i
+.PHONY : src/fea.cpp.i
+
+src/fea.s: src/fea.cpp.s
+.PHONY : src/fea.s
+
+# target to generate assembly for a file
+src/fea.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/fea.cpp.s
+.PHONY : src/fea.cpp.s
+
+src/filter.o: src/filter.cpp.o
+.PHONY : src/filter.o
+
+# target to build an object file
+src/filter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/filter.cpp.o
+.PHONY : src/filter.cpp.o
+
+src/filter.i: src/filter.cpp.i
+.PHONY : src/filter.i
+
+# target to preprocess a source file
+src/filter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/filter.cpp.i
+.PHONY : src/filter.cpp.i
+
+src/filter.s: src/filter.cpp.s
+.PHONY : src/filter.s
+
+# target to generate assembly for a file
+src/filter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/filter.cpp.s
+.PHONY : src/filter.cpp.s
+
+src/io.o: src/io.cpp.o
+.PHONY : src/io.o
+
+# target to build an object file
+src/io.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io.cpp.o
+.PHONY : src/io.cpp.o
+
+src/io.i: src/io.cpp.i
+.PHONY : src/io.i
+
+# target to preprocess a source file
+src/io.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io.cpp.i
+.PHONY : src/io.cpp.i
+
+src/io.s: src/io.cpp.s
+.PHONY : src/io.s
+
+# target to generate assembly for a file
+src/io.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/io.cpp.s
+.PHONY : src/io.cpp.s
+
+src/multigrid/coarsest.o: src/multigrid/coarsest.cpp.o
+.PHONY : src/multigrid/coarsest.o
+
+# target to build an object file
+src/multigrid/coarsest.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o
+.PHONY : src/multigrid/coarsest.cpp.o
+
+src/multigrid/coarsest.i: src/multigrid/coarsest.cpp.i
+.PHONY : src/multigrid/coarsest.i
+
+# target to preprocess a source file
+src/multigrid/coarsest.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.i
+.PHONY : src/multigrid/coarsest.cpp.i
+
+src/multigrid/coarsest.s: src/multigrid/coarsest.cpp.s
+.PHONY : src/multigrid/coarsest.s
+
+# target to generate assembly for a file
+src/multigrid/coarsest.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.s
+.PHONY : src/multigrid/coarsest.cpp.s
+
+src/multigrid/diagonal.o: src/multigrid/diagonal.cpp.o
+.PHONY : src/multigrid/diagonal.o
+
+# target to build an object file
+src/multigrid/diagonal.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o
+.PHONY : src/multigrid/diagonal.cpp.o
+
+src/multigrid/diagonal.i: src/multigrid/diagonal.cpp.i
+.PHONY : src/multigrid/diagonal.i
+
+# target to preprocess a source file
+src/multigrid/diagonal.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.i
+.PHONY : src/multigrid/diagonal.cpp.i
+
+src/multigrid/diagonal.s: src/multigrid/diagonal.cpp.s
+.PHONY : src/multigrid/diagonal.s
+
+# target to generate assembly for a file
+src/multigrid/diagonal.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.s
+.PHONY : src/multigrid/diagonal.cpp.s
+
+src/multigrid/hierarchy.o: src/multigrid/hierarchy.cpp.o
+.PHONY : src/multigrid/hierarchy.o
+
+# target to build an object file
+src/multigrid/hierarchy.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o
+.PHONY : src/multigrid/hierarchy.cpp.o
+
+src/multigrid/hierarchy.i: src/multigrid/hierarchy.cpp.i
+.PHONY : src/multigrid/hierarchy.i
+
+# target to preprocess a source file
+src/multigrid/hierarchy.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.i
+.PHONY : src/multigrid/hierarchy.cpp.i
+
+src/multigrid/hierarchy.s: src/multigrid/hierarchy.cpp.s
+.PHONY : src/multigrid/hierarchy.s
+
+# target to generate assembly for a file
+src/multigrid/hierarchy.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.s
+.PHONY : src/multigrid/hierarchy.cpp.s
+
+src/multigrid/masks.o: src/multigrid/masks.cpp.o
+.PHONY : src/multigrid/masks.o
+
+# target to build an object file
+src/multigrid/masks.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o
+.PHONY : src/multigrid/masks.cpp.o
+
+src/multigrid/masks.i: src/multigrid/masks.cpp.i
+.PHONY : src/multigrid/masks.i
+
+# target to preprocess a source file
+src/multigrid/masks.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.i
+.PHONY : src/multigrid/masks.cpp.i
+
+src/multigrid/masks.s: src/multigrid/masks.cpp.s
+.PHONY : src/multigrid/masks.s
+
+# target to generate assembly for a file
+src/multigrid/masks.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.s
+.PHONY : src/multigrid/masks.cpp.s
+
+src/multigrid/preconditioner.o: src/multigrid/preconditioner.cpp.o
+.PHONY : src/multigrid/preconditioner.o
+
+# target to build an object file
+src/multigrid/preconditioner.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o
+.PHONY : src/multigrid/preconditioner.cpp.o
+
+src/multigrid/preconditioner.i: src/multigrid/preconditioner.cpp.i
+.PHONY : src/multigrid/preconditioner.i
+
+# target to preprocess a source file
+src/multigrid/preconditioner.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.i
+.PHONY : src/multigrid/preconditioner.cpp.i
+
+src/multigrid/preconditioner.s: src/multigrid/preconditioner.cpp.s
+.PHONY : src/multigrid/preconditioner.s
+
+# target to generate assembly for a file
+src/multigrid/preconditioner.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.s
+.PHONY : src/multigrid/preconditioner.cpp.s
+
+src/multigrid/transfers.o: src/multigrid/transfers.cpp.o
+.PHONY : src/multigrid/transfers.o
+
+# target to build an object file
+src/multigrid/transfers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o
+.PHONY : src/multigrid/transfers.cpp.o
+
+src/multigrid/transfers.i: src/multigrid/transfers.cpp.i
+.PHONY : src/multigrid/transfers.i
+
+# target to preprocess a source file
+src/multigrid/transfers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.i
+.PHONY : src/multigrid/transfers.cpp.i
+
+src/multigrid/transfers.s: src/multigrid/transfers.cpp.s
+.PHONY : src/multigrid/transfers.s
+
+# target to generate assembly for a file
+src/multigrid/transfers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.s
+.PHONY : src/multigrid/transfers.cpp.s
+
+src/solver.o: src/solver.cpp.o
+.PHONY : src/solver.o
+
+# target to build an object file
+src/solver.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/solver.cpp.o
+.PHONY : src/solver.cpp.o
+
+src/solver.i: src/solver.cpp.i
+.PHONY : src/solver.i
+
+# target to preprocess a source file
+src/solver.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/solver.cpp.i
+.PHONY : src/solver.cpp.i
+
+src/solver.s: src/solver.cpp.s
+.PHONY : src/solver.s
+
+# target to generate assembly for a file
+src/solver.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/top3d_xl.dir/build.make CMakeFiles/top3d_xl.dir/src/solver.cpp.s
+.PHONY : src/solver.cpp.s
 
 # Help Target
 help:
@@ -224,15 +464,45 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... top3d_xl"
 	@echo "... top3d_xl_cli"
-	@echo "... src/isosurface.o"
-	@echo "... src/isosurface.i"
-	@echo "... src/isosurface.s"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
-	@echo "... src/top3d_xl.o"
-	@echo "... src/top3d_xl.i"
-	@echo "... src/top3d_xl.s"
+	@echo "... apps/top3d_cli.o"
+	@echo "... apps/top3d_cli.i"
+	@echo "... apps/top3d_cli.s"
+	@echo "... src/core.o"
+	@echo "... src/core.i"
+	@echo "... src/core.s"
+	@echo "... src/driver.o"
+	@echo "... src/driver.i"
+	@echo "... src/driver.s"
+	@echo "... src/fea.o"
+	@echo "... src/fea.i"
+	@echo "... src/fea.s"
+	@echo "... src/filter.o"
+	@echo "... src/filter.i"
+	@echo "... src/filter.s"
+	@echo "... src/io.o"
+	@echo "... src/io.i"
+	@echo "... src/io.s"
+	@echo "... src/multigrid/coarsest.o"
+	@echo "... src/multigrid/coarsest.i"
+	@echo "... src/multigrid/coarsest.s"
+	@echo "... src/multigrid/diagonal.o"
+	@echo "... src/multigrid/diagonal.i"
+	@echo "... src/multigrid/diagonal.s"
+	@echo "... src/multigrid/hierarchy.o"
+	@echo "... src/multigrid/hierarchy.i"
+	@echo "... src/multigrid/hierarchy.s"
+	@echo "... src/multigrid/masks.o"
+	@echo "... src/multigrid/masks.i"
+	@echo "... src/multigrid/masks.s"
+	@echo "... src/multigrid/preconditioner.o"
+	@echo "... src/multigrid/preconditioner.i"
+	@echo "... src/multigrid/preconditioner.s"
+	@echo "... src/multigrid/transfers.o"
+	@echo "... src/multigrid/transfers.i"
+	@echo "... src/multigrid/transfers.s"
+	@echo "... src/solver.o"
+	@echo "... src/solver.i"
+	@echo "... src/solver.s"
 .PHONY : help
 
 

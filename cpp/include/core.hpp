@@ -75,111 +75,11 @@ struct Problem {
     std::vector<double> density;    // per element x, size = numElements
 };
 
-struct PDEFilter {
-	// 8-node kernel (8x8) stored row-major
-	std::array<double,8*8> kernel{};
-	std::vector<double> diagPrecondNode; // numNodes
-	// Warm-start storage
-	std::vector<double> lastXNode;       // numNodes
-	std::vector<double> lastRhsNode;     // numNodes
-};
-
-// PDE filter setup and application
-PDEFilter SetupPDEFilter(const Problem& pb, double filterRadius);
-// Apply PDE filtering (element -> node (sum/8), solve, node -> element (sum/8))
-void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<double>& srcEle, std::vector<double>& dstEle);
-
 // Entry points
 void InitialSettings(GlobalParams& out);
 
-// Build a simple cuboid boolean model (all true) and discretize
-void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz);
-
-
-// Apply built-in boundary conditions similar to MATLAB demo
-void ApplyBoundaryConditions(Problem& pb);
-
-// Compute unit hexahedral voxel stiffness matrix
-std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize);
-
-// Matrix-free K·u product on finest level
-/**
-Apply global stiffness operator to displacement vector. This makes use of the fact that
-every element at the finest level has the same Ke matrix (24x24, because 8 nodes * 3 DoFs)
-so we only need to store one version of it. 
-- Compute yFull = K(uFull) where yFull = output vector and uFull = global displacement vector
-  yFull is the internal forces within each element. At equilibrium, Ku = yFull = F
-  So residual is r = F - yFull, which we're trying to minimize over the course of the optimization
-- need ue (element-local displacement vector from uFull) and fe (element-local force vector = Ee * Ke * ue)
-*/
-void K_times_u_finest(const Problem& pb, const std::vector<double>& eleModulus,
-				   const std::vector<double>& uFull, std::vector<double>& yFull);
-
 // Preconditioner functor: z = M^{-1} r (operates on free-DOF vectors)
 using Preconditioner = std::function<void(const std::vector<double>& rFree, std::vector<double>& zFree)>;
-
-// Build Jacobi diagonal on free DOFs (from finest-level element Ke and eleModulus)
-void ComputeJacobiDiagonalFree(const Problem& pb,
-					   const std::vector<double>& eleModulus,
-					   std::vector<double>& diagFree);
-
-// PCG on free DOFs with matrix-free operator and optional preconditioner
-int PCG_free(const Problem& pb,
-		  const std::vector<double>& eleModulus,
-		  const std::vector<double>& bFree,
-		  std::vector<double>& xFree,
-		  double tol, int maxIt,
-		  Preconditioner M = Preconditioner{},
-		  std::vector<double>* xfull = nullptr,
-		  std::vector<double>* yfull = nullptr,
-		  std::vector<double>* pfull = nullptr,
-		  std::vector<double>* Apfull = nullptr,
-		  std::vector<double>* freeTmp = nullptr);
-
-// Optional: Multigrid preconditioner config (diagonal-only V-cycle)
-struct MGPrecondConfig {
-	bool nonDyadic = true;   // first jump 1->3 (span=4)
-	int  maxLevels = 5;      // cap levels
-	double weight = 0.6;     // diagonal relaxation factor
-};
-
-// Compute compliance per element and total
-double ComputeCompliance(const Problem& pb,
-					   const std::vector<double>& eleModulus,
-					   const std::vector<double>& uFull,
-					   std::vector<double>& ceList);
-
-// Run GLOBAL topology optimization (simplified, no PDE filter)
-void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin);
-
-// ================= Multigrid scaffolding (Step 2) =================
-struct MGLevel {
-	int resX = 0, resY = 0, resZ = 0;
-	int spanWidth = 2;                 // 2 (dyadic) or 4 (non-dyadic jump)
-	int numElements = 0, numNodes = 0, numDOFs = 0;
-
-	// Structured connectivity at this level
-	std::vector<int32_t> eNodMat;      // numElements x 8
-	std::vector<int32_t> nodMapBack;   // [0..numNodes-1]
-	std::vector<int32_t> nodMapForward;
-
-	// Per-element nodal weights from 8 coarse vertices to embedded (span+1)^3 fine vertices
-	// Stored as weightsNode[(iz*grid + iy)*grid + ix]*8 + a, grid = spanWidth+1, a in [0..7]
-	std::vector<double> weightsNode;   // size = (span+1)^3 * 8
-};
-
-struct MGHierarchy {
-	std::vector<MGLevel> levels;       // levels[0] = finest
-	bool nonDyadic = true;             // if true, first coarsening uses span=4
-};
-
-// Build lightweight geometric hierarchy (no coarse Ks yet). Stops when coarse dims <2 or maxLevels.
-void BuildMGHierarchy(const Problem& pb, bool nonDyadic, MGHierarchy& H, int maxLevels = 5);
-
-// Build an MG diagonal-only V-cycle preconditioner (captures hierarchy + diagonals)
-Preconditioner MakeMGDiagonalPreconditioner(const Problem& pb,
-								const std::vector<double>& eleModulus,
-								const MGPrecondConfig& cfg);
 
 } // namespace top3d
 

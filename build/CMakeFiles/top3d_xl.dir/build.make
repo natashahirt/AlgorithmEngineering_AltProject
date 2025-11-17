@@ -69,47 +69,207 @@ include CMakeFiles/top3d_xl.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/top3d_xl.dir/flags.make
 
-CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
-CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp
-CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o -MF CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp
+CMakeFiles/top3d_xl.dir/src/core.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/core.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/core.cpp
+CMakeFiles/top3d_xl.dir/src/core.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/top3d_xl.dir/src/core.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/core.cpp.o -MF CMakeFiles/top3d_xl.dir/src/core.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/core.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/core.cpp
 
-CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.i"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp > CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.i
+CMakeFiles/top3d_xl.dir/src/core.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/core.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/core.cpp > CMakeFiles/top3d_xl.dir/src/core.cpp.i
 
-CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/top3d_xl.cpp -o CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.s
+CMakeFiles/top3d_xl.dir/src/core.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/core.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/core.cpp -o CMakeFiles/top3d_xl.dir/src/core.cpp.s
 
-CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
-CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp
-CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o -MF CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp
+CMakeFiles/top3d_xl.dir/src/fea.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/fea.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/fea.cpp
+CMakeFiles/top3d_xl.dir/src/fea.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/top3d_xl.dir/src/fea.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/fea.cpp.o -MF CMakeFiles/top3d_xl.dir/src/fea.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/fea.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/fea.cpp
 
-CMakeFiles/top3d_xl.dir/src/isosurface.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/isosurface.cpp.i"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp > CMakeFiles/top3d_xl.dir/src/isosurface.cpp.i
+CMakeFiles/top3d_xl.dir/src/fea.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/fea.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/fea.cpp > CMakeFiles/top3d_xl.dir/src/fea.cpp.i
 
-CMakeFiles/top3d_xl.dir/src/isosurface.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/isosurface.cpp.s"
-	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/isosurface.cpp -o CMakeFiles/top3d_xl.dir/src/isosurface.cpp.s
+CMakeFiles/top3d_xl.dir/src/fea.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/fea.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/fea.cpp -o CMakeFiles/top3d_xl.dir/src/fea.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/solver.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/solver.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/solver.cpp
+CMakeFiles/top3d_xl.dir/src/solver.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/top3d_xl.dir/src/solver.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/solver.cpp.o -MF CMakeFiles/top3d_xl.dir/src/solver.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/solver.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/solver.cpp
+
+CMakeFiles/top3d_xl.dir/src/solver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/solver.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/solver.cpp > CMakeFiles/top3d_xl.dir/src/solver.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/solver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/solver.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/solver.cpp -o CMakeFiles/top3d_xl.dir/src/solver.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/filter.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/filter.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/filter.cpp
+CMakeFiles/top3d_xl.dir/src/filter.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/top3d_xl.dir/src/filter.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/filter.cpp.o -MF CMakeFiles/top3d_xl.dir/src/filter.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/filter.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/filter.cpp
+
+CMakeFiles/top3d_xl.dir/src/filter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/filter.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/filter.cpp > CMakeFiles/top3d_xl.dir/src/filter.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/filter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/filter.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/filter.cpp -o CMakeFiles/top3d_xl.dir/src/filter.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/hierarchy.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/hierarchy.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/hierarchy.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/hierarchy.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/transfers.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/transfers.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/transfers.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/transfers.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/masks.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/masks.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/masks.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/masks.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/diagonal.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/diagonal.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/diagonal.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/diagonal.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/coarsest.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/coarsest.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/coarsest.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/coarsest.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/preconditioner.cpp
+CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o -MF CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/preconditioner.cpp
+
+CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/preconditioner.cpp > CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/preconditioner.cpp -o CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/io.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/io.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io.cpp
+CMakeFiles/top3d_xl.dir/src/io.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/top3d_xl.dir/src/io.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/io.cpp.o -MF CMakeFiles/top3d_xl.dir/src/io.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/io.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io.cpp
+
+CMakeFiles/top3d_xl.dir/src/io.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/io.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io.cpp > CMakeFiles/top3d_xl.dir/src/io.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/io.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/io.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/io.cpp -o CMakeFiles/top3d_xl.dir/src/io.cpp.s
+
+CMakeFiles/top3d_xl.dir/src/driver.cpp.o: CMakeFiles/top3d_xl.dir/flags.make
+CMakeFiles/top3d_xl.dir/src/driver.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/driver.cpp
+CMakeFiles/top3d_xl.dir/src/driver.cpp.o: CMakeFiles/top3d_xl.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/top3d_xl.dir/src/driver.cpp.o"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/top3d_xl.dir/src/driver.cpp.o -MF CMakeFiles/top3d_xl.dir/src/driver.cpp.o.d -o CMakeFiles/top3d_xl.dir/src/driver.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/driver.cpp
+
+CMakeFiles/top3d_xl.dir/src/driver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/top3d_xl.dir/src/driver.cpp.i"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/driver.cpp > CMakeFiles/top3d_xl.dir/src/driver.cpp.i
+
+CMakeFiles/top3d_xl.dir/src/driver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/top3d_xl.dir/src/driver.cpp.s"
+	/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/driver.cpp -o CMakeFiles/top3d_xl.dir/src/driver.cpp.s
 
 # Object files for target top3d_xl
 top3d_xl_OBJECTS = \
-"CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o" \
-"CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o"
+"CMakeFiles/top3d_xl.dir/src/core.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/fea.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/solver.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/filter.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/io.cpp.o" \
+"CMakeFiles/top3d_xl.dir/src/driver.cpp.o"
 
 # External object files for target top3d_xl
 top3d_xl_EXTERNAL_OBJECTS =
 
-libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/top3d_xl.cpp.o
-libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/isosurface.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/core.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/fea.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/solver.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/filter.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/io.cpp.o
+libtop3d_xl.a: CMakeFiles/top3d_xl.dir/src/driver.cpp.o
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/build.make
 libtop3d_xl.a: CMakeFiles/top3d_xl.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX static library libtop3d_xl.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX static library libtop3d_xl.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/top3d_xl.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/top3d_xl.dir/link.txt --verbose=$(VERBOSE)
 
