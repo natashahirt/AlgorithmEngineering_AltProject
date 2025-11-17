@@ -8,6 +8,9 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=8G
+#SBATCH --nodelist=node[1600-1619]
+
+# using 2x48AMD EPYC 9474F 48-Core Processors 
 
 module load gcc/12.2.0
 module load cmake/3.27.9
@@ -15,7 +18,7 @@ module load cmake/3.27.9
 cd /home/nhirt/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
-PARAMS="30 60 30 0.12 30"
+PARAMS="12 24 12 0.12 30"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl
@@ -47,4 +50,3 @@ fi
 ./build/top3d_xl_cli $MODE $PARAMS
 
 echo "Job completed at $(date)"
-
