@@ -2,6 +2,10 @@
 #include "core.hpp"
 #include "multigrid/multigrid.hpp"
 #include <vector>
+// Optional OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace top3d { namespace mg {
 
@@ -20,6 +24,9 @@ const int span = Lc.spanWidth;
 	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
 	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
 
+#ifdef _OPENMP
+#pragma omp parallel for collapse(3)
+#endif
 	for (int cez=0; cez<Lc.resZ; ++cez) {
 		for (int cex=0; cex<Lc.resX; ++cex) {
 			for (int cey=0; cey<Lc.resY; ++cey) {
@@ -43,13 +50,24 @@ const int span = Lc.spanWidth;
 							int fidx = idxF(fxi, fyi, fzi);
 const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
 							double sum = 0.0; for (int a=0;a<8;a++) sum += W[a]*cv[a];
+#ifdef _OPENMP
+							#pragma omp atomic
+							xf[fidx] += sum;
+							#pragma omp atomic
+							wsum[fidx] += 1.0;
+#else
 							xf[fidx] += sum; wsum[fidx] += 1.0;
+#endif
 						}
 					}
 				}
 			}
 		}
 	}
+	// Normalize accumulated contributions. Parallelize if OpenMP available.
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for (size_t i=0;i<xf.size();++i) if (wsum[i]>0) xf[i] /= wsum[i];
 }
 

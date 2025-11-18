@@ -39,3 +39,23 @@ add_executable(top3d_xl_cli
 )
 
 target_link_libraries(top3d_xl_cli PRIVATE top3d_xl)
+
+# OpenMP support: prefer CMake's FindOpenMP; on macOS fall back to Homebrew libomp
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(top3d_xl PUBLIC OpenMP::OpenMP_CXX)
+else()
+    if (APPLE)
+        find_library(LIBOMP_LIB NAMES omp libomp PATHS /opt/homebrew/opt/libomp/lib /usr/local/opt/libomp/lib NO_DEFAULT_PATH)
+        if (LIBOMP_LIB)
+            # AppleClang needs -Xpreprocessor -fopenmp
+            target_compile_options(top3d_xl PUBLIC "-Xpreprocessor" "-fopenmp")
+            target_link_libraries(top3d_xl PUBLIC ${LIBOMP_LIB})
+            target_include_directories(top3d_xl PUBLIC /opt/homebrew/opt/libomp/include /usr/local/opt/libomp/include)
+        else()
+            message(WARNING "OpenMP not found: building without OpenMP (install libomp via Homebrew to enable)")
+        endif()
+    else()
+        message(WARNING "OpenMP not found: building without OpenMP")
+    endif()
+endif()
