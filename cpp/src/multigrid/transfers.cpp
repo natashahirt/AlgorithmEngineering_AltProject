@@ -2,6 +2,7 @@
 #include "core.hpp"
 #include "multigrid/multigrid.hpp"
 #include <vector>
+#include <iostream>
 // Optional OpenMP
 #ifdef _OPENMP
 #include <omp.h>
@@ -25,7 +26,9 @@ const int span = Lc.spanWidth;
 	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
 
 #ifdef _OPENMP
+std::cout << "Hello, World \n";
 #pragma omp parallel for collapse(3)
+
 #endif
 	for (int cez=0; cez<Lc.resZ; ++cez) {
 		for (int cex=0; cex<Lc.resX; ++cex) {
