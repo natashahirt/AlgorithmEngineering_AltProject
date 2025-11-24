@@ -81,7 +81,7 @@ Run
 
 ```
 # from cpp/build
-./top3d_xl_cli GLOBAL <nely> <nelx> <nelz> <V0> <nLoop>
+./top3d_xl_cli GLOBAL <nely> <nelx> <nelz> <V0> <nLoop> <simulation_count>
 # example
-./top3d_xl_cli GLOBAL 30 60 30 0.12 30
+./top3d_xl_cli GLOBAL 30 60 30 0.12 30 5
 ```

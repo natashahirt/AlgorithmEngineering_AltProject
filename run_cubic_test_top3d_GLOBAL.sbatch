@@ -15,10 +15,11 @@
 module load gcc/12.2.0
 module load cmake/3.27.9
 
-cd /home/nhirt/AlgorithmEngineering_AltProject
+cd /home/lucas_b/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
 PARAMS="12 24 12 0.12 30"
+SIMULATION_COUNT="5"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl
@@ -32,6 +33,7 @@ exec 2> >(tee "$ERROR_FILE" >&2)
 echo "Job started at $(date)"
 echo "Mode: $MODE"
 echo "Parameters: $PARAMS"
+echo "Simulation count: $SIMULATION_COUNT"
 echo "Output file: $OUTPUT_FILE"
 echo "Error file: $ERROR_FILE"
 echo "Latest log: $LOG_FILE"
@@ -47,6 +49,6 @@ if [ ! -f build/top3d_xl_cli ]; then
   cd ..
 fi
 
-./build/top3d_xl_cli $MODE $PARAMS
+./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
 
 echo "Job completed at $(date)"
