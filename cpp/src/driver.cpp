@@ -45,6 +45,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		CreateVoxelFEAmodel_Cuboid(pb, nely, nelx, nelz);
 		ApplyBoundaryConditions(pb);
 		PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
+		PDEFilterWorkspace filter_ws;
 		// Build MG hierarchy and fixed masks once; reuse across solves
 		mg::MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
 		mg::MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; mg::build_static_once(pb, mgcfgStatic_tv, H, fixedMasks);
@@ -61,13 +62,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::vector<float> ce(ne, 0.0f);
 		std::vector<float> eleMod(ne, pb.params.youngsModulus);
 		std::vector<float> uFreeWarm; // warm-start buffer for PCG
-
-		// Initialize reused vectors
-		std::vector<float> xfull(pb.mesh.numDOFs, 0.0f);
-		std::vector<float> yfull(pb.mesh.numDOFs, 0.0f);
-		std::vector<float> pfull(pb.mesh.numDOFs, 0.0f);
-		std::vector<float> Apfull(pb.mesh.numDOFs, 0.0f);
-		std::vector<float> freeTmp(pb.freeDofIndex.size(), 0.0f);
+		// PCG workspace reused across solves
+		PCGFreeWorkspace pcg_ws;
 
 		// Solve fully solid for reference
 		{
@@ -76,10 +72,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			std::vector<float> bFree; restrict_to_free(pb, pb.F, bFree);
 			std::vector<float> uFree; uFree.assign(bFree.size(), 0.0f);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
-			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
-			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG,
-				&xfull, &yfull, &pfull, &Apfull, &freeTmp);
+			auto M = make_jacobi_preconditioner(pb, eleMod);
+			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFree, U);
 			double Csolid = static_cast<double>(ComputeCompliance(pb, eleMod, U, ce));
 			CsolidRef = Csolid;
@@ -118,10 +112,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			// Ensure warm-start vector matches current system size
 			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
 			// Reuse static MG context for current SIMP-modified modulus
-			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
-			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
-			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG,
-				&xfull, &yfull, &pfull, &Apfull, &freeTmp);
+			auto M = make_jacobi_preconditioner(pb, eleMod);
+			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFreeWarm, U);
 			auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
 			
@@ -149,7 +141,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			{
 				std::vector<float> xdc(ne);
 				for (int e=0;e<ne;e++) xdc[e] = static_cast<float>(x[e]*dc[e]);
-				std::vector<float> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt);
+				std::vector<float> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt, filter_ws);
 				for (int e=0;e<ne;e++) dc[e] = static_cast<double>(dc_filt[e]) / std::max<double>(1.0e-3, static_cast<double>(x[e]));
 			}
 			auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();

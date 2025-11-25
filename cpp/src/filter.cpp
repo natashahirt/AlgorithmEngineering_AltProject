@@ -83,74 +83,80 @@ static void MatTimesVec_PDE(const Problem& pb, const PDEFilter& pf, const std::v
 	}
 }
 
-void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& srcEle, std::vector<float>& dstEle) {
-	// Ele -> Node (sum/8)
-	std::vector<float> rhs(pb.mesh.numNodes, 0.0);
+void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& srcEle, std::vector<float>& dstEle, PDEFilterWorkspace& ws) {
+	// Ele -> Node (sum/8) into ws.rhs
+	const int nNodes = pb.mesh.numNodes;
+	ws.rhs.assign(nNodes, 0.0f);
 	for (int e=0;e<pb.mesh.numElements;e++) {
 		float val = srcEle[e] * (1.0/8.0);
-		int base = e*8; for (int a=0;a<8;a++) rhs[pb.mesh.eNodMat[base+a]] += val;
+		int base = e*8; for (int a=0;a<8;a++) ws.rhs[pb.mesh.eNodMat[base+a]] += val;
 	}
 	// Solve (PDE kernel) * x = rhs with PCG and Jacobi precond
 	// Conditional warm-start: reuse lastX if rhs hasn't changed much
-	const float relThresh = 0.1; // relative RHS change threshold for warm-start
-	if ((int)pf.lastXNode.size() != pb.mesh.numNodes) pf.lastXNode.assign(pb.mesh.numNodes, 0.0);
-	if ((int)pf.lastRhsNode.size() != pb.mesh.numNodes) pf.lastRhsNode.assign(pb.mesh.numNodes, 0.0);
-	float normRhs=0.0, diff=0.0;
-	for (size_t i=0;i<rhs.size();++i) { normRhs += rhs[i]*rhs[i]; float d = rhs[i]-pf.lastRhsNode[i]; diff += d*d; }
+	const float relThresh = 0.1f; // relative RHS change threshold for warm-start
+	if ((int)pf.lastXNode.size() != nNodes) pf.lastXNode.assign(nNodes, 0.0f);
+	if ((int)pf.lastRhsNode.size() != nNodes) pf.lastRhsNode.assign(nNodes, 0.0f);
+	float normRhs=0.0f, diff=0.0f;
+	for (int i=0;i<nNodes;++i) { normRhs += ws.rhs[i]*ws.rhs[i]; float d = ws.rhs[i]-pf.lastRhsNode[i]; diff += d*d; }
 	normRhs = std::sqrt(normRhs); diff = std::sqrt(diff);
-	bool useWarm = (normRhs > 0.0) && (diff / normRhs < relThresh);
-	std::vector<float> x = useWarm ? pf.lastXNode : std::vector<float>(pb.mesh.numNodes, 0.0);
-
-	std::vector<float> r(rhs.size()), z(rhs.size()), pvec(rhs.size()), Ap(rhs.size());
+	bool useWarm = (normRhs > 0.0f) && (diff / std::max(1e-30f, normRhs) < relThresh);
+	// Prepare workspace vectors
+	ws.x.resize(nNodes);
+	if (useWarm) ws.x = pf.lastXNode; else std::fill(ws.x.begin(), ws.x.end(), 0.0f);
+	ws.r.resize(nNodes);
+	ws.z.resize(nNodes);
+	ws.p.resize(nNodes);
+	ws.Ap.resize(nNodes);
+	// r = rhs - A*x (or rhs if x=0)
 	if (useWarm) {
-		std::vector<float> y0; MatTimesVec_PDE(pb, pf, x, y0);
-		for (size_t i=0;i<r.size();++i) r[i] = rhs[i] - y0[i];
+		MatTimesVec_PDE(pb, pf, ws.x, ws.Ap);
+		for (int i=0;i<nNodes;++i) ws.r[i] = ws.rhs[i] - ws.Ap[i];
 	} else {
-		r = rhs;
+		for (int i=0;i<nNodes;++i) ws.r[i] = ws.rhs[i];
 	}
-	for (size_t i=0;i<r.size();++i) z[i] = pf.diagPrecondNode[i]*r[i];
-	float rz = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
-	if (rz==0) rz=1.0; pvec = z;
-	const float tol = 1e-6;
+	for (int i=0;i<nNodes;++i) ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
+	float rz = std::inner_product(ws.r.begin(), ws.r.end(), ws.z.begin(), 0.0f);
+	if (rz==0) rz=1.0f; ws.p = ws.z;
+	const float tol = 1e-6f;
 	const int maxIt = 400;
 	// Early exit if warm-start already good
 	{
-		float rn = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0));
+		float rn = std::sqrt(std::inner_product(ws.r.begin(), ws.r.end(), ws.r.begin(), 0.0f));
 		if (rn < tol) {
 			// Node -> Ele (sum/8)
-			dstEle.assign(pb.mesh.numElements, 0.0);
+			dstEle.assign(pb.mesh.numElements, 0.0f);
 			for (int e=0;e<pb.mesh.numElements;e++) {
-				int base=e*8; float sum=0.0; for (int a=0;a<8;a++) sum += x[pb.mesh.eNodMat[base+a]];
-				dstEle[e] = sum*(1.0/8.0);
+				int base=e*8; float sum=0.0f; for (int a=0;a<8;a++) sum += ws.x[pb.mesh.eNodMat[base+a]];
+				dstEle[e] = sum*(1.0f/8.0f);
 			}
-			pf.lastXNode = x;
-			pf.lastRhsNode = rhs;
+			pf.lastXNode = ws.x;
+			pf.lastRhsNode = ws.rhs;
 			return;
 		}
 	}
 	for (int it=0; it<maxIt; ++it) {
-		MatTimesVec_PDE(pb, pf, pvec, Ap);
-		float denom = std::inner_product(pvec.begin(), pvec.end(), Ap.begin(), 0.0);
+		MatTimesVec_PDE(pb, pf, ws.p, ws.Ap);
+		float denom = std::inner_product(ws.p.begin(), ws.p.end(), ws.Ap.begin(), 0.0f);
 		float alpha = rz / std::max(1e-30f, denom);
-		for (size_t i=0;i<x.size();++i) x[i] += alpha * pvec[i];
-		for (size_t i=0;i<r.size();++i) r[i] -= alpha * Ap[i];
-		float rn = std::sqrt(std::inner_product(r.begin(), r.end(), r.begin(), 0.0));
+		for (int i=0;i<nNodes;++i) ws.x[i] += alpha * ws.p[i];
+		for (int i=0;i<nNodes;++i) ws.r[i] -= alpha * ws.Ap[i];
+		float rn = std::sqrt(std::inner_product(ws.r.begin(), ws.r.end(), ws.r.begin(), 0.0f));
 		if (rn < tol) break;
-		for (size_t i=0;i<z.size();++i) z[i] = pf.diagPrecondNode[i]*r[i];
-		float rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+		for (int i=0;i<nNodes;++i) ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
+		float rz_new = std::inner_product(ws.r.begin(), ws.r.end(), ws.z.begin(), 0.0f);
 		float beta = rz_new / std::max(1e-30f, rz);
-		for (size_t i=0;i<pvec.size();++i) pvec[i] = z[i] + beta * pvec[i];
+		for (int i=0;i<nNodes;++i) ws.p[i] = ws.z[i] + beta * ws.p[i];
 		rz = rz_new;
 	}
 	// Node -> Ele (sum/8)
-	dstEle.assign(pb.mesh.numElements, 0.0);
+	dstEle.assign(pb.mesh.numElements, 0.0f);
 	for (int e=0;e<pb.mesh.numElements;e++) {
-		int base=e*8; float sum=0.0; for (int a=0;a<8;a++) sum += x[pb.mesh.eNodMat[base+a]];
-		dstEle[e] = sum*(1.0/8.0);
+		int base=e*8; float sum=0.0f; for (int a=0;a<8;a++) sum += ws.x[pb.mesh.eNodMat[base+a]];
+		dstEle[e] = sum*(1.0f/8.0f);
 	}
 	// Save warm-start buffers
-	pf.lastXNode = x;
-	pf.lastRhsNode = rhs;
+	pf.lastXNode = ws.x;
+	pf.lastRhsNode = ws.rhs;
 }
 
 } // namespace top3d

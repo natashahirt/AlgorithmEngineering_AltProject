@@ -15,6 +15,16 @@ struct PDEFilter {
 };
  
 PDEFilter SetupPDEFilter(const Problem&, float filterRadius);
-void ApplyPDEFilter(const Problem&, PDEFilter&, const std::vector<float>& srcEle, std::vector<float>& dstEle);
+ 
+struct PDEFilterWorkspace {
+	std::vector<float> rhs; // node-level RHS
+	std::vector<float> x;   // node solution
+	std::vector<float> r;   // residual
+	std::vector<float> z;   // preconditioned residual
+	std::vector<float> p;   // search direction
+	std::vector<float> Ap;  // A*p
+};
+ 
+void ApplyPDEFilter(const Problem&, PDEFilter&, const std::vector<float>& srcEle, std::vector<float>& dstEle, PDEFilterWorkspace& ws);
  
 } // namespace top3d

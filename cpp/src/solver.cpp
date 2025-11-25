@@ -16,32 +16,51 @@ void scatter_from_free(const Problem& pb, const std::vector<float>& freev, std::
 	for (size_t i=0;i<pb.freeDofIndex.size();++i) full[pb.freeDofIndex[i]] = freev[i];
 }
 
+Preconditioner make_jacobi_preconditioner(const Problem& pb, const std::vector<float>& eleModulus) {
+	// Build full-space diagonal then restrict to free dofs
+	std::vector<float> diagFull(pb.mesh.numDOFs, 0.0f);
+	const auto& Ke = pb.mesh.Ke; // 24x24 row-major
+	for (int e=0; e<pb.mesh.numElements; ++e) {
+		const float Ee = eleModulus[e];
+		if (Ee <= 1.0e-16f) continue;
+		const int baseD = e*24;
+		for (int i=0;i<24;i++) {
+			const int gi = pb.mesh.eDofMat[baseD + i];
+			diagFull[gi] += Ee * Ke[i*24 + i];
+		}
+	}
+	// Extract diagonal on free dofs
+	std::vector<float> diagFree(pb.freeDofIndex.size(), 1.0f);
+	for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+		float d = diagFull[pb.freeDofIndex[i]];
+		diagFree[i] = (d > 1.0e-30f) ? d : 1.0f;
+	}
+	// Return functor that applies z = inv(D) * r
+	return [diag = std::move(diagFree)](const std::vector<float>& r, std::vector<float>& z) {
+		if (z.size() != r.size()) z.resize(r.size());
+		for (size_t i=0;i<r.size();++i) z[i] = r[i] / diag[i];
+	};
+}
+
 int PCG_free(const Problem& pb,
 			  const std::vector<float>& eleModulus,
 			  const std::vector<float>& bFree,
 			  std::vector<float>& xFree,
 			  float tol, int maxIt,
 			  Preconditioner M,
-			  std::vector<float>* xfull,
-			  std::vector<float>* yfull,
-			  std::vector<float>* pfull,
-			  std::vector<float>* Apfull,
-			  std::vector<float>* freeTmp) {
+			  PCGFreeWorkspace& ws) {
 	std::vector<float> r = bFree;
 	std::vector<float> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
 
-	// Acquire buffers (use provided or local)
-	std::vector<float> xfull_loc, yfull_loc, pfull_loc, Apfull_loc, freeTmp_loc;
-	auto& X = xfull ? *xfull : (xfull_loc = std::vector<float>(pb.mesh.numDOFs, 0.0), xfull_loc);
-	auto& Y = yfull ? *yfull : (yfull_loc = std::vector<float>(pb.mesh.numDOFs, 0.0), yfull_loc);
-	auto& P = pfull ? *pfull : (pfull_loc = std::vector<float>(pb.mesh.numDOFs, 0.0), pfull_loc);
-	auto& A = Apfull ? *Apfull : (Apfull_loc = std::vector<float>(pb.mesh.numDOFs, 0.0), Apfull_loc);
-	auto& F = freeTmp ? *freeTmp : (freeTmp_loc = std::vector<float>(pb.freeDofIndex.size(), 0.0), freeTmp_loc);
-	if ((int)X.size() != pb.mesh.numDOFs) X.assign(pb.mesh.numDOFs, 0.0);
-	if ((int)Y.size() != pb.mesh.numDOFs) Y.assign(pb.mesh.numDOFs, 0.0);
-	if ((int)P.size() != pb.mesh.numDOFs) P.assign(pb.mesh.numDOFs, 0.0);
-	if ((int)A.size() != pb.mesh.numDOFs) A.assign(pb.mesh.numDOFs, 0.0);
-	if ((int)F.size() != (int)pb.freeDofIndex.size()) F.assign(pb.freeDofIndex.size(), 0.0);
+	// Initialize workspace buffers
+	const int nFull = pb.mesh.numDOFs;
+	const int nFree = static_cast<int>(bFree.size());
+	ws.xfull.assign(nFull, 0.0f);
+	ws.yfull.assign(nFull, 0.0f);
+	ws.tmpFree.resize(nFree);
+	auto& X = ws.xfull;
+	auto& Y = ws.yfull;
+	auto& F = ws.tmpFree;
 
 	// r = b - A*x (if nonzero initial guess)
 	if (!xFree.empty()) {
@@ -59,16 +78,17 @@ int PCG_free(const Problem& pb,
 
 	const float normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
 	for (int it=0; it<maxIt; ++it) {
-		std::fill(P.begin(), P.end(), 0.0);
-		scatter_from_free(pb, p, P);
-		K_times_u_finest(pb, eleModulus, P, A);
+		// Ap = A * p, using workspace buffers
+		std::fill(X.begin(), X.end(), 0.0);
+		scatter_from_free(pb, p, X);
+		K_times_u_finest(pb, eleModulus, X, Y);
 
 		// Fused restrict (A -> Ap) and denom = p·Ap
 		float denom = 0.0;
 		Ap.resize(p.size());
 		for (size_t i=0;i<p.size();++i) {
 			int gi = pb.freeDofIndex[i];
-			float api = A[gi];
+			float api = Y[gi];
 			Ap[i] = api;
 			denom += p[i] * api;
 		}
