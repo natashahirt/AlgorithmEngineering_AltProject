@@ -12,14 +12,14 @@ namespace top3d {
 
 struct GlobalParams {
 	// Physical
-	double youngsModulus = 1.0;
-	double poissonRatio = 0.3;
-	double youngsModulusMin = 1.0e-6;
-	double simpPenalty = 3.0;
-	double cellSize = 1.0;
+	float youngsModulus = 1.0f;
+	float poissonRatio = 0.3f;
+	float youngsModulusMin = 1.0e-6f;
+	float simpPenalty = 3.0f;
+	float cellSize = 1.0f;
 
 	// Solver
-	double cgTol = 1.0e-3;
+	float cgTol = 1.0e-3f;
 	int cgMaxIt = 800;
 
 	// Optimization
@@ -38,7 +38,7 @@ struct CartesianMesh {
 	int origResY = 0;
 	int origResZ = 0;
 
-	std::array<double,3> eleSize {1.0,1.0,1.0};
+	std::array<float,3> eleSize {1.0f,1.0f,1.0f};
 
 	int numElements = 0;
 	int numNodes = 0;
@@ -58,7 +58,7 @@ struct CartesianMesh {
 	std::vector<int32_t> eDofMat; // stored row-major: [ele][24]
 
 	// Element stiffness (24x24) for unit modulus
-	std::array<double,24*24> Ke{};
+	std::array<float,24*24> Ke{};
 };
 
 
@@ -67,19 +67,19 @@ struct Problem {
     CartesianMesh mesh;
 
     // Loads: one load case supported in minimal port: numNodes x 3 vector (flattened DOF)
-    std::vector<double> F;          // size = numDOFs
+    std::vector<float> F;          // size = numDOFs
     std::vector<uint8_t> isFreeDOF; // size = numDOFs (1 free, 0 fixed)
     std::vector<int> freeDofIndex;  // compact list of free dofs
 
     // Design variables
-    std::vector<double> density;    // per element x, size = numElements
+    std::vector<float> density;    // per element x, size = numElements
 };
 
 // Entry points
 void InitialSettings(GlobalParams& out);
 
 // Preconditioner functor: z = M^{-1} r (operates on free-DOF vectors)
-using Preconditioner = std::function<void(const std::vector<double>& rFree, std::vector<double>& zFree)>;
+using Preconditioner = std::function<void(const std::vector<float>& rFree, std::vector<float>& zFree)>;
 
 } // namespace top3d
 

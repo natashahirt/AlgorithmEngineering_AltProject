@@ -11,7 +11,7 @@ namespace top3d { namespace mg {
 // ===== MG scaffolding: trilinear weights and hierarchy (Step 2) =====
 
 // Trilinear shape for 8-node hex at natural coords (xi, eta, zeta) in [-1,1]
-static inline void shape_trilinear8(double xi, double eta, double zeta, double N[8]) {
+static inline void shape_trilinear8(float xi, float eta, float zeta, float N[8]) {
 	N[0] = 0.125*(1-xi)*(1-eta)*(1-zeta);
 	N[1] = 0.125*(1+xi)*(1-eta)*(1-zeta);
 	N[2] = 0.125*(1+xi)*(1+eta)*(1-zeta);
@@ -24,16 +24,16 @@ static inline void shape_trilinear8(double xi, double eta, double zeta, double N
 
 // Build per-element nodal weights table for a given span (2 or 4)
 // Mapping: coarse element's 8 vertices -> (span+1)^3 embedded fine-grid vertices
-static std::vector<double> make_trilinear_weights_table(int span) {
+static std::vector<float> make_trilinear_weights_table(int span) {
 	const int grid = span + 1;
-	std::vector<double> W(grid*grid*grid*8, 0.0);
+	std::vector<float> W(grid*grid*grid*8, 0.0);
 	for (int iz=0; iz<=span; ++iz) {
 		for (int iy=0; iy<=span; ++iy) {
 			for (int ix=0; ix<=span; ++ix) {
-				double xi   = -1.0 + 2.0 * (double(ix) / double(span));
-				double eta  = -1.0 + 2.0 * (double(iy) / double(span));
-				double zeta = -1.0 + 2.0 * (double(iz) / double(span));
-				double N[8]; shape_trilinear8(xi, eta, zeta, N);
+				float xi   = -1.0 + 2.0 * (float(ix) / float(span));
+				float eta  = -1.0 + 2.0 * (float(iy) / float(span));
+				float zeta = -1.0 + 2.0 * (float(iz) / float(span));
+				float N[8]; shape_trilinear8(xi, eta, zeta, N);
 				const int v = (iz*grid + iy)*grid + ix;
 				for (int a=0; a<8; ++a) W[v*8 + a] = N[a];
 			}

@@ -8,7 +8,7 @@ namespace top3d { namespace mg {
 struct MGPrecondConfig {
 	bool nonDyadic = true;   // first jump 1->3 (span=4)
 	int  maxLevels = 5;      // cap levels
-	double weight = 0.6;     // diagonal relaxation factor
+	float weight = 0.6f;     // diagonal relaxation factor
 };
  
 struct MGLevel {
@@ -23,7 +23,7 @@ struct MGLevel {
  
 	// Per-element nodal weights from 8 coarse vertices to embedded (span+1)^3 fine vertices
 	// Stored as weightsNode[(iz*grid + iy)*grid + ix]*8 + a, grid = spanWidth+1, a in [0..7]
-	std::vector<double> weightsNode;   // size = (span+1)^3 * 8
+	std::vector<float> weightsNode;   // size = (span+1)^3 * 8
 };
  
 struct MGHierarchy {
@@ -35,6 +35,6 @@ void BuildMGHierarchy(const Problem&, bool nonDyadic, MGHierarchy&, int maxLevel
 void build_static_once(const Problem&, const MGPrecondConfig&, MGHierarchy&, std::vector<std::vector<uint8_t>>&);
 Preconditioner make_diagonal_preconditioner_from_static(const Problem&, const MGHierarchy&,
     const std::vector<std::vector<uint8_t>>& fixedMasks,
-    const std::vector<double>& eleE, const MGPrecondConfig&);
+    const std::vector<float>& eleE, const MGPrecondConfig&);
       
 } } // namespace top3d::mg

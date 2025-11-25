@@ -5,10 +5,10 @@
 
 namespace top3d {
 
-std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize);
+std::array<float,24*24> ComputeVoxelKe(float nu, float cellSize);
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz);
 void ApplyBoundaryConditions(Problem& pb);
-void K_times_u_finest(const Problem&, const std::vector<double>& eleE, const std::vector<double>& u, std::vector<double>& y);
-double ComputeCompliance(const Problem&, const std::vector<double>& eleE, const std::vector<double>& U, std::vector<double>& ce);
+void K_times_u_finest(const Problem&, const std::vector<float>& eleE, const std::vector<float>& u, std::vector<float>& y);
+float ComputeCompliance(const Problem&, const std::vector<float>& eleE, const std::vector<float>& U, std::vector<float>& ce);
 
 } // namespace top3d

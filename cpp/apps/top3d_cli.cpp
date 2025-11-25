@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     int nely = std::atoi(argv[2]);
     int nelx = std::atoi(argv[3]);
     int nelz = std::atoi(argv[4]);
-    double V0  = std::atof(argv[5]);
+    float V0  = std::atof(argv[5]);
     int nLoop  = std::atoi(argv[6]);
 
     std::cout << "Running GLOBAL topo-opt on cuboid: "
