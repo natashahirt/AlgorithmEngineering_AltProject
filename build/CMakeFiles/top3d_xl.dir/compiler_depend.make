@@ -1097,6 +1097,7 @@ CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngin
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/ptr_traits.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/range_access.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/refwrap.h \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/specfun.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/std_abs.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/std_function.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/bits/stl_algo.h \
@@ -1122,6 +1123,7 @@ CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngin
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cctype \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cerrno \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/clocale \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cmath \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/compare \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cstdint \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/cstdio \
@@ -1138,11 +1140,24 @@ CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngin
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/functional \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/initializer_list \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/iosfwd \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/limits \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/new \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/optional \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/pstl/pstl_config.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/string \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/string_view \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/bessel_function.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/beta_function.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/ell_integral.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/exp_integral.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/gamma.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/hypergeometric.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/legendre_function.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/modified_bessel_func.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/poly_hermite.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/poly_laguerre.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/riemann_zeta.tcc \
+  /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tr1/special_function_util.h \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/tuple \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/type_traits \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/typeinfo \
@@ -1165,9 +1180,19 @@ CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngin
   /usr/include/bits/errno.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
+  /usr/include/bits/flt-eval-method.h \
+  /usr/include/bits/fp-fast.h \
+  /usr/include/bits/fp-logb.h \
+  /usr/include/bits/iscanonical.h \
   /usr/include/bits/libc-header-start.h \
+  /usr/include/bits/libm-simd-decl-stubs.h \
   /usr/include/bits/locale.h \
   /usr/include/bits/long-double.h \
+  /usr/include/bits/math-vector.h \
+  /usr/include/bits/mathcalls-helper-functions.h \
+  /usr/include/bits/mathcalls-narrow.h \
+  /usr/include/bits/mathcalls.h \
+  /usr/include/bits/mathinline.h \
   /usr/include/bits/pthreadtypes-arch.h \
   /usr/include/bits/pthreadtypes.h \
   /usr/include/bits/select.h \
@@ -1214,6 +1239,7 @@ CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o: /home/nhirt/AlgorithmEngin
   /usr/include/gnu/stubs.h \
   /usr/include/linux/errno.h \
   /usr/include/locale.h \
+  /usr/include/math.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -1562,6 +1588,7 @@ CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o: /home/nhirt/AlgorithmEngi
 
 CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o: /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/masks.cpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/core.hpp \
+  /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/transfers.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/multigrid.hpp \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/array \
   /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward/binders.h \
@@ -1729,6 +1756,7 @@ CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o: /home/nhirt/Algorith
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/core.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/coarsest.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/diagonal.hpp \
+  /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/hierarchy.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/masks.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/transfers.hpp \
   /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/multigrid.hpp \
@@ -2299,6 +2327,8 @@ CMakeFiles/top3d_xl.dir/src/solver.cpp.o: /home/nhirt/AlgorithmEngineering_AltPr
 
 
 /home/nhirt/AlgorithmEngineering_AltProject/cpp/src/multigrid/transfers.cpp:
+
+/home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/hierarchy.hpp:
 
 /home/nhirt/AlgorithmEngineering_AltProject/cpp/include/multigrid/detail/diagonal.hpp:
 

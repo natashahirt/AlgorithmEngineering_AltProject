@@ -167,22 +167,8 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 		}
 	}
 
-	// eDofMat (flattened DOF indices per element: 24 per element)
-	mesh.eDofMat.resize(mesh.numElements * 24);
-	for (int e=0; e<mesh.numElements; ++e) {
-		int nb = e*8;
-		int db = e*24;
-		for (int j=0;j<8;j++) {
-			int n = mesh.eNodMat[nb + j];
-			int d = 3*n;
-			mesh.eDofMat[db + 3*j + 0] = d + 0;
-			mesh.eDofMat[db + 3*j + 1] = d + 1;
-			mesh.eDofMat[db + 3*j + 2] = d + 2;
-		}
-	}
-
 	// Boundary nodes/elements identification
-	std::vector<int> nodDegree(mesh.numNodes, 0);
+	std::vector<int32_t> nodDegree(mesh.numNodes, 0);
 	for (int e=0;e<mesh.numElements;e++) {
 		for (int j=0;j<8;j++) nodDegree[ mesh.eNodMat[e*8+j] ] += 1;
 	}
@@ -220,7 +206,7 @@ void ApplyBoundaryConditions(Problem& pb) {
     std::fill(pb.F.begin(), pb.F.end(), 0.0);
 
 	// Built-in demo BCs as fallback
-	std::vector<int> fixedNodes;
+	std::vector<int32_t> fixedNodes;
 	for (int iz=0; iz<nnz; ++iz) {
 		for (int iy=0; iy<nny; ++iy) {
 			int node = nnx*nny*iz + nnx*iy + 0;
@@ -235,7 +221,7 @@ void ApplyBoundaryConditions(Problem& pb) {
 
 	// Apply loads on the right face of the original (pre-padding) domain: ix = origNx
 	{
-		std::vector<int> loadedNodes;
+		std::vector<int32_t> loadedNodes;
 		int count=0;
 		const int ixLoad = std::min(origNx, nnx-1); // guard
 		for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
@@ -292,16 +278,18 @@ void K_times_u_finest(const Problem& pb, const std::vector<float>& eleModulus,
 	for (int e=0; e<mesh.numElements; ++e) {
 		const float Ee = eleModulus[e];
 		if (Ee <= 1.0e-16) continue;
-		// gather element DOFs (8 nodes x 3 comps) from uFull global displacement vector
+		// gather ue from nodes (8 nodes × 3 dofs)
 		{
-			const int32_t* __restrict__ dptr = &eDof[e*24];
+			const int32_t* __restrict__ nptr = &eNodes[e*8];
 			for (int j=0;j<8;j++) {
-				ue[3*j+0] = uPtr[dptr[3*j+0]];
-				ue[3*j+1] = uPtr[dptr[3*j+1]];
-				ue[3*j+2] = uPtr[dptr[3*j+2]];
+				const int n = nptr[j];
+				const int d = 3*n;
+				ue[3*j+0] = uPtr[d+0];
+				ue[3*j+1] = uPtr[d+1];
+				ue[3*j+2] = uPtr[d+2];
 			}
 		}
-		// direct scatter: y[dof_i] += Ee * (Ke[i,:] · ue)
+		// y[dof(i)] += Ee * (Ke[i,:] · ue), map row i -> (node j, comp c)
 		{
 			const int32_t* __restrict__ dptr = &eDof[e*24];
 			for (int i=0;i<24;i++) {
@@ -309,7 +297,10 @@ void K_times_u_finest(const Problem& pb, const std::vector<float>& eleModulus,
 				float sum = 0.0;
 				#pragma omp simd reduction(+:sum)
 				for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-				yPtr[dptr[i]] += Ee * sum;
+				const int j = iRow / 3;
+				const int c = iRow - 3*j; // 0,1,2
+				const int n = nptr[j];
+				yPtr[3*n + c] += Ee * sum;
 			}
 		}
 	}
@@ -326,11 +317,13 @@ float ComputeCompliance(const Problem& pb,
 	std::array<float,24> ue{};
 	for (int e=0;e<mesh.numElements;e++) {
 		{
-			const int32_t* __restrict__ dptr = &mesh.eDofMat[e*24];
+			const int32_t* __restrict__ nptr = &mesh.eNodMat[e*8];
 			for (int j=0;j<8;j++) {
-				ue[3*j+0] = uFull[dptr[3*j+0]];
-				ue[3*j+1] = uFull[dptr[3*j+1]];
-				ue[3*j+2] = uFull[dptr[3*j+2]];
+				const int n = nptr[j];
+				const int d = 3*n;
+				ue[3*j+0] = uFull[d+0];
+				ue[3*j+1] = uFull[d+1];
+				ue[3*j+2] = uFull[d+2];
 			}
 		}
 		float tmp[24];
