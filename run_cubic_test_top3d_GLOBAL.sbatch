@@ -15,11 +15,11 @@
 module load gcc/12.2.0
 module load cmake/3.27.9
 
-cd /home/lucas_b/AlgorithmEngineering_AltProject
+cd /home/nhirt/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
-PARAMS="12 24 12 0.12 30"
-SIMULATION_COUNT="5"
+PARAMS="30 60 30 0.12 30"
+SIMULATION_COUNT="1"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl

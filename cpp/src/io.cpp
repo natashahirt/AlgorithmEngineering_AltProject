@@ -37,7 +37,15 @@ std::string out_stl_dir_for_cwd() {
 	return out_dir_for_cwd() + "stl/";
 }
 
-std::string generate_unique_filename(const std::string& mode) {
+std::string out_log_dir_for_cwd() {
+	return out_dir_for_cwd() + "log/";
+}
+
+std::string out_comments_dir_for_cwd() {
+	return out_dir_for_cwd() + "comments/";
+}
+
+std::string generate_unique_tag(const std::string& mode) {
 	// Generate datetime string matching bash format: YYYYMMDD_HHMMSS
 	auto now = std::chrono::system_clock::now();
 	auto time_t = std::chrono::system_clock::to_time_t(now);
@@ -58,10 +66,14 @@ std::string generate_unique_filename(const std::string& mode) {
 	
 	// Format: MODE_DATETIME_JOBID.stl (or MODE_DATETIME.stl if no job ID)
 	if (!job_id_str.empty()) {
-		return mode + "_" + datetime + "_" + job_id_str + ".stl";
+		return mode + "_" + datetime + "_" + job_id_str;
 	} else {
-		return mode + "_" + datetime + ".stl";
+		return mode + "_" + datetime;
 	}
+}
+
+std::string generate_unique_filename(const std::string& mode) {
+	return generate_unique_tag(mode) + ".stl";
 }
 
 // ===== Export helpers =====

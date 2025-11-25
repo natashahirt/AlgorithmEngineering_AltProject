@@ -134,7 +134,6 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 
 	// eNodMat (compact by using compact node ids directly)
 	mesh.eNodMat.resize(mesh.numElements*8);
-	int eIdx = 0;
 	for (int ez=0; ez<nz; ++ez) {
 		for (int ex=0; ex<nx; ++ex) {
 			for (int ey=0; ey<ny; ++ey) {
@@ -162,7 +161,6 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 				mesh.eNodMat[base+5] = n6;
 				mesh.eNodMat[base+6] = n7;
 				mesh.eNodMat[base+7] = n8;
-				++eIdx;
 			}
 		}
 	}
@@ -270,38 +268,33 @@ void K_times_u_finest(const Problem& pb, const std::vector<float>& eleModulus,
 	// element-local displacement buffer
 	alignas(64) std::array<float,24> ue{};
 
-	// generate pointers for u, y, and elements
+	// generate pointers for u, y
 	const float* __restrict__ uPtr = uFull.data();
 	float* __restrict__ yPtr = yFull.data();
-	const int32_t* __restrict__ eDof = mesh.eDofMat.data();
 
 	for (int e=0; e<mesh.numElements; ++e) {
 		const float Ee = eleModulus[e];
-		if (Ee <= 1.0e-16) continue;
+		if (Ee <= 1.0e-16f) continue;
+
 		// gather ue from nodes (8 nodes × 3 dofs)
-		{
-			const int32_t* __restrict__ nptr = &eNodes[e*8];
-			for (int j=0;j<8;j++) {
-				const int n = nptr[j];
-				const int d = 3*n;
-				ue[3*j+0] = uPtr[d+0];
-				ue[3*j+1] = uPtr[d+1];
-				ue[3*j+2] = uPtr[d+2];
-			}
+		const int32_t* __restrict__ nptr = &mesh.eNodMat[e*8];
+		for (int j=0;j<8;j++) {
+			const int n = nptr[j];
+			const int d = 3*n;
+			ue[3*j+0] = uPtr[d+0];
+			ue[3*j+1] = uPtr[d+1];
+			ue[3*j+2] = uPtr[d+2];
 		}
-		// y[dof(i)] += Ee * (Ke[i,:] · ue), map row i -> (node j, comp c)
-		{
-			const int32_t* __restrict__ dptr = &eDof[e*24];
-			for (int i=0;i<24;i++) {
-				const float* __restrict__ Ki = &Ke[i*24];
-				float sum = 0.0;
-				#pragma omp simd reduction(+:sum)
-				for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-				const int j = iRow / 3;
-				const int c = iRow - 3*j; // 0,1,2
-				const int n = nptr[j];
-				yPtr[3*n + c] += Ee * sum;
-			}
+		// y[dof(i)] += Ee * (Ke[i,:] · ue)
+		for (int i=0;i<24;i++) {
+			const float* __restrict__ Ki = &Ke[i*24];
+			float sum = 0.0f;
+			#pragma omp simd reduction(+:sum)
+			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
+			const int jnode = i / 3;
+			const int comp = i - 3*jnode; // 0,1,2
+			const int n = nptr[jnode];
+			yPtr[3*n + comp] += Ee * sum;
 		}
 	}
 	// No Dirichlet row zeroing (callers on free subspace don't require)

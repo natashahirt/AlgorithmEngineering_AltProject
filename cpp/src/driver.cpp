@@ -12,6 +12,8 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 namespace top3d {
 
@@ -51,35 +53,35 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
 		
 		// Initialize design
-		for (double& x: pb.density) x = V0;
+		for (float& x: pb.density) x = static_cast<float>(V0);
 
 		const int ne = pb.mesh.numElements;
-		std::vector<double> x = pb.density;
-		std::vector<double> xPhys = x;
-		std::vector<double> ce(ne, 0.0);
-		std::vector<double> eleMod(ne, pb.params.youngsModulus);
-		std::vector<double> uFreeWarm; // warm-start buffer for PCG
+		std::vector<float> x = pb.density;
+		std::vector<float> xPhys = x;
+		std::vector<float> ce(ne, 0.0f);
+		std::vector<float> eleMod(ne, pb.params.youngsModulus);
+		std::vector<float> uFreeWarm; // warm-start buffer for PCG
 
 		// Initialize reused vectors
-		std::vector<double> xfull(pb.mesh.numDOFs, 0.0);
-		std::vector<double> yfull(pb.mesh.numDOFs, 0.0);
-		std::vector<double> pfull(pb.mesh.numDOFs, 0.0);
-		std::vector<double> Apfull(pb.mesh.numDOFs, 0.0);
-		std::vector<double> freeTmp(pb.freeDofIndex.size(), 0.0);
+		std::vector<float> xfull(pb.mesh.numDOFs, 0.0f);
+		std::vector<float> yfull(pb.mesh.numDOFs, 0.0f);
+		std::vector<float> pfull(pb.mesh.numDOFs, 0.0f);
+		std::vector<float> Apfull(pb.mesh.numDOFs, 0.0f);
+		std::vector<float> freeTmp(pb.freeDofIndex.size(), 0.0f);
 
 		// Solve fully solid for reference
 		{
 			tStart = std::chrono::steady_clock::now();
-			std::vector<double> U(pb.mesh.numDOFs, 0.0);
-			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
-			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
+			std::vector<float> U(pb.mesh.numDOFs, 0.0f);
+			std::vector<float> bFree; restrict_to_free(pb, pb.F, bFree);
+			std::vector<float> uFree; uFree.assign(bFree.size(), 0.0f);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
 			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG,
 				&xfull, &yfull, &pfull, &Apfull, &freeTmp);
 			scatter_from_free(pb, uFree, U);
-			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
+			double Csolid = static_cast<double>(ComputeCompliance(pb, eleMod, U, ce));
 			CsolidRef = Csolid;
 			// Seed warm start for first optimization iteration
 			uFreeWarm = uFree;
@@ -94,6 +96,9 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		int loop=0;
 		double change=1.0;
 		double sharpness = 1.0;
+		// Aggregation for summary
+		double sumCG = 0.0, sumOpt = 0.0, sumFilter = 0.0, sumIter = 0.0;
+		double objFirst = 0.0, objLast = 0.0;
 		
 		while (loop < nLoop && change > 1e-4 && sharpness > 0.01) {
 			auto tPerIter = std::chrono::steady_clock::now();
@@ -101,16 +106,17 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			
 			// Update modulus via SIMP
 			for (int e=0;e<ne;e++) {
-				double rho = std::clamp(xPhys[e], 0.0, 1.0);
-				eleMod[e] = pb.params.youngsModulusMin + std::pow(rho, pb.params.simpPenalty) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+				float rho = std::clamp(xPhys[e], 0.0f, 1.0f);
+				float powp = static_cast<float>(std::pow(rho, pb.params.simpPenalty));
+				eleMod[e] = pb.params.youngsModulusMin + powp * (pb.params.youngsModulus - pb.params.youngsModulusMin);
 			}
 			
 			// Solve KU=F
 			auto tSolveStart = std::chrono::steady_clock::now();
-			std::vector<double> U(pb.mesh.numDOFs, 0.0);
-			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+			std::vector<float> U(pb.mesh.numDOFs, 0.0f);
+			std::vector<float> bFree; restrict_to_free(pb, pb.F, bFree);
 			// Ensure warm-start vector matches current system size
-			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0);
+			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
 			// Reuse static MG context for current SIMP-modified modulus
 			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
 			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
@@ -121,7 +127,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			
 			// Compliance and sensitivities
 			auto tOptStart = std::chrono::steady_clock::now();
-			double C = ComputeCompliance(pb, eleMod, U, ce);
+			double C = static_cast<double>(ComputeCompliance(pb, eleMod, U, ce));
 			// Normalized reporting to mirror MATLAB: ceNorm = ce / CsolidRef; cObj = sum(Ee*ceNorm); Cdisp = cObj*CsolidRef
 			double cObjNorm = 0.0;
 			if (CsolidRef > 0) {
@@ -132,38 +138,38 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
 			std::vector<double> dc(ne, 0.0);
 			for (int e=0;e<ne;e++) {
-				double rho = std::clamp(xPhys[e], 0.0, 1.0);
+				double rho = std::clamp(static_cast<double>(xPhys[e]), 0.0, 1.0);
 				double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-				double ceNorm = (CsolidRef > 0 ? ce[e] / CsolidRef : ce[e]);
+				double ceNorm = (CsolidRef > 0 ? static_cast<double>(ce[e]) / CsolidRef : static_cast<double>(ce[e]));
 				dc[e] = - dEdrho * ceNorm;
 			}
 			
 			// PDE filter on dc (ft=1): filter(x.*dc)./max(1e-3,x)
 			auto tFilterStart = std::chrono::steady_clock::now();
 			{
-				std::vector<double> xdc(ne);
-				for (int e=0;e<ne;e++) xdc[e] = x[e]*dc[e];
-				std::vector<double> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt);
-				for (int e=0;e<ne;e++) dc[e] = dc_filt[e] / std::max(1e-3, x[e]);
+				std::vector<float> xdc(ne);
+				for (int e=0;e<ne;e++) xdc[e] = static_cast<float>(x[e]*dc[e]);
+				std::vector<float> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt);
+				for (int e=0;e<ne;e++) dc[e] = static_cast<double>(dc_filt[e]) / std::max<double>(1.0e-3, static_cast<double>(x[e]));
 			}
 			auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
 			
 			// OC (Optimality Criteria)
 			double l1=0.0, l2=1e9;
 			double move=0.2;
-			std::vector<double> xnew(ne, 0.0);
+			std::vector<float> xnew(ne, 0.0f);
 			while ((l2-l1)/(l1+l2) > 1e-6) {
 				double lmid = 0.5*(l1+l2);
 				for (int e=0;e<ne;e++) {
 					double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
-					double xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
+					double xe = std::clamp(static_cast<double>(x[e])*val, static_cast<double>(x[e])-move, static_cast<double>(x[e])+move);
 					xe = std::clamp(xe, 0.0, 1.0);
-					xnew[e] = std::max(1.0e-3, xe);
+					xnew[e] = static_cast<float>(std::max(1.0e-3, xe));
 				}
-				double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0) / static_cast<double>(ne);
+				double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0, [](double s, float v){ return s + static_cast<double>(v); }) / static_cast<double>(ne);
 				if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 			}
-			change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
+			change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(static_cast<double>(xnew[e]-x[e])));
 			x.swap(xnew);
 			xPhys = x; // no filter in this minimal port
 
@@ -171,6 +177,14 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 				[](double sum, double val) { return sum + val * (1.0 - val); }) / static_cast<double>(ne);
 			auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
 			auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tPerIter).count();
+			
+			// Aggregation
+			if (loop == 1) objFirst = Cdisp;
+			objLast = Cdisp;
+			sumCG += tSolveTime;
+			sumOpt += tOptTime;
+			sumFilter += tFilterTime;
+			sumIter += tTotalTime;
 			
 			double volFrac = std::accumulate(xPhys.begin(), xPhys.end(), 0.0) / static_cast<double>(ne);
 			double fval = volFrac - V0;
@@ -196,11 +210,48 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 				<< std::scientific << std::setprecision(4) << tTotalTime << "s.\n";
 		std::cout << std::fixed;
 		
+		// Build summary text
+		int origdimsX = pb.mesh.origResX, origdimsY = pb.mesh.origResY, origdimsZ = pb.mesh.origResZ;
+		int dimsX = pb.mesh.resX, dimsY = pb.mesh.resY, dimsZ = pb.mesh.resZ;
+		double avgPerIter = (loop > 0 ? sumIter / static_cast<double>(loop) : 0.0);
+		double pctCG = (sumIter > 0 ? 100.0 * sumCG / sumIter : 0.0);
+		double pctOpt = (sumIter > 0 ? 100.0 * sumOpt / sumIter : 0.0);
+		double pctFilt = (sumIter > 0 ? 100.0 * sumFilter / sumIter : 0.0);
+		std::ostringstream summary;
+		summary << "PARAMETERS\n"
+		        << "original dims: x=" << origdimsX << ", y=" << origdimsY << ", z=" << origdimsZ << "\n"
+				<< "padded dims: x=" << dimsX << ", y=" << dimsY << ", z=" << dimsZ << "\n"
+		        << "v0: " << V0 << "\n\n"
+		        << "SOLVING\n"
+		        << "iterations: " << loop << "\n"
+		        << "cg iterations: " << pb.params.cgMaxIt << "\n\n"
+		        << "RESULTS\n"
+		        << "compliance solid: " << std::scientific << std::setprecision(6) << CsolidRef << "\n"
+		        << "objective first: " << objFirst << "\n"
+		        << "objective last: " << objLast << "\n\n"
+		        << "TIME\n"
+		        << "total solver time: " << sumCG << "\n"
+		        << "time per iter: " << std::fixed << std::setprecision(4) << avgPerIter << "\n"
+		        << "percentage time spent on cg: " << std::setprecision(2) << pctCG << "%\n"
+		        << "percentage time spent on optim: " << pctOpt << "%\n"
+		        << "percentage time spent on filtering: " << pctFilt << "%\n";
+		// Print to stdout so it appears in logs
+		std::cout << "\n" << summary.str() << std::endl;
+		
+		// Persist artifacts with a shared tag
+		const std::string tag = generate_unique_tag("GLOBAL");
+		// Write comments markdown only for dims = 30 x 60 x 30
+		if (pb.mesh.origResX == 60 && pb.mesh.origResY == 30 && pb.mesh.origResZ == 30) {
+			const std::string commentsDir = out_comments_dir_for_cwd();
+			ensure_out_dir(commentsDir);
+			std::ofstream md(commentsDir + tag + ".md");
+			md << summary.str();
+		}
+		// Export STL with same tag
 		const std::string stlDir = out_stl_dir_for_cwd();
 		ensure_out_dir(stlDir);
-		std::string stlFilename = generate_unique_filename("GLOBAL");
-		export_surface_stl(pb, xPhys, stlDir + stlFilename, 0.3f);
-		std::cout << "STL file saved to: " << stlDir << stlFilename << "\n";
+		export_surface_stl(pb, xPhys, stlDir + tag + ".stl", 0.3f);
+		std::cout << "STL file saved to: " << stlDir << tag << ".stl\n";
 		std::cout << "\nDone.\n";
 	}
 	auto finalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSimulationsStart).count();
