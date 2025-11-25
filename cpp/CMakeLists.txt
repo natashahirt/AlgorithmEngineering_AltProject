@@ -39,3 +39,9 @@ add_executable(top3d_xl_cli
 )
 
 target_link_libraries(top3d_xl_cli PRIVATE top3d_xl)
+
+# OpenMP support: prefer CMake's FindOpenMP; on macOS fall back to Homebrew libomp
+# find_package(OpenMP REQUIRED)
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(top3d_xl PUBLIC OpenMP::OpenMP_CXX)
+endif()

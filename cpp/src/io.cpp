@@ -65,7 +65,7 @@ std::string generate_unique_filename(const std::string& mode) {
 }
 
 // ===== Export helpers =====
-void export_surface_stl(const Problem& pb, const std::vector<double>& xPhys, const std::string& path, float iso) {
+void export_surface_stl(const Problem& pb, const std::vector<float>& xPhys, const std::string& path, float iso) {
 	int ny = pb.mesh.resY, nx = pb.mesh.resX, nz = pb.mesh.resZ;
 	std::vector<float> vol(ny*nx*nz, 0.0f);
 	for (int e=0; e<pb.mesh.numElements; ++e) vol[pb.mesh.eleMapBack[e]] = static_cast<float>(xPhys[e]);

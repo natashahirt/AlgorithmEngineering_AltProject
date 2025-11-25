@@ -8,13 +8,13 @@
 namespace top3d { namespace mg {
 
 static void ComputeJacobiDiagonalFull(const Problem& pb,
-									  const std::vector<double>& eleModulus,
-									  std::vector<double>& diagFull) {
+									  const std::vector<float>& eleModulus,
+									  std::vector<float>& diagFull) {
 	const auto& mesh = pb.mesh;
 	diagFull.assign(mesh.numDOFs, 0.0);
 	const auto& Ke = mesh.Ke;
 	for (int e=0; e<mesh.numElements; ++e) {
-		double Ee = eleModulus[e];
+		float Ee = eleModulus[e];
 		for (int a=0; a<8; ++a) {
 			int n = mesh.eNodMat[e*8 + a];
 			for (int c=0; c<3; ++c) {
@@ -23,20 +23,20 @@ static void ComputeJacobiDiagonalFull(const Problem& pb,
 			}
 		}
 	}
-	for (double& v : diagFull) if (!(v > 0.0)) v = 1.0;
+	for (float& v : diagFull) if (!(v > 0.0)) v = 1.0;
 }
 
 
 static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
-								  const std::vector<double>& diagFine,
+								  const std::vector<float>& diagFine,
 								  const std::vector<uint8_t>& fineFixedMask,
 								  const std::vector<uint8_t>& coarseFixedMask,
-								  std::vector<double>& diagCoarse) {
+								  std::vector<float>& diagCoarse) {
     const int span = Lc.spanWidth;
     const int grid = span+1;
 
 	diagCoarse.assign((Lc.resX+1)*(Lc.resY+1)*(Lc.resZ+1)*3, 0.0);
-	std::vector<double> wsum(diagCoarse.size(), 0.0);
+	std::vector<float> wsum(diagCoarse.size(), 0.0);
 
 	auto idxF = [&](int ix,int iy,int iz){ return (Lf.resX+1)*(Lf.resY+1)*iz + (Lf.resX+1)*iy + ix; };
 	auto idxC = [&](int ix,int iy,int iz){ return (Lc.resX+1)*(Lc.resY+1)*iz + (Lc.resX+1)*iy + ix; };
@@ -50,7 +50,7 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 						for (int ix=0; ix<=span; ++ix) {
 							int fxi = fx0 + ix; int fyi = fy0 - iy; int fzi = fz0 + iz;
 							int fn = idxF(fxi, fyi, fzi);
-                            const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+                            const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
 							int cidx[8] = {
 								idxC(cex,   Lc.resY-cey,   cez),
 								idxC(cex+1, Lc.resY-cey,   cez),
@@ -62,7 +62,7 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 								idxC(cex,   Lc.resY-cey-1, cez+1)
 							};
 							for (int a=0;a<8;a++) {
-								double w2 = W[a]*W[a];
+								float w2 = W[a]*W[a];
 								for (int c=0;c<3;c++) {
 									const int fineD = 3*fn + c;
 									const int coarseD = 3*cidx[a] + c;
@@ -98,8 +98,8 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 
 void MG_BuildDiagonals(const Problem& pb, const MGHierarchy& H,
 							   const std::vector<std::vector<uint8_t>>& fixedMasks,
-							   const std::vector<double>& eleModulus,
-							   std::vector<std::vector<double>>& diagLevels) {
+							   const std::vector<float>& eleModulus,
+							   std::vector<std::vector<float>>& diagLevels) {
 	diagLevels.resize(H.levels.size());
 	ComputeJacobiDiagonalFull(pb, eleModulus, diagLevels[0]);
 	// Impose BCs at finest level on the diagonal
