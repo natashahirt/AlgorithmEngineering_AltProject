@@ -75,12 +75,15 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		}
 	}
 
-	// 3) Return preconditioner closure (same as MG diagonal-only path)
-	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<float>& rFree, std::vector<float>& zFree) {
+	// 3) Return preconditioner closure (adapt to double free-DOF vectors)
+	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
+		// Convert input free vector to float for MG internals
+		std::vector<float> rFree_f(rFree.size());
+		for (size_t i=0;i<rFree.size();++i) rFree_f[i] = static_cast<float>(rFree[i]);
 		const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
 		const int n0_dofs  = 3*n0_nodes;
-		std::vector<float> r0(n0_dofs, 0.0);
-		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree[i];
+		std::vector<float> r0(n0_dofs, 0.0f);
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree_f[i];
 
 		std::vector<std::vector<float>> rLv(H.levels.size());
 		std::vector<std::vector<float>> xLv(H.levels.size());
@@ -93,15 +96,15 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		for (size_t l=0; l+1<H.levels.size(); ++l) {
 			const int fn_nodes = H.levels[l].numNodes;
 			const int cn_nodes = H.levels[l+1].numNodes;
-			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0);
+			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0f);
 			const auto& D = diag[l];
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
 					const int d = 3*i+c; if (fixedMasks[l][d]) continue;
-					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30f, D[d]);
+					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
 				}
 			}
-			rLv[l+1].assign(3*cn_nodes, 0.0);
+			rLv[l+1].assign(3*cn_nodes, 0.0f);
 			for (int c=0;c<3;c++) {
 				std::vector<float> rf(fn_nodes), rc;
 				for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
@@ -109,7 +112,7 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
 			}
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
-			xLv[l+1].assign(3*cn_nodes, 0.0);
+			xLv[l+1].assign(3*cn_nodes, 0.0f);
 		}
 
 		const size_t Lidx = H.levels.size()-1;
@@ -120,33 +123,34 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		} else {
 			const auto& D = diag[Lidx];
 			const int cn_nodes = H.levels[Lidx].numNodes;
-			xLv[Lidx].assign(3*cn_nodes, 0.0);
+			xLv[Lidx].assign(3*cn_nodes, 0.0f);
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
 				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
-				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1e-30f, D[d]);
+				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30f, D[d]);
 			}
 		}
 
 		for (int l=(int)H.levels.size()-2; l>=0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
-			std::vector<float> add(3*fn_nodes, 0.0);
+			std::vector<float> add(3*fn_nodes, 0.0f);
 			for (int c=0;c<3;c++) {
 				std::vector<float> xc(H.levels[l+1].numNodes), xf;
 				for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
 				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
 				for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
 			}
-			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0);
+			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0f);
 			for (int i=0;i<3*fn_nodes;i++) xLv[l][i] += add[i];
 			const auto& D = diag[l];
 			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
 			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) {
 				int d = 3*i+c; if (fixedMasks[l][d]) continue;
-				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1e-30f, D[d]);
+				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
 			}
 		}
+		// Convert back to double for output
 		zFree.resize(rFree.size());
-		for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = xLv[0][pb.freeDofIndex[i]];
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = static_cast<double>(xLv[0][pb.freeDofIndex[i]]);
 	};
 }
 

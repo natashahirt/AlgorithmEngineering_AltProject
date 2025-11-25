@@ -7,13 +7,13 @@
 
 namespace top3d {
 
-std::array<float,24*24> ComputeVoxelKe(float nu, float cellSize) {
+std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize) {
 	// Numerical 2x2x2 Gauss integration for an 8-node linear hex element
-	float E = 1.0; // unit modulus; actual modulus scales at element level
-	float lambda = E*nu/((1.0+nu)*(1.0-2.0*nu));
-	float mu = E/(2.0*(1.0+nu));
+	double E = 1.0; // unit modulus; actual modulus scales at element level
+	double lambda = E*nu/((1.0+nu)*(1.0-2.0*nu));
+	double mu = E/(2.0*(1.0+nu));
 	// Constitutive D (6x6) in Voigt order [xx,yy,zz,yz,xz,xy]
-	float D[6][6] = {
+	double D[6][6] = {
 		{lambda+2*mu, lambda,       lambda,       0,    0,    0},
 		{lambda,       lambda+2*mu, lambda,       0,    0,    0},
 		{lambda,       lambda,       lambda+2*mu, 0,    0,    0},
@@ -21,34 +21,34 @@ std::array<float,24*24> ComputeVoxelKe(float nu, float cellSize) {
 		{0,            0,            0,            0,    mu,   0},
 		{0,            0,            0,            0,    0,    mu}
 	};
-	std::array<float,24*24> Ke{};
+	std::array<double,24*24> Ke{};
 	// Gauss points in [-1,1]
-	const float gp[2] = {-1.0f/std::sqrt(3.0f), 1.0f/std::sqrt(3.0f)};
-	const float w[2] = {1.0, 1.0};
+	const double gp[2] = {-1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
+	const double w[2] = {1.0, 1.0};
 	// Mapping: natural -> physical with hx=hy=hz=cellSize; J = diag(h/2)
-	float hx = cellSize, hy = cellSize, hz = cellSize;
-	float detJ = (hx*hy*hz)/8.0;
-	float sx = 2.0/hx, sy = 2.0/hy, sz = 2.0/hz; // d/dx = d/ds * sx, etc.
+	double hx = cellSize, hy = cellSize, hz = cellSize;
+	double detJ = (hx*hy*hz)/8.0;
+	double sx = 2.0/hx, sy = 2.0/hy, sz = 2.0/hz; // d/dx = d/ds * sx, etc.
 	for (int a=0;a<2;a++) for (int b=0;b<2;b++) for (int c=0;c<2;c++) {
-		float s = gp[a], t = gp[b], p = gp[c];
+		double s = gp[a], t = gp[b], p = gp[c];
 		// Shape function derivatives in natural coords
-		float dNds[8] = {
-			-0.125f*(1-t)*(1-p),  0.125f*(1-t)*(1-p),  0.125f*(1+t)*(1-p), -0.125f*(1+t)*(1-p),
-			-0.125f*(1-t)*(1+p),  0.125f*(1-t)*(1+p),  0.125f*(1+t)*(1+p), -0.125f*(1+t)*(1+p)
+		double dNds[8] = {
+			-0.125*(1-t)*(1-p),  0.125*(1-t)*(1-p),  0.125*(1+t)*(1-p), -0.125*(1+t)*(1-p),
+			-0.125*(1-t)*(1+p),  0.125*(1-t)*(1+p),  0.125*(1+t)*(1+p), -0.125*(1+t)*(1+p)
 		};
-		float dNdt[8] = {
-			-0.125f*(1-s)*(1-p), -0.125f*(1+s)*(1-p),  0.125f*(1+s)*(1-p),  0.125f*(1-s)*(1-p),
-			-0.125f*(1-s)*(1+p), -0.125f*(1+s)*(1+p),  0.125f*(1+s)*(1+p),  0.125f*(1-s)*(1+p)
+		double dNdt[8] = {
+			-0.125*(1-s)*(1-p), -0.125*(1+s)*(1-p),  0.125*(1+s)*(1-p),  0.125*(1-s)*(1-p),
+			-0.125*(1-s)*(1+p), -0.125*(1+s)*(1+p),  0.125*(1+s)*(1+p),  0.125*(1-s)*(1+p)
 		};
-		float dNdp[8] = {
-			-0.125f*(1-s)*(1-t), -0.125f*(1+s)*(1-t), -0.125f*(1+s)*(1+t), -0.125f*(1-s)*(1+t),
-			 0.125f*(1-s)*(1-t),  0.125f*(1+s)*(1-t),  0.125f*(1+s)*(1+t),  0.125f*(1-s)*(1+t)
+		double dNdp[8] = {
+			-0.125*(1-s)*(1-t), -0.125*(1+s)*(1-t), -0.125*(1+s)*(1+t), -0.125*(1-s)*(1+t),
+			 0.125*(1-s)*(1-t),  0.125*(1+s)*(1-t),  0.125*(1+s)*(1+t),  0.125*(1-s)*(1+t)
 		};
 		// Convert to physical derivatives
-		float dNdx[8], dNdy[8], dNdz[8];
+		double dNdx[8], dNdy[8], dNdz[8];
 		for (int i=0;i<8;i++) { dNdx[i]=dNds[i]*sx; dNdy[i]=dNdt[i]*sy; dNdz[i]=dNdp[i]*sz; }
 		// Build B (6x24)
-		float B[6][24]; for (int r=0;r<6;r++) for (int c2=0;c2<24;c2++) B[r][c2]=0.0;
+		double B[6][24]; for (int r=0;r<6;r++) for (int c2=0;c2<24;c2++) B[r][c2]=0.0;
 		for (int i=0;i<8;i++) {
 			int c0 = 3*i;
 			B[0][c0+0] = dNdx[i];
@@ -59,11 +59,11 @@ std::array<float,24*24> ComputeVoxelKe(float nu, float cellSize) {
 			B[5][c0+0] = dNdy[i]; B[5][c0+1] = dNdx[i]; // xy
 		}
 		// Ke += B' * D * B * w_s * w_t * w_p * detJ
-		float DB[6][24]; for (int i=0;i<6;i++) for (int j=0;j<24;j++) { float sum=0; for (int k=0;k<6;k++) sum+=D[i][k]*B[k][j]; DB[i][j]=sum; }
-		float weight = w[a]*w[b]*w[c]*detJ;
+		double DB[6][24]; for (int i=0;i<6;i++) for (int j=0;j<24;j++) { double sum=0.0; for (int k=0;k<6;k++) sum+=D[i][k]*B[k][j]; DB[i][j]=sum; }
+		double weight = w[a]*w[b]*w[c]*detJ;
 		for (int i=0;i<24;i++) {
 			for (int j=0;j<24;j++) {
-				float sum=0.0; for (int k=0;k<6;k++) sum += B[k][i]*DB[k][j];
+				double sum=0.0; for (int k=0;k<6;k++) sum += B[k][i]*DB[k][j];
 				Ke[i*24+j] += sum * weight;
 			}
 		}
@@ -73,7 +73,7 @@ std::array<float,24*24> ComputeVoxelKe(float nu, float cellSize) {
 
 void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	CartesianMesh& mesh = pb.mesh;
-	mesh.eleSize = {1.0,1.0,1.0};
+	mesh.eleSize = {1.0f,1.0f,1.0f};
 	// Record original resolutions (elements) before padding
 	mesh.origResX = nelx;
 	mesh.origResY = nely;
@@ -195,7 +195,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	mesh.Ke = ComputeVoxelKe(0.3, 1.0);
 
 	// Initialize design variables to V0 later
-	pb.density.assign(mesh.numElements, 1.0);
+	pb.density.assign(mesh.numElements, 1.0f);
 
 	// Allocate forces and DOF state
 	pb.F.assign(mesh.numDOFs, 0.0);
@@ -212,7 +212,7 @@ void ApplyBoundaryConditions(Problem& pb) {
 
     // Reset DOF masks and loads
     std::fill(pb.isFreeDOF.begin(), pb.isFreeDOF.end(), 1);
-    std::fill(pb.F.begin(), pb.F.end(), 0.0);
+	std::fill(pb.F.begin(), pb.F.end(), 0.0);
 
 	// Built-in demo BCs as fallback
 	std::vector<int32_t> fixedNodes;
@@ -241,7 +241,7 @@ void ApplyBoundaryConditions(Problem& pb) {
 			}
 		}
 		if (count>0) {
-			float fz = -1.0/static_cast<float>(count);
+			double fz = -1.0/static_cast<double>(count);
 			for (int n : loadedNodes) pb.F[3*n + 2] += fz;
 		}
 	}
@@ -266,25 +266,23 @@ void ApplyBoundaryConditions(Problem& pb) {
 }
 
 void K_times_u_finest(const Problem& pb,
-                      const std::vector<float>& eleModulus,
-                      const std::vector<float>& uFull,
-                      std::vector<float>& yFull) {
+                      const std::vector<double>& eleModulus,
+                      const std::vector<double>& uFull,
+                      std::vector<double>& yFull) {
     const auto& mesh = pb.mesh; 
     const auto& Ke   = mesh.Ke; 
 
-    if ((int)yFull.size() == mesh.numDOFs)
-        std::fill(yFull.begin(), yFull.end(), 0.0f);
-    else
-        yFull.assign(mesh.numDOFs, 0.0f);
+    if ((int)yFull.size() == mesh.numDOFs) std::fill(yFull.begin(), yFull.end(), 0.0);
+    else yFull.assign(mesh.numDOFs, 0.0);
 
-    const float* __restrict__ uPtr = uFull.data();
-    float* __restrict__ yPtr       = yFull.data();
+    const double* __restrict__ uPtr = uFull.data();
+    double* __restrict__ yPtr       = yFull.data();
 
-    alignas(64) std::array<float,24> ue{};
+    alignas(64) std::array<double,24> ue{};
 
     for (int e=0; e<mesh.numElements; ++e) {
-        const float Ee = eleModulus[e];
-        if (Ee <= 1.0e-16f) continue;
+        const double Ee = eleModulus[e];
+        if (Ee <= 1.0e-16) continue;
 
 		const int32_t* __restrict__ dofs = &mesh.eDofMat[e*24];
 		// gather ue directly via DOF indices
@@ -292,8 +290,8 @@ void K_times_u_finest(const Problem& pb,
 
         // matvec & scatter
         for (int i=0;i<24;i++) {
-            const float* __restrict__ Ki = &Ke[i*24];
-            float sum = 0.0f;
+            const double* __restrict__ Ki = &Ke[i*24];
+            double sum = 0.0;
             #pragma omp simd reduction(+:sum)
             for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
 			yPtr[dofs[i]] += Ee * sum;
@@ -301,32 +299,32 @@ void K_times_u_finest(const Problem& pb,
     }
 }
 
-float ComputeCompliance(const Problem& pb,
-						   const std::vector<float>& eleModulus,
-						   const std::vector<float>& uFull,
-						   std::vector<float>& ceList) {
+double ComputeCompliance(const Problem& pb,
+						   const std::vector<double>& eleModulus,
+						   const std::vector<double>& uFull,
+						   std::vector<double>& ceList) {
 	const auto& mesh = pb.mesh;
 	const auto& Ke = mesh.Ke;
 	ceList.assign(mesh.numElements, 0.0);
-	std::array<float,24> ue{};
+	std::array<double,24> ue{};
 	for (int e=0;e<mesh.numElements;e++) {
 		// gather element DOFs directly
 		{
 			const int32_t* __restrict__ dofs = &mesh.eDofMat[e*24];
 			for (int i=0;i<24;i++) ue[i] = uFull[dofs[i]];
 		}
-		float tmp[24];
+		double tmp[24];
 		for (int i=0;i<24;i++) {
-			float sum=0.0; const float* Ki = &Ke[i*24];
+			double sum=0.0; const double* Ki = &Ke[i*24];
 			#pragma omp simd reduction(+:sum)
 			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
 			tmp[i] = sum;
 		}
-		float val=0.0; for (int i=0;i<24;i++) val += ue[i]*tmp[i];
+		double val=0.0; for (int i=0;i<24;i++) val += ue[i]*tmp[i];
 		ceList[e] = val;
 	}
 	// Total compliance = sum(Ee * ce)
-	float C=0.0; for (int e=0;e<mesh.numElements;e++) C += eleModulus[e]*ceList[e];
+	double C=0.0; for (int e=0;e<mesh.numElements;e++) C += eleModulus[e]*ceList[e];
 	return C;
 }
 

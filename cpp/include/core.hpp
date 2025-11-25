@@ -58,7 +58,7 @@ struct CartesianMesh {
 	std::vector<int32_t> eDofMat; // stored row-major: [ele][24]
 
 	// Element stiffness (24x24) for unit modulus
-	std::array<float,24*24> Ke{};
+	std::array<double,24*24> Ke{};
 };
 
 
@@ -67,7 +67,7 @@ struct Problem {
     CartesianMesh mesh;
 
     // Loads: one load case supported in minimal port: numNodes x 3 vector (flattened DOF)
-    std::vector<float> F;          // size = numDOFs
+    std::vector<double> F;          // size = numDOFs
     std::vector<uint8_t> isFreeDOF; // size = numDOFs (1 free, 0 fixed)
     std::vector<int> freeDofIndex;  // compact list of free dofs
 
@@ -79,7 +79,7 @@ struct Problem {
 void InitialSettings(GlobalParams& out);
 
 // Preconditioner functor: z = M^{-1} r (operates on free-DOF vectors)
-using Preconditioner = std::function<void(const std::vector<float>& rFree, std::vector<float>& zFree)>;
+using Preconditioner = std::function<void(const std::vector<double>& rFree, std::vector<double>& zFree)>;
 
 } // namespace top3d
 

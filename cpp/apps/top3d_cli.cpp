@@ -26,6 +26,6 @@ int main(int argc, char** argv) {
     std::cout << "Running GLOBAL topo-opt on cuboid: "
               << nely << "x" << nelx << "x" << nelz
               << ", V0=" << V0 << ", iters=" << nLoop << "\n";
-    top3d::TOP3D_XL_GLOBAL(nely, nelx, nelz, V0, nLoop, std::sqrt(3.0), simulation_count);
+    top3d::TOP3D_XL_GLOBAL(nely, nelx, nelz, V0, nLoop, std::sqrt(3.0f), simulation_count);
     return 0;
 }

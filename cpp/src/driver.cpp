@@ -17,7 +17,7 @@
 
 namespace top3d {
 
-void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double rMin, int simulation_count) {
+void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rMin, int simulation_count) {
 	auto tSimulationsStart = std::chrono::steady_clock::now();
 	for (int i = 0; i < simulation_count; i++) {
 		auto tStartTotal = std::chrono::steady_clock::now();
@@ -50,7 +50,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		mg::MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
 		mg::MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; mg::build_static_once(pb, mgcfgStatic_tv, H, fixedMasks);
 		
-		auto tModelTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+		auto tModelTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tStart).count();
 		std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
 		
 		// Initialize design
@@ -59,27 +59,27 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		const int ne = pb.mesh.numElements;
 		std::vector<float> x = pb.density;
 		std::vector<float> xPhys = x;
-		std::vector<float> ce(ne, 0.0f);
-		std::vector<float> eleMod(ne, pb.params.youngsModulus);
-		std::vector<float> uFreeWarm; // warm-start buffer for PCG
+		std::vector<double> ce(ne, 0.0);
+		std::vector<double> eleMod(ne, static_cast<double>(pb.params.youngsModulus));
+		std::vector<double> uFreeWarm; // warm-start buffer for PCG
 		// PCG workspace reused across solves
 		PCGFreeWorkspace pcg_ws;
 
 		// Solve fully solid for reference
 		{
 			tStart = std::chrono::steady_clock::now();
-			std::vector<float> U(pb.mesh.numDOFs, 0.0f);
-			std::vector<float> bFree; restrict_to_free(pb, pb.F, bFree);
-			std::vector<float> uFree; uFree.assign(bFree.size(), 0.0f);
+			std::vector<double> U(pb.mesh.numDOFs, 0.0);
+			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
 			auto M = make_jacobi_preconditioner(pb, eleMod);
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFree, U);
-			double Csolid = static_cast<double>(ComputeCompliance(pb, eleMod, U, ce));
+			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 			CsolidRef = Csolid;
 			// Seed warm start for first optimization iteration
 			uFreeWarm = uFree;
-			auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStart).count();
+			auto tSolveTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tStart).count();
 			std::cout << std::scientific << std::setprecision(6);
 			std::cout << "Compliance of Fully Solid Domain: " << std::setw(16) << Csolid << "\n";
 			std::cout << std::fixed;
@@ -88,11 +88,11 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		}
 
 		int loop=0;
-		double change=1.0;
-		double sharpness = 1.0;
+		float change=1.0f;
+		float sharpness = 1.0f;
 		// Aggregation for summary
-		double sumCG = 0.0, sumOpt = 0.0, sumFilter = 0.0, sumIter = 0.0;
-		double objFirst = 0.0, objLast = 0.0;
+		float sumCG = 0.0f, sumOpt = 0.0f, sumFilter = 0.0f, sumIter = 0.0f;
+		float objFirst = 0.0f, objLast = 0.0f;
 		
 		while (loop < nLoop && change > 1e-4 && sharpness > 0.01) {
 			auto tPerIter = std::chrono::steady_clock::now();
@@ -107,19 +107,19 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			
 			// Solve KU=F
 			auto tSolveStart = std::chrono::steady_clock::now();
-			std::vector<float> U(pb.mesh.numDOFs, 0.0f);
-			std::vector<float> bFree; restrict_to_free(pb, pb.F, bFree);
+			std::vector<double> U(pb.mesh.numDOFs, 0.0);
+			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 			// Ensure warm-start vector matches current system size
 			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
 			// Reuse static MG context for current SIMP-modified modulus
 			auto M = make_jacobi_preconditioner(pb, eleMod);
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFreeWarm, U);
-			auto tSolveTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSolveStart).count();
+			auto tSolveTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tSolveStart).count();
 			
 			// Compliance and sensitivities
 			auto tOptStart = std::chrono::steady_clock::now();
-			double C = static_cast<double>(ComputeCompliance(pb, eleMod, U, ce));
+			double C = ComputeCompliance(pb, eleMod, U, ce);
 			// Normalized reporting to mirror MATLAB: ceNorm = ce / CsolidRef; cObj = sum(Ee*ceNorm); Cdisp = cObj*CsolidRef
 			double cObjNorm = 0.0;
 			if (CsolidRef > 0) {
@@ -128,11 +128,11 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 				for (int e=0;e<ne;e++) cObjNorm += eleMod[e] * ce[e];
 			}
 			double Cdisp = (CsolidRef > 0 ? cObjNorm * CsolidRef : C);
-			std::vector<double> dc(ne, 0.0);
+			std::vector<float> dc(ne, 0.0f);
 			for (int e=0;e<ne;e++) {
-				double rho = std::clamp(static_cast<double>(xPhys[e]), 0.0, 1.0);
-				double dEdrho = pb.params.simpPenalty * std::pow(rho, pb.params.simpPenalty-1.0) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
-				double ceNorm = (CsolidRef > 0 ? static_cast<double>(ce[e]) / CsolidRef : static_cast<double>(ce[e]));
+				float rho = std::clamp(xPhys[e], 0.0f, 1.0f);
+				float dEdrho = pb.params.simpPenalty * static_cast<float>(std::pow(rho, pb.params.simpPenalty-1.0f)) * (pb.params.youngsModulus - pb.params.youngsModulusMin);
+				float ceNorm = (CsolidRef > 0 ? static_cast<float>(ce[e] / CsolidRef) : static_cast<float>(ce[e]));
 				dc[e] = - dEdrho * ceNorm;
 			}
 			
@@ -140,46 +140,46 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			auto tFilterStart = std::chrono::steady_clock::now();
 			{
 				std::vector<float> xdc(ne);
-				for (int e=0;e<ne;e++) xdc[e] = static_cast<float>(x[e]*dc[e]);
+				for (int e=0;e<ne;e++) xdc[e] = x[e]*dc[e];
 				std::vector<float> dc_filt; ApplyPDEFilter(pb, pfFilter, xdc, dc_filt, filter_ws);
-				for (int e=0;e<ne;e++) dc[e] = static_cast<double>(dc_filt[e]) / std::max<double>(1.0e-3, static_cast<double>(x[e]));
+				for (int e=0;e<ne;e++) dc[e] = dc_filt[e] / std::max(1.0e-3f, x[e]);
 			}
-			auto tFilterTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tFilterStart).count();
+			auto tFilterTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tFilterStart).count();
 			
 			// OC (Optimality Criteria)
-			double l1=0.0, l2=1e9;
-			double move=0.2;
+			float l1=0.0f, l2=1e9f;
+			float move=0.2f;
 			std::vector<float> xnew(ne, 0.0f);
 			while ((l2-l1)/(l1+l2) > 1e-6) {
-				double lmid = 0.5*(l1+l2);
+				float lmid = 0.5f*(l1+l2);
 				for (int e=0;e<ne;e++) {
-					double val = std::sqrt(std::max(1e-30, -dc[e]/lmid));
-					double xe = std::clamp(static_cast<double>(x[e])*val, static_cast<double>(x[e])-move, static_cast<double>(x[e])+move);
-					xe = std::clamp(xe, 0.0, 1.0);
-					xnew[e] = static_cast<float>(std::max(1.0e-3, xe));
+					float val = std::sqrt(std::max(1e-30f, -dc[e]/lmid));
+					float xe = std::clamp(x[e]*val, x[e]-move, x[e]+move);
+					xe = std::clamp(xe, 0.0f, 1.0f);
+					xnew[e] = std::max(1.0e-3f, xe);
 				}
-				double vol = std::accumulate(xnew.begin(), xnew.end(), 0.0, [](double s, float v){ return s + static_cast<double>(v); }) / static_cast<double>(ne);
+				float vol = std::accumulate(xnew.begin(), xnew.end(), 0.0f, [](float s, float v){ return s + v; }) / static_cast<float>(ne);
 				if (vol - V0 > 0) l1 = lmid; else l2 = lmid;
 			}
-			change = 0.0; for (int e=0;e<ne;e++) change = std::max(change, std::abs(static_cast<double>(xnew[e]-x[e])));
+			change = 0.0f; for (int e=0;e<ne;e++) change = std::max(change, std::abs(xnew[e]-x[e]));
 			x.swap(xnew);
 			xPhys = x; // no filter in this minimal port
 
-			sharpness = 4.0 * std::accumulate(xPhys.begin(), xPhys.end(), 0.0, 
-				[](double sum, double val) { return sum + val * (1.0 - val); }) / static_cast<double>(ne);
-			auto tOptTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tOptStart).count();
-			auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tPerIter).count();
+			sharpness = 4.0f * std::accumulate(xPhys.begin(), xPhys.end(), 0.0f, 
+				[](float sum, float val) { return sum + val * (1.0f - val); }) / static_cast<float>(ne);
+			auto tOptTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tOptStart).count();
+			auto tTotalTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tPerIter).count();
 			
 			// Aggregation
-			if (loop == 1) objFirst = Cdisp;
-			objLast = Cdisp;
+			if (loop == 1) objFirst = static_cast<float>(Cdisp);
+			objLast = static_cast<float>(Cdisp);
 			sumCG += tSolveTime;
 			sumOpt += tOptTime;
 			sumFilter += tFilterTime;
 			sumIter += tTotalTime;
 			
-			double volFrac = std::accumulate(xPhys.begin(), xPhys.end(), 0.0) / static_cast<double>(ne);
-			double fval = volFrac - V0;
+			float volFrac = std::accumulate(xPhys.begin(), xPhys.end(), 0.0f) / static_cast<float>(ne);
+			float fval = volFrac - V0;
 			
 			// Print iteration results (matching MATLAB format)
 			std::cout << std::scientific << std::setprecision(8);
@@ -197,7 +197,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 			std::cout << std::fixed;
 		}
 		// Exports
-		auto tTotalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tStartTotal).count();
+		auto tTotalTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tStartTotal).count();
 		std::cout << "\n..........Performing Topology Optimization Costs (in total): " 
 				<< std::scientific << std::setprecision(4) << tTotalTime << "s.\n";
 		std::cout << std::fixed;
@@ -205,10 +205,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		// Build summary text
 		int origdimsX = pb.mesh.origResX, origdimsY = pb.mesh.origResY, origdimsZ = pb.mesh.origResZ;
 		int dimsX = pb.mesh.resX, dimsY = pb.mesh.resY, dimsZ = pb.mesh.resZ;
-		double avgPerIter = (loop > 0 ? sumIter / static_cast<double>(loop) : 0.0);
-		double pctCG = (sumIter > 0 ? 100.0 * sumCG / sumIter : 0.0);
-		double pctOpt = (sumIter > 0 ? 100.0 * sumOpt / sumIter : 0.0);
-		double pctFilt = (sumIter > 0 ? 100.0 * sumFilter / sumIter : 0.0);
+		float avgPerIter = (loop > 0 ? sumIter / static_cast<float>(loop) : 0.0f);
+		float pctCG = (sumIter > 0 ? 100.0f * sumCG / sumIter : 0.0f);
+		float pctOpt = (sumIter > 0 ? 100.0f * sumOpt / sumIter : 0.0f);
+		float pctFilt = (sumIter > 0 ? 100.0f * sumFilter / sumIter : 0.0f);
 		std::ostringstream summary;
 		summary << "PARAMETERS\n"
 		        << "original dims: x=" << origdimsX << ", y=" << origdimsY << ", z=" << origdimsZ << "\n"
@@ -246,7 +246,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		std::cout << "STL file saved to: " << stlDir << tag << ".stl\n";
 		std::cout << "\nDone.\n";
 	}
-	auto finalTime = std::chrono::duration<double>(std::chrono::steady_clock::now() - tSimulationsStart).count();
+	auto finalTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tSimulationsStart).count();
 	std::cout << "\n............Total runtime time for " << simulation_count << " simulations" << std::scientific << std::setprecision(4) << finalTime << "s.\n";
 }
 
