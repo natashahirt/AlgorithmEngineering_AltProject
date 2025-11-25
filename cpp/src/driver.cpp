@@ -25,7 +25,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, double V0, int nLoop, double 
 		double CsolidRef = 0.0;
 		
 		std::cout << "\n==========================Displaying Inputs==========================\n";
-		std::cout << "Simulation: \n" << i;
+		std::cout << "Simulation: " << i << "\n";
 		std::cout << std::fixed << std::setprecision(4);
 		std::cout << "..............................................Volume Fraction: " << std::setw(6) << V0 << "\n";
 		std::cout << "..........................................Filter Radius: " << std::setw(6) << rMin << " Cells\n";

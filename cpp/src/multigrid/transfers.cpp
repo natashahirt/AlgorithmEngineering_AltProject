@@ -26,7 +26,6 @@ const int span = Lc.spanWidth;
 	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
 
 #ifdef _OPENMP
-std::cout << "Hello, World \n";
 #pragma omp parallel for collapse(3)
 
 #endif
