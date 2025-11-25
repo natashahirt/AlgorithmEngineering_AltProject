@@ -259,6 +259,10 @@ void K_times_u_finest(const Problem& pb, const std::vector<float>& eleModulus,
 	// get constants from the problem statement
 	const auto& mesh = pb.mesh; 
 	const auto& Ke = mesh.Ke; 
+	const int nx = mesh.resX;
+	const int ny = mesh.resY;
+	const int nnx = nx + 1;
+	const int nny = ny + 1;
 	// prep yFull vector (output of K * u)
 	if ((int)yFull.size() == mesh.numDOFs) {
 		std::fill(yFull.begin(), yFull.end(), 0.0);
@@ -276,25 +280,48 @@ void K_times_u_finest(const Problem& pb, const std::vector<float>& eleModulus,
 		const float Ee = eleModulus[e];
 		if (Ee <= 1.0e-16f) continue;
 
+		// derive 8 node ids on-the-fly from full-grid element id (eleMapBack)
+		const int full = mesh.eleMapBack[e];          // ny*nx*ez + ny*ex + (ny-1 - ey)
+		const int plane = ny * nx;
+		const int ez = full / plane;
+		const int exey = full - ez * plane;
+		const int ex = exey / ny;
+		const int yflip = exey - ex * ny;             // yflip = (ny-1 - ey)
+		const int ey = (ny - 1) - yflip;
+		auto nodeIndex = [&](int ix,int iy,int iz){ return (nnx*nny*iz + nnx*iy + ix); };
+		const int n0 = nodeIndex(ex,   ny-ey,   ez);
+		const int n1 = nodeIndex(ex+1, ny-ey,   ez);
+		const int n2 = nodeIndex(ex+1, ny-ey-1, ez);
+		const int n3 = nodeIndex(ex,   ny-ey-1, ez);
+		const int n4 = nodeIndex(ex,   ny-ey,   ez+1);
+		const int n5 = nodeIndex(ex+1, ny-ey,   ez+1);
+		const int n6 = nodeIndex(ex+1, ny-ey-1, ez+1);
+		const int n7 = nodeIndex(ex,   ny-ey-1, ez+1);
+
 		// gather ue from nodes (8 nodes × 3 dofs)
-		const int32_t* __restrict__ nptr = &mesh.eNodMat[e*8];
-		for (int j=0;j<8;j++) {
-			const int n = nptr[j];
-			const int d = 3*n;
-			ue[3*j+0] = uPtr[d+0];
-			ue[3*j+1] = uPtr[d+1];
-			ue[3*j+2] = uPtr[d+2];
+		{
+			const int nArr[8] = {n0,n1,n2,n3,n4,n5,n6,n7};
+			for (int j=0;j<8;j++) {
+				const int n = nArr[j];
+				const int d = 3*n;
+				ue[3*j+0] = uPtr[d+0];
+				ue[3*j+1] = uPtr[d+1];
+				ue[3*j+2] = uPtr[d+2];
+			}
 		}
 		// y[dof(i)] += Ee * (Ke[i,:] · ue)
-		for (int i=0;i<24;i++) {
-			const float* __restrict__ Ki = &Ke[i*24];
-			float sum = 0.0f;
-			#pragma omp simd reduction(+:sum)
-			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-			const int jnode = i / 3;
-			const int comp = i - 3*jnode; // 0,1,2
-			const int n = nptr[jnode];
-			yPtr[3*n + comp] += Ee * sum;
+		{
+			const int nArr[8] = {n0,n1,n2,n3,n4,n5,n6,n7};
+			for (int i=0;i<24;i++) {
+				const float* __restrict__ Ki = &Ke[i*24];
+				float sum = 0.0f;
+				#pragma omp simd reduction(+:sum)
+				for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
+				const int jnode = i / 3;
+				const int comp = i - 3*jnode; // 0,1,2
+				const int n = nArr[jnode];
+				yPtr[3*n + comp] += Ee * sum;
+			}
 		}
 	}
 	// No Dirichlet row zeroing (callers on free subspace don't require)

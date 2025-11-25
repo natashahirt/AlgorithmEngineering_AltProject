@@ -51,4 +51,9 @@ fi
 
 ./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
 
+# After job is done, delete error file if it's empty/job was successful
+if [ ! -s "$ERROR_FILE" ]; then
+  rm -f "$ERROR_FILE"
+fi
+
 echo "Job completed at $(date)"
