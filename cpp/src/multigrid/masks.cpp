@@ -15,8 +15,11 @@ void MG_BuildFixedMasks(const Problem& pb, const MGHierarchy& H,
 	{
 		const int n0 = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
 		fixedMasks[0].assign(3*n0, 0);
+		// pb.isFreeDOF is stored in the mesh's current node numbering (Morton after reordering).
+		// Convert to lexicographic order for structured MG transfers by mapping lex -> morton.
 		for (int n=0;n<pb.mesh.numNodes;n++) {
-			for (int c=0;c<3;c++) fixedMasks[0][3*n+c] = pb.isFreeDOF[3*n+c] ? 0 : 1;
+			int nm = pb.mesh.nodMapForward[n]; // lex index n -> Morton index nm
+			for (int c=0;c<3;c++) fixedMasks[0][3*n+c] = pb.isFreeDOF[3*nm+c] ? 0 : 1;
 		}
 	}
 	// Restrict masks to coarser levels (component-wise), threshold 0.5

@@ -1,2 +1,16 @@
 # --- Topvoxel files ---
 *.TopVoxel
+
+# perf recordings
+out/perf/**/perf.data
+out/perf/**/report.txt
+out/perf/**/annotate_*.txt
+out/perf/**/stat.txt
+out/perf/**/summary.txt
+out/perf/**/hw_check.err
+out/perf/**/rec_check.err
+
+# job logs
+out/log/*.out
+out/log/*.err
+out/log/*_latest.log

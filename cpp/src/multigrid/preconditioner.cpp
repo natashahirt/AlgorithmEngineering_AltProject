@@ -82,12 +82,19 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		for (size_t i=0;i<rFree.size();++i) rFree_f[i] = static_cast<float>(rFree[i]);
 		const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
 		const int n0_dofs  = 3*n0_nodes;
-		std::vector<float> r0(n0_dofs, 0.0f);
-		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0[pb.freeDofIndex[i]] = rFree_f[i];
+		// Build Morton-ordered DOF vector from free DOFs
+		std::vector<float> r0_morton(n0_dofs, 0.0f);
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0_morton[pb.freeDofIndex[i]] = rFree_f[i];
+		// Convert to lexicographic node order expected by structured MG transfers
+		std::vector<float> r0_lex(n0_dofs, 0.0f);
+		for (int nLex=0; nLex<n0_nodes; ++nLex) {
+			int nMort = pb.mesh.nodMapForward[nLex];
+			for (int c=0;c<3;c++) r0_lex[3*nLex + c] = r0_morton[3*nMort + c];
+		}
 
 		std::vector<std::vector<float>> rLv(H.levels.size());
 		std::vector<std::vector<float>> xLv(H.levels.size());
-		rLv[0] = r0; xLv[0].assign(n0_dofs, 0.0);
+		rLv[0] = r0_lex; xLv[0].assign(n0_dofs, 0.0);
 
 		for (int i=0;i<n0_nodes;i++) {
 			for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
@@ -148,9 +155,15 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
 			}
 		}
-		// Convert back to double for output
+		// Convert lex solution back to Morton indexing and extract free DOFs
 		zFree.resize(rFree.size());
-		for (size_t i=0;i<pb.freeDofIndex.size();++i) zFree[i] = static_cast<double>(xLv[0][pb.freeDofIndex[i]]);
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+			int dMort = pb.freeDofIndex[i];
+			int nMort = dMort / 3;
+			int comp  = dMort % 3;
+			int nLex  = pb.mesh.nodMapBack[nMort];
+			zFree[i] = static_cast<double>(xLv[0][3*nLex + comp]);
+		}
 	};
 }
 

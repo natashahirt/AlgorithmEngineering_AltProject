@@ -49,6 +49,13 @@ if [ ! -f build/top3d_xl_cli ]; then
   cd ..
 fi
 
+# Run with single thread for comparability
+export OMP_NUM_THREADS=1
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+
+echo ""
+
 ./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
 
 # After job is done, delete error file if it's empty/job was successful

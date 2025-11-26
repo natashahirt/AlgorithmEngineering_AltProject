@@ -4,8 +4,77 @@
 #include <numeric>
 #include <cmath>
 #include <cstdint>
+#include <cassert>
 
 namespace top3d {
+
+// 64-bit Morton helpers: support up to 21 bits per coordinate (2,097,151)
+static inline std::uint64_t part1by2_64(std::uint64_t x) {
+	// Spread the lower 21 bits of x so that there are 2 zero bits between each
+	x &= 0x1fffffULL;                          // keep only 21 bits
+	x = (x | (x << 32)) & 0x1f00000000ffffULL;
+	x = (x | (x << 16)) & 0x1f0000ff0000ffULL;
+	x = (x | (x << 8))  & 0x100f00f00f00f00fULL;
+	x = (x | (x << 4))  & 0x10c30c30c30c30c3ULL;
+	x = (x | (x << 2))  & 0x1249249249249249ULL;
+	return x;
+}
+
+static inline std::uint64_t morton3D_64(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+	// Assumes x,y,z < 2^21
+	std::uint64_t xx = part1by2_64(x);
+	std::uint64_t yy = part1by2_64(y);
+	std::uint64_t zz = part1by2_64(z);
+	return (xx << 2) | (yy << 1) | zz;
+}
+
+// Inverse of nodeIndex(ix,iy,iz) = nnx*nny*iz + nnx*iy + ix
+static inline void node_ijk(int n, int nnx, int nny, int& ix, int& iy, int& iz) {
+	int slab = nnx * nny;
+	iz = n / slab;
+	int rem = n % slab;
+	iy = rem / nnx;
+	ix = rem % nnx;
+}
+
+// Given fullIdx = ny*nx*ez + ny*ex + (ny-1-ey)
+static inline void elem_ijk_from_full(int fullIdx, int nx, int ny, int& ex, int& ey, int& ez) {
+	int cellsPerLayer = nx * ny;
+	ez = fullIdx / cellsPerLayer;
+	int rem = fullIdx % cellsPerLayer;
+	ex = rem / ny;
+	int inv_ey = rem % ny; // inv_ey = ny-1-ey
+	ey = (ny - 1) - inv_ey;
+}
+
+template<typename T>
+static inline void permute_strided(std::vector<T>& a, const std::vector<int>& perm, int stride) {
+	const int n = static_cast<int>(perm.size());
+	std::vector<T> tmp(a.size());
+	for (int newIdx = 0; newIdx < n; ++newIdx) {
+		int oldIdx = perm[newIdx];
+		int src = oldIdx * stride;
+		int dst = newIdx * stride;
+		for (int k = 0; k < stride; ++k) tmp[static_cast<size_t>(dst + k)] = a[static_cast<size_t>(src + k)];
+	}
+	a.swap(tmp);
+}
+
+template<typename T>
+static inline void permute_unstrided(std::vector<T>& a, const std::vector<int>& perm) {
+	const int n = static_cast<int>(perm.size());
+	std::vector<T> tmp(static_cast<size_t>(n));
+	for (int newIdx = 0; newIdx < n; ++newIdx) tmp[static_cast<size_t>(newIdx)] = a[static_cast<size_t>(perm[newIdx])];
+	a.swap(tmp);
+}
+
+// Branchless maps from local DOF slot i in [0..23] to (local node a, component c)
+static constexpr int node_of_i_[24] = {
+	0,0,0, 1,1,1, 2,2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 7,7,7
+};
+static constexpr int comp_of_i_[24] = {
+	0,1,2, 0,1,2, 0,1,2, 0,1,2, 0,1,2, 0,1,2, 0,1,2, 0,1,2
+};
 
 std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize) {
 	// Numerical 2x2x2 Gauss integration for an 8-node linear hex element
@@ -127,10 +196,35 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	mesh.numNodes = nnx*nny*nnz;
 	mesh.numDOFs = mesh.numNodes*3;
 
-	mesh.nodMapBack.resize(mesh.numNodes);
-	std::iota(mesh.nodMapBack.begin(), mesh.nodMapBack.end(), 0);
-	mesh.nodMapForward.resize(mesh.numNodes);
-	for (int i=0;i<mesh.numNodes;i++) mesh.nodMapForward[i] = i;
+	// Build Morton permutation (64-bit codes) and nodal maps
+	{
+		// Sanity for 64-bit Morton: max coordinate per axis < 2^21
+#ifndef NDEBUG
+		assert((nnx-1) < (1<<21));
+		assert((nny-1) < (1<<21));
+		assert((nnz-1) < (1<<21));
+#endif
+		struct MortonNode { std::uint64_t morton; int oldIndex; };
+		std::vector<MortonNode> nodes;
+		nodes.reserve(static_cast<size_t>(mesh.numNodes));
+		for (int old = 0; old < mesh.numNodes; ++old) {
+			int ix, iy, iz;
+			node_ijk(old, nnx, nny, ix, iy, iz);
+			std::uint64_t code = morton3D_64(static_cast<std::uint32_t>(ix),
+			                                 static_cast<std::uint32_t>(iy),
+			                                 static_cast<std::uint32_t>(iz));
+			nodes.push_back({code, old});
+		}
+		std::sort(nodes.begin(), nodes.end(),
+			[](const MortonNode& a, const MortonNode& b){ return a.morton < b.morton; });
+		mesh.nodMapForward.resize(mesh.numNodes);
+		mesh.nodMapBack.resize(mesh.numNodes);
+		for (int newIdx = 0; newIdx < mesh.numNodes; ++newIdx) {
+			int oldIdx = nodes[static_cast<size_t>(newIdx)].oldIndex;
+			mesh.nodMapForward[static_cast<size_t>(oldIdx)] = newIdx;
+			mesh.nodMapBack[static_cast<size_t>(newIdx)] = oldIdx;
+		}
+	}
 
 	// eNodMat (compact by using compact node ids directly)
 	mesh.eNodMat.resize(mesh.numElements*8);
@@ -153,14 +247,14 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 				int n7 = nodeIndex(ex+1, ny-ey-1, ez+1);
 				int n8 = nodeIndex(ex,   ny-ey-1, ez+1);
 				int base = comp*8;
-				mesh.eNodMat[base+0] = n1;
-				mesh.eNodMat[base+1] = n2;
-				mesh.eNodMat[base+2] = n3;
-				mesh.eNodMat[base+3] = n4;
-				mesh.eNodMat[base+4] = n5;
-				mesh.eNodMat[base+5] = n6;
-				mesh.eNodMat[base+6] = n7;
-				mesh.eNodMat[base+7] = n8;
+				mesh.eNodMat[base+0] = mesh.nodMapForward[n1];
+				mesh.eNodMat[base+1] = mesh.nodMapForward[n2];
+				mesh.eNodMat[base+2] = mesh.nodMapForward[n3];
+				mesh.eNodMat[base+3] = mesh.nodMapForward[n4];
+				mesh.eNodMat[base+4] = mesh.nodMapForward[n5];
+				mesh.eNodMat[base+5] = mesh.nodMapForward[n6];
+				mesh.eNodMat[base+6] = mesh.nodMapForward[n7];
+				mesh.eNodMat[base+7] = mesh.nodMapForward[n8];
 			}
 		}
 	}
@@ -174,6 +268,32 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 			mesh.eDofMat[e*24 + 3*j + 1] = 3*n + 1;
 			mesh.eDofMat[e*24 + 3*j + 2] = 3*n + 2;
 		}
+	}
+
+	// Reorder elements into 64-bit Morton order (based on structured (ex,ey,ez))
+	{
+		struct ElemMorton { std::uint64_t key; int oldIndex; };
+		std::vector<ElemMorton> elems(static_cast<size_t>(mesh.numElements));
+		for (int comp = 0; comp < mesh.numElements; ++comp) {
+			int fullIdx = mesh.eleMapBack[static_cast<size_t>(comp)];
+			int ex, ey, ez;
+			elem_ijk_from_full(fullIdx, nx, ny, ex, ey, ez);
+			std::uint64_t code = morton3D_64(static_cast<std::uint32_t>(ex),
+			                                 static_cast<std::uint32_t>(ey),
+			                                 static_cast<std::uint32_t>(ez));
+			elems[static_cast<size_t>(comp)] = {code, comp};
+		}
+		std::sort(elems.begin(), elems.end(),
+			[](const ElemMorton& a, const ElemMorton& b){ return a.key < b.key; });
+		std::vector<int> elemPerm(static_cast<size_t>(mesh.numElements));
+		for (int newIdx = 0; newIdx < mesh.numElements; ++newIdx) elemPerm[static_cast<size_t>(newIdx)] = elems[static_cast<size_t>(newIdx)].oldIndex;
+		// Apply permutation to per-element data
+		permute_strided(mesh.eNodMat, elemPerm, 8);
+		permute_strided(mesh.eDofMat, elemPerm, 24);
+		permute_unstrided(mesh.eleMapBack, elemPerm);
+		// Recompute eleMapForward to stay consistent
+		mesh.eleMapForward.assign(nx*ny*nz, -1);
+		for (int i=0;i<mesh.numElements;i++) mesh.eleMapForward[ mesh.eleMapBack[static_cast<size_t>(i)] ] = i;
 	}
 
 	// Boundary nodes/elements identification
@@ -198,7 +318,9 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	pb.density.assign(mesh.numElements, 1.0f);
 
 	// Allocate forces and DOF state
-	pb.F.assign(mesh.numDOFs, 0.0);
+	pb.F.ux.assign(mesh.numNodes, 0.0);
+	pb.F.uy.assign(mesh.numNodes, 0.0);
+	pb.F.uz.assign(mesh.numNodes, 0.0);
 	pb.isFreeDOF.assign(mesh.numDOFs, 1);
 	pb.freeDofIndex.clear();
 }
@@ -212,14 +334,16 @@ void ApplyBoundaryConditions(Problem& pb) {
 
     // Reset DOF masks and loads
     std::fill(pb.isFreeDOF.begin(), pb.isFreeDOF.end(), 1);
-	std::fill(pb.F.begin(), pb.F.end(), 0.0);
+	std::fill(pb.F.ux.begin(), pb.F.ux.end(), 0.0);
+	std::fill(pb.F.uy.begin(), pb.F.uy.end(), 0.0);
+	std::fill(pb.F.uz.begin(), pb.F.uz.end(), 0.0);
 
 	// Built-in demo BCs as fallback
 	std::vector<int32_t> fixedNodes;
 	for (int iz=0; iz<nnz; ++iz) {
 		for (int iy=0; iy<nny; ++iy) {
 			int node = nnx*nny*iz + nnx*iy + 0;
-			fixedNodes.push_back(node);
+			fixedNodes.push_back(pb.mesh.nodMapForward[node]);
 		}
 	}
 	for (int n : fixedNodes) {
@@ -236,13 +360,13 @@ void ApplyBoundaryConditions(Problem& pb) {
 		for (int iz=0; iz<=std::max(1,nz/6); ++iz) {
 			for (int iy=0; iy<nny; ++iy) {
 				int node = nnx*nny*iz + nnx*iy + ixLoad;
-				loadedNodes.push_back(node);
+				loadedNodes.push_back(pb.mesh.nodMapForward[node]);
 				++count;
 			}
 		}
 		if (count>0) {
 			double fz = -1.0/static_cast<double>(count);
-			for (int n : loadedNodes) pb.F[3*n + 2] += fz;
+			for (int n : loadedNodes) pb.F.uz[n] += fz;
 		}
 	}
 
@@ -263,45 +387,66 @@ void ApplyBoundaryConditions(Problem& pb) {
     // Build free dof index list
     pb.freeDofIndex.clear();
     for (int i=0;i<pb.mesh.numDOFs;i++) if (pb.isFreeDOF[i]) pb.freeDofIndex.push_back(i);
+	// Cache per-free-DOF mapping to node index and component for fast gathers/scatters
+	pb.freeNodeIndex.resize(pb.freeDofIndex.size());
+	pb.freeCompIndex.resize(pb.freeDofIndex.size());
+	for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+		const int gi = pb.freeDofIndex[i];
+		pb.freeNodeIndex[i] = gi / 3;
+		pb.freeCompIndex[i] = gi % 3;
+	}
 }
 
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
-                      const std::vector<double>& uFull,
-                      std::vector<double>& yFull) {
+                      const DOFData& U,
+                      DOFData& Y) {
     const auto& mesh = pb.mesh; 
     const auto& Ke   = mesh.Ke; 
 
-    if ((int)yFull.size() == mesh.numDOFs) std::fill(yFull.begin(), yFull.end(), 0.0);
-    else yFull.assign(mesh.numDOFs, 0.0);
-
-    const double* __restrict__ uPtr = uFull.data();
-    double* __restrict__ yPtr       = yFull.data();
+    if ((int)Y.ux.size() != mesh.numNodes) Y.ux.assign(mesh.numNodes, 0.0); else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
+    if ((int)Y.uy.size() != mesh.numNodes) Y.uy.assign(mesh.numNodes, 0.0); else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
+    if ((int)Y.uz.size() != mesh.numNodes) Y.uz.assign(mesh.numNodes, 0.0); else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
 
     alignas(64) std::array<double,24> ue{};
+	alignas(64) std::array<double,24> fe{};
 
     for (int e=0; e<mesh.numElements; ++e) {
         const double Ee = eleModulus[e];
         if (Ee <= 1.0e-16) continue;
 
-		const int32_t* __restrict__ dofs = &mesh.eDofMat[e*24];
-		// gather ue directly via DOF indices
-		for (int i=0;i<24;i++) ue[i] = uPtr[dofs[i]];
+		// Gather ue branchlessly using lookup tables
+		for (int i=0;i<24;i++) {
+			const int a = node_of_i_[i];
+			const int c = comp_of_i_[i];
+			const int n = mesh.eNodMat[e*8 + a];
+			ue[i] = (c==0 ? U.ux[n] : (c==1 ? U.uy[n] : U.uz[n]));
+		}
 
-        // matvec & scatter
+        // fe = Ee * Ke * ue
         for (int i=0;i<24;i++) {
             const double* __restrict__ Ki = &Ke[i*24];
             double sum = 0.0;
             #pragma omp simd reduction(+:sum)
             for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-			yPtr[dofs[i]] += Ee * sum;
+			fe[i] = Ee * sum;
         }
+		// Scatter once per local DOF slot, branchlessly
+		for (int i=0;i<24;i++) {
+			const int a = node_of_i_[i];
+			const int c = comp_of_i_[i];
+			const int n = mesh.eNodMat[e*8 + a];
+			const double val = fe[i];
+			if (c==0) Y.ux[n] += val;
+			else if (c==1) Y.uy[n] += val;
+			else Y.uz[n] += val;
+		}
     }
 }
 
 double ComputeCompliance(const Problem& pb,
 						   const std::vector<double>& eleModulus,
-						   const std::vector<double>& uFull,
+						   const DOFData& U,
 						   std::vector<double>& ceList) {
 	const auto& mesh = pb.mesh;
 	const auto& Ke = mesh.Ke;
@@ -309,9 +454,11 @@ double ComputeCompliance(const Problem& pb,
 	std::array<double,24> ue{};
 	for (int e=0;e<mesh.numElements;e++) {
 		// gather element DOFs directly
-		{
-			const int32_t* __restrict__ dofs = &mesh.eDofMat[e*24];
-			for (int i=0;i<24;i++) ue[i] = uFull[dofs[i]];
+		for (int a=0;a<8;a++) {
+			int n = mesh.eNodMat[e*8 + a];
+			ue[3*a+0] = U.ux[n];
+			ue[3*a+1] = U.uy[n];
+			ue[3*a+2] = U.uz[n];
 		}
 		double tmp[24];
 		for (int i=0;i<24;i++) {

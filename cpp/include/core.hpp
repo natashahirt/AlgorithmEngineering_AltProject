@@ -7,8 +7,15 @@
 #include <functional>
 #include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace top3d {
+
+struct DOFData {
+	std::vector<double> ux;
+	std::vector<double> uy;
+	std::vector<double> uz;
+};
 
 struct GlobalParams {
 	// Physical
@@ -66,10 +73,13 @@ struct Problem {
     GlobalParams params;
     CartesianMesh mesh;
 
-    // Loads: one load case supported in minimal port: numNodes x 3 vector (flattened DOF)
-    std::vector<double> F;          // size = numDOFs
+    // Loads: one load case supported in minimal port as SoA (per component per node)
+    DOFData F;                      // size of each = numNodes
     std::vector<uint8_t> isFreeDOF; // size = numDOFs (1 free, 0 fixed)
     std::vector<int> freeDofIndex;  // compact list of free dofs
+    // Cached per-free-DOF mapping to node and component for fast gather/scatter
+    std::vector<int> freeNodeIndex; // same length as freeDofIndex
+    std::vector<int> freeCompIndex; // values in {0,1,2}
 
     // Design variables
     std::vector<float> density;    // per element x, size = numElements

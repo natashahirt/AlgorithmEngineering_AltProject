@@ -7,13 +7,43 @@
 
 namespace top3d {
 
-void restrict_to_free(const Problem& pb, const std::vector<double>& full, std::vector<double>& freev) {
+void restrict_to_free(const Problem& pb, const DOFData& full, std::vector<double>& freev) {
 	freev.resize(pb.freeDofIndex.size());
-	for (size_t i=0;i<pb.freeDofIndex.size();++i) freev[i] = full[pb.freeDofIndex[i]];
+	if (pb.freeNodeIndex.size() == pb.freeDofIndex.size() &&
+		pb.freeCompIndex.size() == pb.freeDofIndex.size()) {
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+			const int n = pb.freeNodeIndex[i];
+			const int c = pb.freeCompIndex[i];
+			freev[i] = (c==0 ? full.ux[n] : (c==1 ? full.uy[n] : full.uz[n]));
+		}
+	} else {
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+			const int gi = pb.freeDofIndex[i];
+			const int n = gi / 3;
+			const int c = gi % 3;
+			freev[i] = (c==0 ? full.ux[n] : (c==1 ? full.uy[n] : full.uz[n]));
+		}
+	}
 }
 
-void scatter_from_free(const Problem& pb, const std::vector<double>& freev, std::vector<double>& full) {
-	for (size_t i=0;i<pb.freeDofIndex.size();++i) full[pb.freeDofIndex[i]] = freev[i];
+void scatter_from_free(const Problem& pb, const std::vector<double>& freev, DOFData& full) {
+	if (pb.freeNodeIndex.size() == pb.freeDofIndex.size() &&
+		pb.freeCompIndex.size() == pb.freeDofIndex.size()) {
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+			const int n = pb.freeNodeIndex[i];
+			const int c = pb.freeCompIndex[i];
+			const double v = freev[i];
+			if (c==0) full.ux[n] = v; else if (c==1) full.uy[n] = v; else full.uz[n] = v;
+		}
+	} else {
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+			const int gi = pb.freeDofIndex[i];
+			const int n = gi / 3;
+			const int c = gi % 3;
+			const double v = freev[i];
+			if (c==0) full.ux[n] = v; else if (c==1) full.uy[n] = v; else full.uz[n] = v;
+		}
+	}
 }
 
 Preconditioner make_jacobi_preconditioner(const Problem& pb, const std::vector<double>& eleModulus) {
@@ -53,9 +83,13 @@ int PCG_free(const Problem& pb,
 	std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
 
 	// Initialize workspace buffers
-	const int nFull = pb.mesh.numDOFs;
-	ws.xfull.assign(nFull, 0.0);
-	ws.yfull.assign(nFull, 0.0);
+	const int nNodes = pb.mesh.numNodes;
+	ws.xfull.ux.assign(nNodes, 0.0);
+	ws.xfull.uy.assign(nNodes, 0.0);
+	ws.xfull.uz.assign(nNodes, 0.0);
+	ws.yfull.ux.assign(nNodes, 0.0);
+	ws.yfull.uy.assign(nNodes, 0.0);
+	ws.yfull.uz.assign(nNodes, 0.0);
 	ws.tmpFree.resize(static_cast<int>(bFree.size()));
 	auto& X = ws.xfull;
 	auto& Y = ws.yfull;
@@ -63,7 +97,9 @@ int PCG_free(const Problem& pb,
 
 	// r = b - A*x (if nonzero initial guess)
 	if (!xFree.empty()) {
-		std::fill(X.begin(), X.end(), 0.0);
+		std::fill(X.ux.begin(), X.ux.end(), 0.0);
+		std::fill(X.uy.begin(), X.uy.end(), 0.0);
+		std::fill(X.uz.begin(), X.uz.end(), 0.0);
 		scatter_from_free(pb, xFree, X);
 		K_times_u_finest(pb, eleModulus, X, Y);
 		restrict_to_free(pb, Y, F);
@@ -78,7 +114,9 @@ int PCG_free(const Problem& pb,
 	const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
 	for (int it=0; it<maxIt; ++it) {
 		// Ap = A * p, using workspace buffers
-		std::fill(X.begin(), X.end(), 0.0);
+		std::fill(X.ux.begin(), X.ux.end(), 0.0);
+		std::fill(X.uy.begin(), X.uy.end(), 0.0);
+		std::fill(X.uz.begin(), X.uz.end(), 0.0);
 		scatter_from_free(pb, p, X);
 		K_times_u_finest(pb, eleModulus, X, Y);
 
@@ -87,7 +125,9 @@ int PCG_free(const Problem& pb,
 		Ap.resize(p.size());
 		for (size_t i=0;i<p.size();++i) {
 			int gi = pb.freeDofIndex[i];
-			double api = Y[gi];
+			int n = gi / 3;
+			int c = gi % 3;
+			double api = (c==0 ? Y.ux[n] : (c==1 ? Y.uy[n] : Y.uz[n]));
 			Ap[i] = api;
 			denom += p[i] * api;
 		}

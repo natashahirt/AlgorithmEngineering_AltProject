@@ -4,13 +4,13 @@
 
 namespace top3d {
     
-void restrict_to_free(const Problem&, const std::vector<double>& full, std::vector<double>& freev);
-void scatter_from_free(const Problem&, const std::vector<double>& freev, std::vector<double>& full);
+void restrict_to_free(const Problem&, const DOFData& full, std::vector<double>& freev);
+void scatter_from_free(const Problem&, const std::vector<double>& freev, DOFData& full);
 
 struct PCGFreeWorkspace {
-	// Full DOF vectors (size = mesh.numDOFs)
-	std::vector<double> xfull;  // holds full-space vector (e.g. pfull, xfull)
-	std::vector<double> yfull;  // holds K * xfull result (e.g. Apfull, yfull)
+	// Full DOF vectors in SoA (size per comp = mesh.numNodes)
+	DOFData xfull;  // holds full-space vector (e.g. pfull, xfull)
+	DOFData yfull;  // holds K * xfull result (e.g. Apfull, yfull)
 	// Temporary free-space buffer, if needed
 	std::vector<double> tmpFree;
 };
