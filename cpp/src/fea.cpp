@@ -8,6 +8,31 @@
 
 namespace top3d {
 
+// In debug builds, verify 64-byte alignment when we claim it
+#ifndef NDEBUG
+static inline void assert_aligned_64(const void* ptr) {
+	auto p = reinterpret_cast<std::uintptr_t>(ptr);
+	assert((p % 64u) == 0 && "Ke is not 64-byte aligned!");
+}
+#endif
+
+// Reusable view bundling invariant raw pointers for kernels
+struct FEAKernelView {
+	int numElements;
+	const int* __restrict__ eNod;
+	const double* __restrict__ Kptr;
+};
+
+static inline FEAKernelView make_fea_kernel_view(const Problem& pb) {
+	const auto& mesh = pb.mesh;
+	FEAKernelView v{
+		mesh.numElements,
+		mesh.eNodMat.data(),
+		mesh.Ke.data()
+	};
+	return v;
+}
+
 // 64-bit Morton helpers: support up to 21 bits per coordinate (2,097,151)
 static inline std::uint64_t part1by2_64(std::uint64_t x) {
 	// Spread the lower 21 bits of x so that there are 2 zero bits between each
@@ -397,71 +422,193 @@ void ApplyBoundaryConditions(Problem& pb) {
 	}
 }
 
+// Forward declaration for int-based kernel to satisfy overload used below
+static inline void K_times_u_kernel(
+	int numElements,
+	const int* __restrict__ eNod,
+	const double* __restrict__ Kptr,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	double* __restrict__ yx,
+	double* __restrict__ yy,
+	double* __restrict__ yz,
+	const double* __restrict__ Ee
+);
+
+// Overload using reusable view
+static inline void K_times_u_kernel(
+	const FEAKernelView& view,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	double* __restrict__ yx,
+	double* __restrict__ yy,
+	double* __restrict__ yz,
+	const double* __restrict__ Ee
+){
+	K_times_u_kernel(view.numElements, view.eNod, view.Kptr, ux, uy, uz, yx, yy, yz, Ee);
+}
+
+// Inner kernel: raw-pointer only, to minimize aliasing paranoia
+static inline void K_times_u_kernel(
+	int numElements,
+	const int* __restrict__ eNod,
+	const double* __restrict__ Kptr_raw,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	double* __restrict__ yx,
+	double* __restrict__ yy,
+	double* __restrict__ yz,
+	const double* __restrict__ Ee
+){
+	#if defined(__GNUC__) || defined(__clang__)
+	const double* __restrict__ Kptr =
+		static_cast<const double*>(__builtin_assume_aligned(Kptr_raw, 64));
+	#else
+	const double* __restrict__ Kptr = Kptr_raw;
+	#endif
+	#ifndef NDEBUG
+	assert_aligned_64(Kptr);
+	#endif
+	alignas(64) double ue[24];
+	alignas(64) double fe[24];
+
+	for (int e = 0; e < numElements; ++e) {
+		const double Ee_e = Ee[e];
+		if (Ee_e <= 1.0e-16) continue;
+
+		const int* __restrict__ en = eNod + 8*e;
+
+		// Gather
+		for (int a = 0; a < 8; ++a) {
+			const int n = en[a];
+			const int base = 3*a;
+			ue[base + 0] = ux[n];
+			ue[base + 1] = uy[n];
+			ue[base + 2] = uz[n];
+		}
+
+		// fe = Ee * Ke * ue
+		for (int i = 0; i < 24; ++i) {
+			const double* __restrict__ Ki = Kptr + 24*i;
+			double sum = 0.0;
+			#pragma omp simd reduction(+:sum)
+			for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
+			fe[i] = Ee_e * sum;
+		}
+
+		// Scatter
+		for (int a = 0; a < 8; ++a) {
+			const int n = en[a];
+			const int base = 3*a;
+			yx[n] += fe[base + 0];
+			yy[n] += fe[base + 1];
+			yz[n] += fe[base + 2];
+		}
+	}
+}
+
+// Compute ce[e] = u_e' * Ke * u_e and return total compliance sum_e Ee[e]*ce[e]
+static inline double compute_compliance_kernel(
+	int numElements,
+	const int* __restrict__ eNod,
+	const double* __restrict__ Kptr_raw,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	const double* __restrict__ Ee,
+	double* __restrict__ ceOut
+){
+	#if defined(__GNUC__) || defined(__clang__)
+	const double* __restrict__ Kptr =
+		static_cast<const double*>(__builtin_assume_aligned(Kptr_raw, 64));
+	#else
+	const double* __restrict__ Kptr = Kptr_raw;
+	#endif
+	#ifndef NDEBUG
+	assert_aligned_64(Kptr);
+	#endif
+	alignas(64) double ue[24];
+	double totalC = 0.0;
+
+	for (int e = 0; e < numElements; ++e) {
+		const double Ee_e = Ee[e];
+		if (Ee_e <= 1.0e-16) {
+			ceOut[e] = 0.0;
+			continue;
+		}
+
+		// Gather element displacements
+		const int* __restrict__ en = eNod + 8*e;
+		for (int a = 0; a < 8; ++a) {
+			const int n = en[a];
+			const int base = 3*a;
+			ue[base + 0] = ux[n];
+			ue[base + 1] = uy[n];
+			ue[base + 2] = uz[n];
+		}
+
+		// ce = ue' * Ke * ue, without intermediate tmp
+		double ce = 0.0;
+		for (int i = 0; i < 24; ++i) {
+			const double* __restrict__ Ki = Kptr + 24*i;
+			double rowDot = 0.0;
+			#pragma omp simd reduction(+:rowDot)
+			for (int j = 0; j < 24; ++j)
+				rowDot += Ki[j] * ue[j];
+			ce += ue[i] * rowDot;
+		}
+
+		ceOut[e] = ce;
+		totalC   += Ee_e * ce;
+	}
+	return totalC;
+}
+
+// Overload using reusable view
+static inline double compute_compliance_kernel(
+	const FEAKernelView& view,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	const double* __restrict__ Ee,
+	double* __restrict__ ceOut
+){
+	return compute_compliance_kernel(view.numElements, view.eNod, view.Kptr, ux, uy, uz, Ee, ceOut);
+}
+
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const DOFData& U,
                       DOFData& Y)
 {
-    const auto& mesh = pb.mesh;
-    const auto& Ke   = mesh.Ke;
+	const auto& mesh = pb.mesh;
+	const auto& Ke   = mesh.Ke;
 
-    const int numNodes    = mesh.numNodes;
-    const int numElements = mesh.numElements;
+	const int numNodes    = mesh.numNodes;
+	const int numElements = mesh.numElements;
 
-    // Zero Y (no realloc if size matches)
-    if ((int)Y.ux.size() != numNodes) Y.ux.assign(numNodes, 0.0);
-    else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
-    if ((int)Y.uy.size() != numNodes) Y.uy.assign(numNodes, 0.0);
-    else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
-    if ((int)Y.uz.size() != numNodes) Y.uz.assign(numNodes, 0.0);
-    else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
+	// Zero Y (no realloc if size matches)
+	if ((int)Y.ux.size() != numNodes) Y.ux.assign(numNodes, 0.0);
+	else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
+	if ((int)Y.uy.size() != numNodes) Y.uy.assign(numNodes, 0.0);
+	else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
+	if ((int)Y.uz.size() != numNodes) Y.uz.assign(numNodes, 0.0);
+	else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
 
-    const int*    __restrict__ eNod = mesh.eNodMat.data();
-    const double* __restrict__ Kptr = Ke.data();
-    const double* __restrict__ ux   = U.ux.data();
-    const double* __restrict__ uy   = U.uy.data();
-    const double* __restrict__ uz   = U.uz.data();
-          double* __restrict__ yx   = Y.ux.data();
-          double* __restrict__ yy   = Y.uy.data();
-          double* __restrict__ yz   = Y.uz.data();
+	const int*    __restrict__ eNod = mesh.eNodMat.data();
+	const double* __restrict__ Kptr = Ke.data();
+	const double* __restrict__ ux   = U.ux.data();
+	const double* __restrict__ uy   = U.uy.data();
+	const double* __restrict__ uz   = U.uz.data();
+	      double* __restrict__ yx   = Y.ux.data();
+	      double* __restrict__ yy   = Y.uy.data();
+	      double* __restrict__ yz   = Y.uz.data();
 
-    alignas(64) double ue[24];
-    alignas(64) double fe[24];
-
-    for (int e = 0; e < numElements; ++e) {
-        const double Ee = eleModulus[e];
-        if (Ee <= 1.0e-16) continue;
-
-        const int* __restrict__ en = eNod + 8*e;
-
-        // Gather ue in the natural [node][xyz] order
-        for (int a = 0; a < 8; ++a) {
-            const int n = en[a];
-            const int base = 3*a;
-            ue[base + 0] = ux[n];
-            ue[base + 1] = uy[n];
-            ue[base + 2] = uz[n];
-        }
-
-        // fe = Ee * Ke * ue
-        for (int i = 0; i < 24; ++i) {
-            const double* __restrict__ Ki = Kptr + 24*i;
-            double sum = 0.0;
-            #pragma omp simd reduction(+:sum)
-            for (int j = 0; j < 24; ++j)
-                sum += Ki[j] * ue[j];
-            fe[i] = Ee * sum;
-        }
-
-        // Scatter fe
-        for (int a = 0; a < 8; ++a) {
-            const int n = en[a];
-            const int base = 3*a;
-            yx[n] += fe[base + 0];
-            yy[n] += fe[base + 1];
-            yz[n] += fe[base + 2];
-        }
-    }
+	// Dispatch directly to the int-based kernel
+	K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
 }
 
 double ComputeCompliance(const Problem& pb,
@@ -469,30 +616,14 @@ double ComputeCompliance(const Problem& pb,
 						   const DOFData& U,
 						   std::vector<double>& ceList) {
 	const auto& mesh = pb.mesh;
-	const auto& Ke = mesh.Ke;
-	ceList.assign(mesh.numElements, 0.0);
-	std::array<double,24> ue{};
-	for (int e=0;e<mesh.numElements;e++) {
-		// gather element DOFs directly
-		for (int a=0;a<8;a++) {
-			int n = mesh.eNodMat[e*8 + a];
-			ue[3*a+0] = U.ux[n];
-			ue[3*a+1] = U.uy[n];
-			ue[3*a+2] = U.uz[n];
-		}
-		double tmp[24];
-		for (int i=0;i<24;i++) {
-			double sum=0.0; const double* Ki = &Ke[i*24];
-			#pragma omp simd reduction(+:sum)
-			for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-			tmp[i] = sum;
-		}
-		double val=0.0; for (int i=0;i<24;i++) val += ue[i]*tmp[i];
-		ceList[e] = val;
-	}
-	// Total compliance = sum(Ee * ce)
-	double C=0.0; for (int e=0;e<mesh.numElements;e++) C += eleModulus[e]*ceList[e];
-	return C;
+	const int numElements = mesh.numElements;
+	ceList.assign(numElements, 0.0);
+	const double* __restrict__ ux   = U.ux.data();
+	const double* __restrict__ uy   = U.uy.data();
+	const double* __restrict__ uz   = U.uz.data();
+	const double* __restrict__ Ee   = eleModulus.data();
+	const FEAKernelView view = make_fea_kernel_view(pb);
+	return compute_compliance_kernel(view, ux, uy, uz, Ee, ceList.data());
 }
 
 } // namespace top3d

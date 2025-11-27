@@ -65,7 +65,7 @@ struct CartesianMesh {
 	std::vector<int32_t> eDofMat; // stored row-major: [ele][24]
 
 	// Element stiffness (24x24) for unit modulus
-	std::array<double,24*24> Ke{};
+	alignas(64) std::array<double,24*24> Ke{};
 };
 
 
