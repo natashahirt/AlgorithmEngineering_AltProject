@@ -400,47 +400,67 @@ void ApplyBoundaryConditions(Problem& pb) {
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const DOFData& U,
-                      DOFData& Y) {
-    const auto& mesh = pb.mesh; 
-    const auto& Ke   = mesh.Ke; 
+                      DOFData& Y)
+{
+    const auto& mesh = pb.mesh;
+    const auto& Ke   = mesh.Ke;
 
-    if ((int)Y.ux.size() != mesh.numNodes) Y.ux.assign(mesh.numNodes, 0.0); else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
-    if ((int)Y.uy.size() != mesh.numNodes) Y.uy.assign(mesh.numNodes, 0.0); else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
-    if ((int)Y.uz.size() != mesh.numNodes) Y.uz.assign(mesh.numNodes, 0.0); else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
+    const int numNodes    = mesh.numNodes;
+    const int numElements = mesh.numElements;
 
-    alignas(64) std::array<double,24> ue{};
-	alignas(64) std::array<double,24> fe{};
+    // Zero Y (no realloc if size matches)
+    if ((int)Y.ux.size() != numNodes) Y.ux.assign(numNodes, 0.0);
+    else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
+    if ((int)Y.uy.size() != numNodes) Y.uy.assign(numNodes, 0.0);
+    else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
+    if ((int)Y.uz.size() != numNodes) Y.uz.assign(numNodes, 0.0);
+    else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
 
-    for (int e=0; e<mesh.numElements; ++e) {
+    const int*    __restrict__ eNod = mesh.eNodMat.data();
+    const double* __restrict__ Kptr = Ke.data();
+    const double* __restrict__ ux   = U.ux.data();
+    const double* __restrict__ uy   = U.uy.data();
+    const double* __restrict__ uz   = U.uz.data();
+          double* __restrict__ yx   = Y.ux.data();
+          double* __restrict__ yy   = Y.uy.data();
+          double* __restrict__ yz   = Y.uz.data();
+
+    alignas(64) double ue[24];
+    alignas(64) double fe[24];
+
+    for (int e = 0; e < numElements; ++e) {
         const double Ee = eleModulus[e];
         if (Ee <= 1.0e-16) continue;
 
-		// Gather ue branchlessly using lookup tables
-		for (int i=0;i<24;i++) {
-			const int a = node_of_i_[i];
-			const int c = comp_of_i_[i];
-			const int n = mesh.eNodMat[e*8 + a];
-			ue[i] = (c==0 ? U.ux[n] : (c==1 ? U.uy[n] : U.uz[n]));
-		}
+        const int* __restrict__ en = eNod + 8*e;
+
+        // Gather ue in the natural [node][xyz] order
+        for (int a = 0; a < 8; ++a) {
+            const int n = en[a];
+            const int base = 3*a;
+            ue[base + 0] = ux[n];
+            ue[base + 1] = uy[n];
+            ue[base + 2] = uz[n];
+        }
 
         // fe = Ee * Ke * ue
-        for (int i=0;i<24;i++) {
-            const double* __restrict__ Ki = &Ke[i*24];
+        for (int i = 0; i < 24; ++i) {
+            const double* __restrict__ Ki = Kptr + 24*i;
             double sum = 0.0;
             #pragma omp simd reduction(+:sum)
-            for (int j=0;j<24;j++) sum += Ki[j]*ue[j];
-			fe[i] = Ee * sum;
+            for (int j = 0; j < 24; ++j)
+                sum += Ki[j] * ue[j];
+            fe[i] = Ee * sum;
         }
-		// Scatter once per local DOF slot, branchlessly
-		for (int i=0;i<24;i++) {
-			const int a = node_of_i_[i];
-			const int c = comp_of_i_[i];
-			const int n = mesh.eNodMat[e*8 + a];
-			const double val = fe[i];
-			if (c==0) Y.ux[n] += val;
-			else if (c==1) Y.uy[n] += val;
-			else Y.uz[n] += val;
-		}
+
+        // Scatter fe
+        for (int a = 0; a < 8; ++a) {
+            const int n = en[a];
+            const int base = 3*a;
+            yx[n] += fe[base + 0];
+            yy[n] += fe[base + 1];
+            yz[n] += fe[base + 2];
+        }
     }
 }
 
