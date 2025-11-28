@@ -14,6 +14,9 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 namespace top3d {
 
@@ -208,6 +211,12 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 				<< std::scientific << std::setprecision(4) << tTotalTime << "s.\n";
 		std::cout << std::fixed;
 		
+		// Determine thread count for summary (tries OpenMP if available, else fallback to 1)
+		int thread_count = 1;
+		#ifdef _OPENMP
+			thread_count = omp_get_max_threads();
+		#endif
+
 		// Build summary text
 		int origdimsX = pb.mesh.origResX, origdimsY = pb.mesh.origResY, origdimsZ = pb.mesh.origResZ;
 		int dimsX = pb.mesh.resX, dimsY = pb.mesh.resY, dimsZ = pb.mesh.resZ;
@@ -232,7 +241,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		        << "time per iter: " << std::fixed << std::setprecision(4) << avgPerIter << "\n"
 		        << "percentage time spent on cg: " << std::setprecision(2) << pctCG << "%\n"
 		        << "percentage time spent on optim: " << pctOpt << "%\n"
-		        << "percentage time spent on filtering: " << pctFilt << "%\n";
+		        << "percentage time spent on filtering: " << pctFilt << "%\n\n"
+				<< "THREADS\n"
+				<< thread_count << "\n\n"
+				<< "NOTES\n";
 		// Print to stdout so it appears in logs
 		std::cout << "\n" << summary.str() << std::endl;
 		

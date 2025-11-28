@@ -469,6 +469,8 @@ static inline void K_times_u_kernel(
 	#ifndef NDEBUG
 	assert_aligned_64(Kptr);
 	#endif
+	const double (* __restrict__ K2D)[24] =
+		reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
 	alignas(64) double ue[24];
 	alignas(64) double fe[24];
 
@@ -489,7 +491,7 @@ static inline void K_times_u_kernel(
 
 		// fe = Ee * Ke * ue
 		for (int i = 0; i < 24; ++i) {
-			const double* __restrict__ Ki = Kptr + 24*i;
+			const double* __restrict__ Ki = K2D[i];
 			double sum = 0.0;
 			#pragma omp simd reduction(+:sum)
 			for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
@@ -527,40 +529,76 @@ static inline double compute_compliance_kernel(
 	#ifndef NDEBUG
 	assert_aligned_64(Kptr);
 	#endif
-	alignas(64) double ue[24];
+	const double (* __restrict__ K2D)[24] =
+		reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
 	double totalC = 0.0;
-
-	for (int e = 0; e < numElements; ++e) {
-		const double Ee_e = Ee[e];
-		if (Ee_e <= 1.0e-16) {
-			ceOut[e] = 0.0;
-			continue;
+	#if defined(_OPENMP)
+	#pragma omp parallel
+	{
+		alignas(64) double ue[24];
+		double localC = 0.0;
+		#pragma omp for nowait schedule(static, 32)
+		for (int e = 0; e < numElements; ++e) {
+			const double Ee_e = Ee[e];
+			if (Ee_e <= 1.0e-16) {
+				ceOut[e] = 0.0;
+				continue;
+			}
+			// Gather element displacements
+			const int* __restrict__ en = eNod + 8*e;
+			for (int a = 0; a < 8; ++a) {
+				const int n = en[a];
+				const int base = 3*a;
+				ue[base + 0] = ux[n];
+				ue[base + 1] = uy[n];
+				ue[base + 2] = uz[n];
+			}
+			// ce = ue' * Ke * ue
+			double ce = 0.0;
+			for (int i = 0; i < 24; ++i) {
+				const double* __restrict__ Ki = K2D[i];
+				double rowDot = 0.0;
+				#pragma omp simd reduction(+:rowDot)
+				for (int j = 0; j < 24; ++j) rowDot += Ki[j] * ue[j];
+				ce += ue[i] * rowDot;
+			}
+			ceOut[e] = ce;
+			localC  += Ee_e * ce;
 		}
-
-		// Gather element displacements
-		const int* __restrict__ en = eNod + 8*e;
-		for (int a = 0; a < 8; ++a) {
-			const int n = en[a];
-			const int base = 3*a;
-			ue[base + 0] = ux[n];
-			ue[base + 1] = uy[n];
-			ue[base + 2] = uz[n];
-		}
-
-		// ce = ue' * Ke * ue, without intermediate tmp
-		double ce = 0.0;
-		for (int i = 0; i < 24; ++i) {
-			const double* __restrict__ Ki = Kptr + 24*i;
-			double rowDot = 0.0;
-			#pragma omp simd reduction(+:rowDot)
-			for (int j = 0; j < 24; ++j)
-				rowDot += Ki[j] * ue[j];
-			ce += ue[i] * rowDot;
-		}
-
-		ceOut[e] = ce;
-		totalC   += Ee_e * ce;
+		#pragma omp atomic
+		totalC += localC;
 	}
+	#else
+	{
+		alignas(64) double ue[24];
+		for (int e = 0; e < numElements; ++e) {
+			const double Ee_e = Ee[e];
+			if (Ee_e <= 1.0e-16) {
+				ceOut[e] = 0.0;
+				continue;
+			}
+			// Gather element displacements
+			const int* __restrict__ en = eNod + 8*e;
+			for (int a = 0; a < 8; ++a) {
+				const int n = en[a];
+				const int base = 3*a;
+				ue[base + 0] = ux[n];
+				ue[base + 1] = uy[n];
+				ue[base + 2] = uz[n];
+			}
+			// ce = ue' * Ke * ue
+			double ce = 0.0;
+			for (int i = 0; i < 24; ++i) {
+				const double* __restrict__ Ki = K2D[i];
+				double rowDot = 0.0;
+				for (int j = 0; j < 24; ++j) rowDot += Ki[j] * ue[j];
+				ce += ue[i] * rowDot;
+			}
+			ceOut[e] = ce;
+			totalC   += Ee_e * ce;
+		}
+	}
+	#endif
 	return totalC;
 }
 
@@ -626,6 +664,8 @@ void K_times_u_finest(const Problem& pb,
 		#ifndef NDEBUG
 		assert_aligned_64(KptrAligned);
 		#endif
+		const double (* __restrict__ K2D)[24] =
+			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
 		const auto& buckets = mesh.coloring.colorBuckets;
 		const int numColors = mesh.coloring.numColors;
 		#pragma omp parallel
@@ -634,7 +674,7 @@ void K_times_u_finest(const Problem& pb,
 			alignas(64) double fe[24];
 			for (int c = 0; c < numColors; ++c) {
 				const auto& elems = buckets[static_cast<size_t>(c)];
-				#pragma omp for nowait schedule(static)
+				#pragma omp for nowait schedule(static, 32)
 				for (int idx = 0; idx < static_cast<int>(elems.size()); ++idx) {
 					const int e = elems[static_cast<size_t>(idx)];
 					const int* __restrict__ en = eNod + 8*e;
@@ -650,7 +690,7 @@ void K_times_u_finest(const Problem& pb,
 					}
 					// fe = Ee_e * Ke * ue
 					for (int i = 0; i < 24; ++i) {
-						const double* __restrict__ Ki = KptrAligned + 24*i;
+						const double* __restrict__ Ki = K2D[i];
 						double sum = 0.0;
 						#pragma omp simd reduction(+:sum)
 						for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
