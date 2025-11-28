@@ -34,7 +34,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		std::cout << std::scientific << std::setprecision(4);
 		std::cout << "................................................Cell Size: " << std::setw(10) << pb.params.cellSize << "\n";
 		std::cout << std::fixed;
-		std::cout << "...............................................#CG Iterations: " << std::setw(4) << pb.params.cgMaxIt << "\n";
+		std::cout << ".................................................#CG Iterations: " << std::setw(4) << pb.params.cgMaxIt << "\n";
 		std::cout << std::scientific << std::setprecision(4);
 		std::cout << "...........................................Youngs Modulus: " << std::setw(10) << pb.params.youngsModulus << "\n";
 		std::cout << "....................................Youngs Modulus (Min.): " << std::setw(10) << pb.params.youngsModulusMin << "\n";

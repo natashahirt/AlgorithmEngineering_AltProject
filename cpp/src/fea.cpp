@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cassert>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 namespace top3d {
 
@@ -51,77 +54,6 @@ static inline std::uint64_t morton3D_64(std::uint32_t x, std::uint32_t y, std::u
 	std::uint64_t yy = part1by2_64(y);
 	std::uint64_t zz = part1by2_64(z);
 	return (xx << 2) | (yy << 1) | zz;
-}
-
-// Build node -> incident element adjacency
-static inline std::vector<std::vector<int>> build_node_to_elems(const CartesianMesh& mesh) {
-	std::vector<std::vector<int>> nodeToElems(mesh.numNodes);
-	const int* eNod = mesh.eNodMat.data();
-	const int numElements = mesh.numElements;
-	for (int e = 0; e < numElements; ++e) {
-		const int base = e * 8;
-		for (int a = 0; a < 8; ++a) {
-			const int n = eNod[base + a];
-			nodeToElems[static_cast<size_t>(n)].push_back(e);
-		}
-	}
-	return nodeToElems;
-}
-
-// Greedy coloring in current element order (Morton order preserved)
-static inline ElementColoring color_elements(const CartesianMesh& mesh) {
-	const int numElements = mesh.numElements;
-	ElementColoring result;
-	if (numElements == 0) {
-		result.numColors = 0;
-		return result;
-	}
-	const int* eNod = mesh.eNodMat.data();
-	auto nodeToElems = build_node_to_elems(mesh);
-	std::vector<int> elemColor(static_cast<size_t>(numElements), -1);
-	int maxColors = 32;
-	std::vector<uint8_t> used(static_cast<size_t>(maxColors));
-	int globalMaxColor = -1;
-	for (int e = 0; e < numElements; ++e) {
-		std::fill(used.begin(), used.end(), static_cast<uint8_t>(0));
-		const int base = e * 8;
-		for (int a = 0; a < 8; ++a) {
-			const int n = eNod[base + a];
-			const auto& incident = nodeToElems[static_cast<size_t>(n)];
-			for (int neigh : incident) {
-				if (neigh == e) continue;
-				const int c = elemColor[static_cast<size_t>(neigh)];
-				if (c >= 0) {
-					if (c >= maxColors) {
-						const int newMax = std::max(maxColors * 2, c + 1);
-						std::vector<uint8_t> newUsed(static_cast<size_t>(newMax), 0);
-						std::copy(used.begin(), used.end(), newUsed.begin());
-						used.swap(newUsed);
-						maxColors = newMax;
-					}
-					used[static_cast<size_t>(c)] = 1;
-				}
-			}
-		}
-		int color = 0;
-		while (color < maxColors && used[static_cast<size_t>(color)]) ++color;
-		if (color == maxColors) {
-			used.resize(static_cast<size_t>(maxColors * 2), 0);
-			maxColors *= 2;
-		}
-		elemColor[static_cast<size_t>(e)] = color;
-		if (color > globalMaxColor) globalMaxColor = color;
-	}
-	const int numColors = globalMaxColor + 1;
-	std::vector<std::vector<int>> buckets(static_cast<size_t>(numColors));
-	for (int e = 0; e < numElements; ++e) {
-		const int c = elemColor[static_cast<size_t>(e)];
-		buckets[static_cast<size_t>(c)].push_back(e);
-	}
-	result.numColors = numColors;
-	result.elemColor = std::move(elemColor);
-	result.colorBuckets = std::move(buckets);
-	return result;
 }
 
 // Inverse of nodeIndex(ix,iy,iz) = nnx*nny*iz + nnx*iy + ix
@@ -292,34 +224,12 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	mesh.numNodes = nnx*nny*nnz;
 	mesh.numDOFs = mesh.numNodes*3;
 
-	// Build Morton permutation (64-bit codes) and nodal maps
-	{
-		// Sanity for 64-bit Morton: max coordinate per axis < 2^21
-#ifndef NDEBUG
-		assert((nnx-1) < (1<<21));
-		assert((nny-1) < (1<<21));
-		assert((nnz-1) < (1<<21));
-#endif
-		struct MortonNode { std::uint64_t morton; int oldIndex; };
-		std::vector<MortonNode> nodes;
-		nodes.reserve(static_cast<size_t>(mesh.numNodes));
-		for (int old = 0; old < mesh.numNodes; ++old) {
-			int ix, iy, iz;
-			node_ijk(old, nnx, nny, ix, iy, iz);
-			std::uint64_t code = morton3D_64(static_cast<std::uint32_t>(ix),
-			                                 static_cast<std::uint32_t>(iy),
-			                                 static_cast<std::uint32_t>(iz));
-			nodes.push_back({code, old});
-		}
-		std::sort(nodes.begin(), nodes.end(),
-			[](const MortonNode& a, const MortonNode& b){ return a.morton < b.morton; });
-		mesh.nodMapForward.resize(mesh.numNodes);
-		mesh.nodMapBack.resize(mesh.numNodes);
-		for (int newIdx = 0; newIdx < mesh.numNodes; ++newIdx) {
-			int oldIdx = nodes[static_cast<size_t>(newIdx)].oldIndex;
-			mesh.nodMapForward[static_cast<size_t>(oldIdx)] = newIdx;
-			mesh.nodMapBack[static_cast<size_t>(newIdx)] = oldIdx;
-		}
+	// Lexicographic nodal order: identity maps
+	mesh.nodMapForward.resize(mesh.numNodes);
+	mesh.nodMapBack.resize(mesh.numNodes);
+	for (int i = 0; i < mesh.numNodes; ++i) {
+		mesh.nodMapForward[static_cast<size_t>(i)] = i;
+		mesh.nodMapBack[static_cast<size_t>(i)] = i;
 	}
 
 	// eNodMat (compact by using compact node ids directly)
@@ -368,7 +278,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 
 	// Reorder elements into 64-bit Morton order (based on structured (ex,ey,ez))
 	{
-		struct ElemMorton { std::uint64_t key; int oldIndex; };
+		struct ElemMorton { std::uint64_t key; int oldIndex; int color; };
 		std::vector<ElemMorton> elems(static_cast<size_t>(mesh.numElements));
 		for (int comp = 0; comp < mesh.numElements; ++comp) {
 			int fullIdx = mesh.eleMapBack[static_cast<size_t>(comp)];
@@ -377,12 +287,17 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 			std::uint64_t code = morton3D_64(static_cast<std::uint32_t>(ex),
 			                                 static_cast<std::uint32_t>(ey),
 			                                 static_cast<std::uint32_t>(ez));
-			elems[static_cast<size_t>(comp)] = {code, comp};
+			int color = (ex & 1) | ((ey & 1) << 1) | ((ez & 1) << 2); // 0..7
+			elems[static_cast<size_t>(comp)] = {code, comp, color};
 		}
 		std::sort(elems.begin(), elems.end(),
 			[](const ElemMorton& a, const ElemMorton& b){ return a.key < b.key; });
 		std::vector<int> elemPerm(static_cast<size_t>(mesh.numElements));
-		for (int newIdx = 0; newIdx < mesh.numElements; ++newIdx) elemPerm[static_cast<size_t>(newIdx)] = elems[static_cast<size_t>(newIdx)].oldIndex;
+		std::vector<int> elemColorPerm(static_cast<size_t>(mesh.numElements));
+		for (int newIdx = 0; newIdx < mesh.numElements; ++newIdx) {
+			elemPerm[static_cast<size_t>(newIdx)]      = elems[static_cast<size_t>(newIdx)].oldIndex;
+			elemColorPerm[static_cast<size_t>(newIdx)] = elems[static_cast<size_t>(newIdx)].color;
+		}
 		// Apply permutation to per-element data
 		permute_strided(mesh.eNodMat, elemPerm, 8);
 		permute_strided(mesh.eDofMat, elemPerm, 24);
@@ -390,6 +305,15 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 		// Recompute eleMapForward to stay consistent
 		mesh.eleMapForward.assign(nx*ny*nz, -1);
 		for (int i=0;i<mesh.numElements;i++) mesh.eleMapForward[ mesh.eleMapBack[static_cast<size_t>(i)] ] = i;
+		// Build color buckets directly (8-color parity scheme)
+		const int numColors = 8;
+		mesh.coloring.numColors = numColors;
+		mesh.coloring.elemColor = std::move(elemColorPerm);
+		mesh.coloring.colorBuckets.assign(static_cast<size_t>(numColors), {});
+		for (int e = 0; e < mesh.numElements; ++e) {
+			const int c = mesh.coloring.elemColor[static_cast<size_t>(e)];
+			mesh.coloring.colorBuckets[static_cast<size_t>(c)].push_back(e);
+		}
 	}
 
 	// Boundary nodes/elements identification
@@ -410,8 +334,7 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	// Element stiffness
 	mesh.Ke = ComputeVoxelKe(0.3, 1.0);
 
-	// Build element coloring once (race-free parallel assembly)
-	mesh.coloring = color_elements(mesh);
+	// Structured 8-coloring built during Morton reorder (mesh.coloring filled above)
 
 	// Initialize design variables to V0 later
 	pb.density.assign(mesh.numElements, 1.0f);
@@ -681,8 +604,19 @@ void K_times_u_finest(const Problem& pb,
 	      double* __restrict__ yy   = Y.uy.data();
 	      double* __restrict__ yz   = Y.uz.data();
 
-	// If coloring is available, use race-free colored parallel assembly
-	if (mesh.coloring.numColors > 0 && !mesh.coloring.colorBuckets.empty()) {
+	// Decide whether to use colored parallel assembly
+#if defined(_OPENMP)
+	int maxThreads = omp_get_max_threads();
+	bool useColoring =
+		(maxThreads > 1) &&
+		(mesh.coloring.numColors > 0) &&
+		!mesh.coloring.colorBuckets.empty() &&
+		(numElements > 1000);
+#else
+	bool useColoring = false;
+#endif
+
+	if (useColoring) {
 		#if defined(__GNUC__) || defined(__clang__)
 		const double* __restrict__ KptrAligned =
 			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
@@ -694,40 +628,44 @@ void K_times_u_finest(const Problem& pb,
 		#endif
 		const auto& buckets = mesh.coloring.colorBuckets;
 		const int numColors = mesh.coloring.numColors;
-		for (int c = 0; c < numColors; ++c) {
-			const auto& elems = buckets[static_cast<size_t>(c)];
-			#pragma omp parallel for
-			for (int idx = 0; idx < static_cast<int>(elems.size()); ++idx) {
-				const int e = elems[static_cast<size_t>(idx)];
-				alignas(64) double ue[24];
-				alignas(64) double fe[24];
-				const int* __restrict__ en = eNod + 8*e;
-				const double Ee_e = eleModulus[e];
-				if (Ee_e <= 1.0e-16) continue;
-				// Gather
-				for (int a = 0; a < 8; ++a) {
-					const int n = en[a];
-					const int base = 3*a;
-					ue[base + 0] = ux[n];
-					ue[base + 1] = uy[n];
-					ue[base + 2] = uz[n];
+		#pragma omp parallel
+		{
+			alignas(64) double ue[24];
+			alignas(64) double fe[24];
+			for (int c = 0; c < numColors; ++c) {
+				const auto& elems = buckets[static_cast<size_t>(c)];
+				#pragma omp for nowait schedule(static)
+				for (int idx = 0; idx < static_cast<int>(elems.size()); ++idx) {
+					const int e = elems[static_cast<size_t>(idx)];
+					const int* __restrict__ en = eNod + 8*e;
+					const double Ee_e = eleModulus[e];
+					if (Ee_e <= 1.0e-16) continue;
+					// Gather
+					for (int a = 0; a < 8; ++a) {
+						const int n = en[a];
+						const int base = 3*a;
+						ue[base + 0] = ux[n];
+						ue[base + 1] = uy[n];
+						ue[base + 2] = uz[n];
+					}
+					// fe = Ee_e * Ke * ue
+					for (int i = 0; i < 24; ++i) {
+						const double* __restrict__ Ki = KptrAligned + 24*i;
+						double sum = 0.0;
+						#pragma omp simd reduction(+:sum)
+						for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
+						fe[i] = Ee_e * sum;
+					}
+					// Scatter
+					for (int a = 0; a < 8; ++a) {
+						const int n = en[a];
+						const int base = 3*a;
+						yx[n] += fe[base + 0];
+						yy[n] += fe[base + 1];
+						yz[n] += fe[base + 2];
+					}
 				}
-				// fe = Ee_e * Ke * ue
-				for (int i = 0; i < 24; ++i) {
-					const double* __restrict__ Ki = KptrAligned + 24*i;
-					double sum = 0.0;
-					#pragma omp simd reduction(+:sum)
-					for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
-					fe[i] = Ee_e * sum;
-				}
-				// Scatter
-				for (int a = 0; a < 8; ++a) {
-					const int n = en[a];
-					const int base = 3*a;
-					yx[n] += fe[base + 0];
-					yy[n] += fe[base + 1];
-					yz[n] += fe[base + 2];
-				}
+				#pragma omp barrier
 			}
 		}
 	} else {
