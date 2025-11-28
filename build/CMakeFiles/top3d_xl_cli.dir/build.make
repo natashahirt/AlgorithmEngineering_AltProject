@@ -93,6 +93,8 @@ top3d_xl_cli_EXTERNAL_OBJECTS =
 top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/apps/top3d_cli.cpp.o
 top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/build.make
 top3d_xl_cli: libtop3d_xl.a
+top3d_xl_cli: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64/libgomp.so
+top3d_xl_cli: /lib64/libpthread.so
 top3d_xl_cli: CMakeFiles/top3d_xl_cli.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable top3d_xl_cli"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/top3d_xl_cli.dir/link.txt --verbose=$(VERBOSE)

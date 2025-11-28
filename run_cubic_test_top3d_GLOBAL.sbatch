@@ -6,7 +6,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=8G
 #SBATCH --nodelist=node[1600-1619]
 
@@ -50,13 +50,13 @@ if [ ! -f build/top3d_xl_cli ]; then
 fi
 
 # Run with single thread for comparability
-export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OMP_PROC_BIND=close
 export OMP_PLACES=cores
 
 echo ""
 
-./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
+srun --cpus-per-task=$SLURM_CPUS_PER_TASK ./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
 
 # After job is done, delete error file if it's empty/job was successful
 if [ ! -s "$ERROR_FILE" ]; then

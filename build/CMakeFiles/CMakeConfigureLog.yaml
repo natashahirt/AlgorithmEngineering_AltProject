@@ -256,3 +256,241 @@ events:
       
       
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:219 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:485 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:44 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d60f5/fast
+        gmake: Warning: File 'Makefile' has modification time 2.9 s in the future
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d60f5.dir/build.make CMakeFiles/cmTC_d60f5.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf'
+        gmake[1]: Warning: File 'CMakeFiles/cmTC_d60f5.dir/flags.make' has modification time 2.9 s in the future
+        Building CXX object CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++   -fopenmp -v -std=gnu++17 -fPIE -o CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf/OpenMPTryFlag.cpp
+        Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs
+        COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++
+        Target: x86_64-pc-linux-gnu
+        Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c,c++,fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64' --with-boot-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 12.2.0 (Spack GCC) 
+        COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/'
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/cc1plus -quiet -v -D_GNU_SOURCE -D_REENTRANT /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf/OpenMPTryFlag.cpp -quiet -dumpdir CMakeFiles/cmTC_d60f5.dir/ -dumpbase OpenMPTryFlag.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -std=gnu++17 -version -fopenmp -fPIE -o /tmp/ccWxmi9P.s
+        GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)
+        	compiled by GNU C version 12.2.0, GMP version 6.2.1, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include
+         /usr/local/include
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed
+         /usr/include
+        End of search list.
+        GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)
+        	compiled by GNU C version 12.2.0, GMP version 6.2.1, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        Compiler executable checksum: bb029ae40352653463a7b34b72e4fb1b
+        COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/'
+         as -v --64 -o CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o /tmp/ccWxmi9P.s
+        GNU assembler version 2.30 (x86_64-redhat-linux) using BFD version version 2.30-123.el8
+        COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/
+        LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.'
+        Linking CXX executable cmTC_d60f5
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d60f5.dir/link.txt --verbose=1
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++  -fopenmp -v CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -o cmTC_d60f5  -v 
+        Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs
+        COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++
+        COLLECT_LTO_WRAPPER=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper
+        Target: x86_64-pc-linux-gnu
+        Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c,c++,fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64' --with-boot-ldflags='-Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl,-rpath,/orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl,-rpath,/usr/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl,-rpath,/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl,-rpath,/usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 12.2.0 (Spack GCC) 
+        COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/
+        LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/
+        Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/libgomp.spec
+        COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-o' 'cmTC_d60f5' '-v' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'cmTC_d60f5.'
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2 -plugin /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so -plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuzQRTf.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_d60f5 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../.. -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -lstdc++ -lm -lgomp -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o
+        COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-o' 'cmTC_d60f5' '-v' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'cmTC_d60f5.'
+        gmake[1]: warning:  Clock skew detected.  Your build may be incomplete.
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf'
+        gmake: warning:  Clock skew detected.  Your build may be incomplete.
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:262 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:485 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:44 (find_package)"
+    message: |
+      Parsed CXX OpenMP implicit link information from above output:
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf']
+        ignore line: []
+        ignore line: [Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d60f5/fast]
+        ignore line: [gmake: Warning: File 'Makefile' has modification time 2.9 s in the future]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_d60f5.dir/build.make CMakeFiles/cmTC_d60f5.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf']
+        ignore line: [gmake[1]: Warning: File 'CMakeFiles/cmTC_d60f5.dir/flags.make' has modification time 2.9 s in the future]
+        ignore line: [Building CXX object CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o]
+        ignore line: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++   -fopenmp -v -std=gnu++17 -fPIE -o CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf/OpenMPTryFlag.cpp]
+        ignore line: [Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs]
+        ignore line: [COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c c++ fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64' --with-boot-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 12.2.0 (Spack GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/']
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/cc1plus -quiet -v -D_GNU_SOURCE -D_REENTRANT /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-nuRmZf/OpenMPTryFlag.cpp -quiet -dumpdir CMakeFiles/cmTC_d60f5.dir/ -dumpbase OpenMPTryFlag.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -std=gnu++17 -version -fopenmp -fPIE -o /tmp/ccWxmi9P.s]
+        ignore line: [GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)]
+        ignore line: [	compiled by GNU C version 12.2.0  GMP version 6.2.1  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [GNU C++17 (Spack GCC) version 12.2.0 (x86_64-pc-linux-gnu)]
+        ignore line: [	compiled by GNU C version 12.2.0  GMP version 6.2.1  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [Compiler executable checksum: bb029ae40352653463a7b34b72e4fb1b]
+        ignore line: [COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/']
+        ignore line: [ as -v --64 -o CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o /tmp/ccWxmi9P.s]
+        ignore line: [GNU assembler version 2.30 (x86_64-redhat-linux) using BFD version version 2.30-123.el8]
+        ignore line: [COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-std=gnu++17' '-fPIE' '-o' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.']
+        ignore line: [Linking CXX executable cmTC_d60f5]
+        ignore line: [/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d60f5.dir/link.txt --verbose=1]
+        ignore line: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++  -fopenmp -v CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -o cmTC_d60f5  -v ]
+        ignore line: [Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/specs]
+        ignore line: [COLLECT_GCC=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++]
+        ignore line: [COLLECT_LTO_WRAPPER=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Configured with: /tmp/milechin/spack-stage/spack-stage-gcc-12.2.0-yt6vabmqdhcyqorspqj4groanxmwom4c/spack-src/configure --prefix=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm --with-pkgversion='Spack GCC' --with-bugurl=https://github.com/spack/spack/issues --disable-multilib --enable-languages=c c++ fortran --disable-nls --disable-canonical-system-headers --with-system-zlib --with-zstd-include=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/include --with-zstd-lib=/orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib --enable-bootstrap --with-mpfr-include=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/include --with-mpfr-lib=/orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib --with-gmp-include=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/include --with-gmp-lib=/orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib --with-mpc-include=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/include --with-mpc-lib=/orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib --without-isl --with-stage1-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64' --with-boot-ldflags='-Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 -Wl -rpath /orcd/software/core/001/spack/pkg/gcc-runtime/8.5.0/xvjgomg/lib -Wl -rpath /usr/lib -Wl -rpath /orcd/software/core/001/spack/pkg/gmp/6.2.1/vb6uboo/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpc/1.3.1/k4kcx27/lib -Wl -rpath /orcd/software/core/001/spack/pkg/mpfr/4.2.1/e4wij6c/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zlib-ng/2.1.6/bucswa2/lib -Wl -rpath /orcd/software/core/001/spack/pkg/zstd/1.5.6/c4ziswj/lib -Wl -rpath /usr/lib64 -static-libstdc++ -static-libgcc' --with-build-config=spack]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 12.2.0 (Spack GCC) ]
+        ignore line: [COMPILER_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/]
+        ignore line: [LIBRARY_PATH=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../:/lib/:/usr/lib/]
+        ignore line: [Reading specs from /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64/libgomp.spec]
+        ignore line: [COLLECT_GCC_OPTIONS='-fopenmp' '-v' '-o' 'cmTC_d60f5' '-v' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-pthread' '-dumpdir' 'cmTC_d60f5.']
+        link line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2 -plugin /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so -plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccuzQRTf.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_d60f5 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../.. -rpath /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64 CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o -lstdc++ -lm -lgomp -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o]
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/libexec/gcc/x86_64-pc-linux-gnu/12.2.0/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccuzQRTf.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lpthread] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_d60f5] ==> ignore
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..]
+          arg [-rpath] ==> ignore
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64] ==> ignore
+          arg [CMakeFiles/cmTC_d60f5.dir/OpenMPTryFlag.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgomp] ==> lib [gomp]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lpthread] ==> lib [pthread]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../..] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib]
+        implicit libs: [stdc++;m;gomp;gcc_s;gcc;pthread;c;gcc_s;gcc]
+        implicit objs: []
+        implicit dirs: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64;/lib64;/usr/lib64;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:419 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:559 (_OPENMP_GET_SPEC_DATE)"
+      - "CMakeLists.txt:44 (find_package)"
+    description: "Detecting CXX OpenMP version"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "OpenMP_SPECTEST_CXX_"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_a8de4/fast
+        gmake: Warning: File 'Makefile' has modification time 2.9 s in the future
+        /usr/bin/gmake  -f CMakeFiles/cmTC_a8de4.dir/build.make CMakeFiles/cmTC_a8de4.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb'
+        gmake[1]: Warning: File 'CMakeFiles/cmTC_a8de4.dir/flags.make' has modification time 2.9 s in the future
+        Building CXX object CMakeFiles/cmTC_a8de4.dir/OpenMPCheckVersion.cpp.o
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++   -fopenmp -std=gnu++17 -fPIE -o CMakeFiles/cmTC_a8de4.dir/OpenMPCheckVersion.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb/OpenMPCheckVersion.cpp
+        Linking CXX executable cmTC_a8de4
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a8de4.dir/link.txt --verbose=1
+        /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++  -fopenmp CMakeFiles/cmTC_a8de4.dir/OpenMPCheckVersion.cpp.o -o cmTC_a8de4 
+        gmake[1]: warning:  Clock skew detected.  Your build may be incomplete.
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build/CMakeFiles/CMakeScratch/TryCompile-se03Tb'
+        gmake: warning:  Clock skew detected.  Your build may be incomplete.
+        
+      exitCode: 0
+...

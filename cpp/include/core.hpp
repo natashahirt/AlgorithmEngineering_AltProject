@@ -11,6 +11,12 @@
 
 namespace top3d {
 
+struct ElementColoring {
+	int numColors = 0;
+	std::vector<int> elemColor;                 // size = numElements, color index per element
+	std::vector<std::vector<int>> colorBuckets; // buckets[c] = list of elements with color c
+};
+
 struct DOFData {
 	std::vector<double> ux;
 	std::vector<double> uy;
@@ -66,6 +72,9 @@ struct CartesianMesh {
 
 	// Element stiffness (24x24) for unit modulus
 	alignas(64) std::array<double,24*24> Ke{};
+
+	// Optional element graph coloring for race-free parallel assembly
+	ElementColoring coloring;
 };
 
 

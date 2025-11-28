@@ -53,6 +53,77 @@ static inline std::uint64_t morton3D_64(std::uint32_t x, std::uint32_t y, std::u
 	return (xx << 2) | (yy << 1) | zz;
 }
 
+// Build node -> incident element adjacency
+static inline std::vector<std::vector<int>> build_node_to_elems(const CartesianMesh& mesh) {
+	std::vector<std::vector<int>> nodeToElems(mesh.numNodes);
+	const int* eNod = mesh.eNodMat.data();
+	const int numElements = mesh.numElements;
+	for (int e = 0; e < numElements; ++e) {
+		const int base = e * 8;
+		for (int a = 0; a < 8; ++a) {
+			const int n = eNod[base + a];
+			nodeToElems[static_cast<size_t>(n)].push_back(e);
+		}
+	}
+	return nodeToElems;
+}
+
+// Greedy coloring in current element order (Morton order preserved)
+static inline ElementColoring color_elements(const CartesianMesh& mesh) {
+	const int numElements = mesh.numElements;
+	ElementColoring result;
+	if (numElements == 0) {
+		result.numColors = 0;
+		return result;
+	}
+	const int* eNod = mesh.eNodMat.data();
+	auto nodeToElems = build_node_to_elems(mesh);
+	std::vector<int> elemColor(static_cast<size_t>(numElements), -1);
+	int maxColors = 32;
+	std::vector<uint8_t> used(static_cast<size_t>(maxColors));
+	int globalMaxColor = -1;
+	for (int e = 0; e < numElements; ++e) {
+		std::fill(used.begin(), used.end(), static_cast<uint8_t>(0));
+		const int base = e * 8;
+		for (int a = 0; a < 8; ++a) {
+			const int n = eNod[base + a];
+			const auto& incident = nodeToElems[static_cast<size_t>(n)];
+			for (int neigh : incident) {
+				if (neigh == e) continue;
+				const int c = elemColor[static_cast<size_t>(neigh)];
+				if (c >= 0) {
+					if (c >= maxColors) {
+						const int newMax = std::max(maxColors * 2, c + 1);
+						std::vector<uint8_t> newUsed(static_cast<size_t>(newMax), 0);
+						std::copy(used.begin(), used.end(), newUsed.begin());
+						used.swap(newUsed);
+						maxColors = newMax;
+					}
+					used[static_cast<size_t>(c)] = 1;
+				}
+			}
+		}
+		int color = 0;
+		while (color < maxColors && used[static_cast<size_t>(color)]) ++color;
+		if (color == maxColors) {
+			used.resize(static_cast<size_t>(maxColors * 2), 0);
+			maxColors *= 2;
+		}
+		elemColor[static_cast<size_t>(e)] = color;
+		if (color > globalMaxColor) globalMaxColor = color;
+	}
+	const int numColors = globalMaxColor + 1;
+	std::vector<std::vector<int>> buckets(static_cast<size_t>(numColors));
+	for (int e = 0; e < numElements; ++e) {
+		const int c = elemColor[static_cast<size_t>(e)];
+		buckets[static_cast<size_t>(c)].push_back(e);
+	}
+	result.numColors = numColors;
+	result.elemColor = std::move(elemColor);
+	result.colorBuckets = std::move(buckets);
+	return result;
+}
+
 // Inverse of nodeIndex(ix,iy,iz) = nnx*nny*iz + nnx*iy + ix
 static inline void node_ijk(int n, int nnx, int nny, int& ix, int& iy, int& iz) {
 	int slab = nnx * nny;
@@ -339,6 +410,9 @@ void CreateVoxelFEAmodel_Cuboid(Problem& pb, int nely, int nelx, int nelz) {
 	// Element stiffness
 	mesh.Ke = ComputeVoxelKe(0.3, 1.0);
 
+	// Build element coloring once (race-free parallel assembly)
+	mesh.coloring = color_elements(mesh);
+
 	// Initialize design variables to V0 later
 	pb.density.assign(mesh.numElements, 1.0f);
 
@@ -607,8 +681,59 @@ void K_times_u_finest(const Problem& pb,
 	      double* __restrict__ yy   = Y.uy.data();
 	      double* __restrict__ yz   = Y.uz.data();
 
-	// Dispatch directly to the int-based kernel
-	K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
+	// If coloring is available, use race-free colored parallel assembly
+	if (mesh.coloring.numColors > 0 && !mesh.coloring.colorBuckets.empty()) {
+		#if defined(__GNUC__) || defined(__clang__)
+		const double* __restrict__ KptrAligned =
+			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
+		#else
+		const double* __restrict__ KptrAligned = Kptr;
+		#endif
+		#ifndef NDEBUG
+		assert_aligned_64(KptrAligned);
+		#endif
+		const auto& buckets = mesh.coloring.colorBuckets;
+		const int numColors = mesh.coloring.numColors;
+		for (int c = 0; c < numColors; ++c) {
+			const auto& elems = buckets[static_cast<size_t>(c)];
+			#pragma omp parallel for
+			for (int idx = 0; idx < static_cast<int>(elems.size()); ++idx) {
+				const int e = elems[static_cast<size_t>(idx)];
+				alignas(64) double ue[24];
+				alignas(64) double fe[24];
+				const int* __restrict__ en = eNod + 8*e;
+				const double Ee_e = eleModulus[e];
+				if (Ee_e <= 1.0e-16) continue;
+				// Gather
+				for (int a = 0; a < 8; ++a) {
+					const int n = en[a];
+					const int base = 3*a;
+					ue[base + 0] = ux[n];
+					ue[base + 1] = uy[n];
+					ue[base + 2] = uz[n];
+				}
+				// fe = Ee_e * Ke * ue
+				for (int i = 0; i < 24; ++i) {
+					const double* __restrict__ Ki = KptrAligned + 24*i;
+					double sum = 0.0;
+					#pragma omp simd reduction(+:sum)
+					for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
+					fe[i] = Ee_e * sum;
+				}
+				// Scatter
+				for (int a = 0; a < 8; ++a) {
+					const int n = en[a];
+					const int base = 3*a;
+					yx[n] += fe[base + 0];
+					yy[n] += fe[base + 1];
+					yz[n] += fe[base + 2];
+				}
+			}
+		}
+	} else {
+		// Fallback: plain contiguous loop
+		K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
+	}
 }
 
 double ComputeCompliance(const Problem& pb,
