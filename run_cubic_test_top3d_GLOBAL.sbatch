@@ -6,7 +6,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=8G
 #SBATCH --nodelist=node[1600-1619]
 
@@ -19,7 +19,7 @@ cd /home/lucas_b/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
 PARAMS="12 24 12 0.12 30"
-SIMULATION_COUNT="5"
+SIMULATION_COUNT="1"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
 mkdir -p out/log out/stl
@@ -40,7 +40,7 @@ echo "Latest log: $LOG_FILE"
 echo "STL dir: out/stl/"
 echo "NODELIST: ${SLURM_JOB_NODELIST:-$SLURM_NODELIST}"
 
-if [ ! -f build/top3d_xl_cli ]; then
+if [ ! -f cpp/build/top3d_xl_cli ]; then
   echo "Building top3d_xl_cli..."
   mkdir -p build
   cd build
@@ -49,6 +49,6 @@ if [ ! -f build/top3d_xl_cli ]; then
   cd ..
 fi
 
-./build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
+./cpp/build/top3d_xl_cli $MODE $PARAMS $SIMULATION_COUNT
 
 echo "Job completed at $(date)"

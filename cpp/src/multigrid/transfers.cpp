@@ -12,7 +12,6 @@ namespace top3d { namespace mg {
 
 // ===== MG diagonal-only V-cycle (Adapted) =====
 
-// ...existing code...
 void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
                                   const std::vector<double>& xc, std::vector<double>& xf) {
     const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
@@ -20,25 +19,24 @@ void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
     const int span = Lc.spanWidth;
     const int grid = span+1;
     const size_t minCoarseElemsForParallel = 90; // Need to tune
-	
-	const int nFineElements = fnnx*fnny*fnnz;
-	const int nCoarseElements = cnnx*cnny*cnnz;
+    const int nFineElements = fnnx*fnny*fnnz;
+    const int nCoarseElements = cnnx*cnny*cnnz;
 
 	// final results
     xf.assign(nFineElements, 0.0);
     std::vector<double> wsum(xf.size(), 0.0);
-
     auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
     auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
 
     // Decide runtime threading
 	#ifdef _OPENMP
-		int maxThreads = 2;
+		int maxThreads =  omp_get_max_threads();
 	#else
 		int maxThreads = 1;
 	#endif
 		bool doParallel = (maxThreads > 1) && (nCoarseElements >= minCoarseElemsForParallel);
 		if (doParallel) {
+			std::cout << "Incorrectly parallel \n";
 			// allocate contiguous thread-local buffers: [tid * Nf + idx]
 			std::vector<double> xf_loc((size_t)maxThreads * nFineElements, 0.0);
 			std::vector<double> wsum_loc((size_t)maxThreads * nFineElements, 0.0);

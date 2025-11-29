@@ -4,6 +4,21 @@ project(TOP3D_XL CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_DEBUG   "-g -O0")
+
+option(ENABLE_SANITIZERS "Enable Address/UB/Thread sanitizers" ON)
+
+if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Adding sanitizers to Debug build")
+
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined -fno-omit-frame-pointer")
+
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
+    set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
+
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
+endif()
 
 add_library(top3d_xl
     src/core.cpp
