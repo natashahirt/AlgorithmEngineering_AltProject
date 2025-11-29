@@ -53,13 +53,18 @@ PDEFilter SetupPDEFilter(const Problem& pb, float filterRadius) {
 	double iRmin = (static_cast<double>(filterRadius) * static_cast<double>(pb.mesh.eleSize[0])) / (2.0*std::sqrt(3.0));
 	for (int i=0;i<8;i++) for (int j=0;j<8;j++) pf.kernel[i*8+j] = iRmin*iRmin*KEF0[i*8+j] + KEF1[i*8+j];
 	// Diagonal preconditioner by accumulating kernel contributions to nodes
+	double rowSum[8];
+	for (int a=0;a<8;a++) {
+		double s = 0.0;
+		for (int b=0;b<8;b++) s += pf.kernel[a*8 + b];
+		rowSum[a] = s;
+	}
 	pf.diagPrecondNode.assign(pb.mesh.numNodes, 0.0);
 	for (int e=0;e<pb.mesh.numElements;e++) {
 		int base = e*8;
 		for (int a=0;a<8;a++) {
 			int na = pb.mesh.eNodMat[base+a];
-			double sum=0.0; for (int b=0;b<8;b++) sum += pf.kernel[a*8+b];
-			pf.diagPrecondNode[na] += sum;
+			pf.diagPrecondNode[na] += rowSum[a];
 		}
 	}
 	for (double& v : pf.diagPrecondNode) v = v>0 ? 1.0/v : 1.0;
@@ -70,17 +75,59 @@ PDEFilter SetupPDEFilter(const Problem& pb, float filterRadius) {
 }
 
 static void MatTimesVec_PDE(const Problem& pb, const PDEFilter& pf, const std::vector<double>& xNode, std::vector<double>& yNode) {
-	yNode.assign(pb.mesh.numNodes, 0.0);
-	for (int e=0;e<pb.mesh.numElements;e++) {
-		int base = e*8;
-		double u[8]; for (int a=0;a<8;a++) u[a] = xNode[pb.mesh.eNodMat[base+a]];
-		double f[8]={0};
-		for (int i=0;i<8;i++) {
-			double sum=0.0; for (int j=0;j<8;j++) sum += pf.kernel[i*8+j]*u[j];
-			f[i]=sum;
+	const auto& mesh = pb.mesh;
+	const int numNodes    = mesh.numNodes;
+	const int numElements = mesh.numElements;
+	yNode.assign(numNodes, 0.0);
+	const int* __restrict__ eNod = mesh.eNodMat.data();
+	// 2D view over the 8x8 kernel to aid autovectorization
+	const double (* __restrict__ K)[8] = reinterpret_cast<const double (*)[8]>(pf.kernel.data());
+#if defined(_OPENMP)
+	#pragma omp parallel
+	{
+		alignas(64) double u[8];
+		alignas(64) double f[8];
+		#pragma omp for schedule(static)
+		for (int e=0; e<numElements; ++e) {
+			const int base = e*8;
+			// gather
+			for (int a=0; a<8; ++a) {
+				const int n = eNod[base + a];
+				u[a] = xNode[n];
+			}
+			// f = K * u
+			for (int i=0; i<8; ++i) {
+				const double* __restrict__ Ki = K[i];
+				double sum = 0.0;
+				#pragma omp simd reduction(+:sum)
+				for (int j=0; j<8; ++j) sum += Ki[j]*u[j];
+				f[i] = sum;
+			}
+			// scatter with atomics
+			for (int a=0; a<8; ++a) {
+				const int n = eNod[base + a];
+				#pragma omp atomic update
+				yNode[n] += f[a];
+			}
 		}
-		for (int a=0;a<8;a++) yNode[pb.mesh.eNodMat[base+a]] += f[a];
 	}
+#else
+	// Sequential fallback
+	for (int e=0; e<numElements; ++e) {
+		const int base = e*8;
+		alignas(64) double u[8];
+		for (int a=0; a<8; ++a) u[a] = xNode[eNod[base + a]];
+		alignas(64) double f[8];
+		for (int i=0; i<8; ++i) {
+			const double* __restrict__ Ki = K[i];
+			double sum = 0.0;
+			#pragma omp simd reduction(+:sum)
+			for (int j=0; j<8; ++j) sum += Ki[j]*u[j];
+			f[i] = sum;
+		}
+		for (int a=0; a<8; ++a) yNode[eNod[base + a]] += f[a];
+	}
+#endif
 }
 
 void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& srcEle, std::vector<float>& dstEle, PDEFilterWorkspace& ws) {
@@ -97,7 +144,12 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 	if ((int)pf.lastXNode.size() != nNodes) pf.lastXNode.assign(nNodes, 0.0);
 	if ((int)pf.lastRhsNode.size() != nNodes) pf.lastRhsNode.assign(nNodes, 0.0);
 	double normRhs=0.0, diff=0.0;
-	for (int i=0;i<nNodes;++i) { normRhs += ws.rhs[i]*ws.rhs[i]; float d = ws.rhs[i]-pf.lastRhsNode[i]; diff += d*d; }
+	for (int i=0;i<nNodes;++i) {
+		const double rhs_i = ws.rhs[i];
+		const double d = rhs_i - pf.lastRhsNode[i];
+		normRhs += rhs_i * rhs_i;
+		diff += d * d;
+	}
 	normRhs = std::sqrt(normRhs); diff = std::sqrt(diff);
 	bool useWarm = (normRhs > 0.0) && (diff / std::max(1.0e-30, normRhs) < relThresh);
 	// Prepare workspace vectors
@@ -110,18 +162,27 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 	// r = rhs - A*x (or rhs if x=0)
 	if (useWarm) {
 		MatTimesVec_PDE(pb, pf, ws.x, ws.Ap);
+		#pragma omp parallel for
 		for (int i=0;i<nNodes;++i) ws.r[i] = ws.rhs[i] - ws.Ap[i];
 	} else {
+		#pragma omp parallel for
 		for (int i=0;i<nNodes;++i) ws.r[i] = ws.rhs[i];
 	}
-	for (int i=0;i<nNodes;++i) ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
-	double rz = std::inner_product(ws.r.begin(), ws.r.end(), ws.z.begin(), 0.0);
+	double rz = 0.0;
+	#pragma omp parallel for reduction(+:rz)
+	for (int i=0;i<nNodes;++i) {
+		ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
+		rz += ws.r[i]*ws.z[i];
+	}
 	if (rz==0) rz=1.0; ws.p = ws.z;
 	const double tol = 1e-6;
 	const int maxIt = 400;
 	// Early exit if warm-start already good
 	{
-		double rn = std::sqrt(std::inner_product(ws.r.begin(), ws.r.end(), ws.r.begin(), 0.0));
+		double rn2 = 0.0;
+		#pragma omp parallel for reduction(+:rn2)
+		for (int i=0;i<nNodes;++i) rn2 += ws.r[i]*ws.r[i];
+		double rn = std::sqrt(rn2);
 		if (rn < tol) {
 			// Node -> Ele (sum/8)
 			dstEle.assign(pb.mesh.numElements, 0.0f);
@@ -136,15 +197,27 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 	}
 	for (int it=0; it<maxIt; ++it) {
 		MatTimesVec_PDE(pb, pf, ws.p, ws.Ap);
-		double denom = std::inner_product(ws.p.begin(), ws.p.end(), ws.Ap.begin(), 0.0);
+		double denom = 0.0;
+		#pragma omp parallel for reduction(+:denom)
+		for (int i=0;i<nNodes;++i) denom += ws.p[i]*ws.Ap[i];
 		double alpha = rz / std::max(1.0e-30, denom);
+		#pragma omp parallel for
 		for (int i=0;i<nNodes;++i) ws.x[i] += alpha * ws.p[i];
+		#pragma omp parallel for
 		for (int i=0;i<nNodes;++i) ws.r[i] -= alpha * ws.Ap[i];
-		double rn = std::sqrt(std::inner_product(ws.r.begin(), ws.r.end(), ws.r.begin(), 0.0));
+		double rn2 = 0.0;
+		#pragma omp parallel for reduction(+:rn2)
+		for (int i=0;i<nNodes;++i) rn2 += ws.r[i]*ws.r[i];
+		double rn = std::sqrt(rn2);
 		if (rn < tol) break;
-		for (int i=0;i<nNodes;++i) ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
-		double rz_new = std::inner_product(ws.r.begin(), ws.r.end(), ws.z.begin(), 0.0);
+		double rz_new = 0.0;
+		#pragma omp parallel for reduction(+:rz_new)
+		for (int i=0;i<nNodes;++i) {
+			ws.z[i] = pf.diagPrecondNode[i]*ws.r[i];
+			rz_new += ws.r[i]*ws.z[i];
+		}
 		double beta = rz_new / std::max(1.0e-30, rz);
+		#pragma omp parallel for
 		for (int i=0;i<nNodes;++i) ws.p[i] = ws.z[i] + beta * ws.p[i];
 		rz = rz_new;
 	}

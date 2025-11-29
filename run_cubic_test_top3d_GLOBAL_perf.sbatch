@@ -61,9 +61,9 @@ PERF_DATA_FILE="${PERF_RUN_DIR}/perf.data"
 PERF_REPORT_FILE="${PERF_RUN_DIR}/report.txt"
 PERF_ANNOT_FILE="${PERF_RUN_DIR}/annotate_K_times_u_finest.txt"
 
-# Keep runs comparable (single thread; bind places)
-export OMP_NUM_THREADS=1
-export OMP_PROC_BIND=close
+# Keep runs comparable (multithread; bind places)
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-4}"
+export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
 
 # Helper: wrap executable and args
@@ -99,15 +99,19 @@ if command -v perf >/dev/null 2>&1; then
   fi
   # Avoid taskset on Slurm-managed CPUs (can conflict with cgroups); rely on OMP_* for consistency
   TASKSET_PREFIX=()
-  echo "Running single pass with perf stat + perf record combined (one simulation run, one export)..."
-  # Combine stat and record so the app executes only once (avoids double export)
-  "${TASKSET_PREFIX[@]}" perf stat -r 1 -d -d -d \
-    -e "$STAT_EVENTS" \
-    -o "$PERF_STAT_FILE" -- \
-    perf record -g --call-graph "$CALLGRAPH" -F 400 \
-      -e "$REC_EVENTS" \
-      -o "$PERF_DATA_FILE" -- $APP $APP_ARGS
-  echo "perf stat saved to: $PERF_STAT_FILE"
+  # Optional: set PERF_ENABLE_THREAD_STAT=1 to run a separate per-thread counters pass
+  PERF_ENABLE_THREAD_STAT="${PERF_ENABLE_THREAD_STAT:-0}"
+  if [ "$PERF_ENABLE_THREAD_STAT" = "1" ]; then
+    echo "Running perf stat --per-thread for per-thread counters..."
+    "${TASKSET_PREFIX[@]}" perf stat --per-thread -d -d -d \
+      -e "$STAT_EVENTS" \
+      -o "$PERF_STAT_FILE" -- $APP $APP_ARGS
+    echo "perf stat saved to: $PERF_STAT_FILE"
+  fi
+  echo "Running perf record for call stacks across all threads..."
+  "${TASKSET_PREFIX[@]}" perf record -g --call-graph "$CALLGRAPH" -F 99 \
+    -e "$REC_EVENTS" \
+    -o "$PERF_DATA_FILE" -- $APP $APP_ARGS
   echo "perf record data saved to: $PERF_DATA_FILE"
 
   echo "Generating text report (perf report --stdio)..."

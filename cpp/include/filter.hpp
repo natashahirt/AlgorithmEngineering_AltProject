@@ -7,7 +7,7 @@ namespace top3d {
  
 struct PDEFilter {
 	// 8-node kernel (8x8) stored row-major
-	std::array<double,8*8> kernel{};
+	alignas(64) std::array<double,8*8> kernel{};
 	std::vector<double> diagPrecondNode; // numNodes
 	// Warm-start storage
 	std::vector<double> lastXNode;       // numNodes
