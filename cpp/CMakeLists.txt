@@ -20,6 +20,22 @@ add_library(top3d_xl
     src/driver.cpp
 )
 
+# Find OpenMP and (on macOS) libomp fallback
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(top3d_xl PUBLIC OpenMP::OpenMP_CXX)
+else()
+    # macOS with AppleClang may need Homebrew libomp
+    find_path(LIBOMP_INCLUDE omp.h PATHS /opt/homebrew/opt/libomp/include /usr/local/opt/libomp/include)
+    find_library(LIBOMP_LIB omp PATHS /opt/homebrew/opt/libomp/lib /usr/local/opt/libomp/lib)
+    if(LIBOMP_INCLUDE AND LIBOMP_LIB)
+        target_include_directories(top3d_xl PUBLIC ${LIBOMP_INCLUDE})
+        # AppleClang requires -Xpreprocessor -fopenmp for compile and link with -lomp
+        target_compile_options(top3d_xl PUBLIC "-Xpreprocessor" "-fopenmp")
+        target_link_libraries(top3d_xl PUBLIC ${LIBOMP_LIB})
+    endif()
+endif()
+
 target_include_directories(top3d_xl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_sources(top3d_xl PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/core.hpp
