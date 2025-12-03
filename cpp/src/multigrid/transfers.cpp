@@ -30,7 +30,7 @@ namespace top3d
 			{ return cnnx * cnny * iz + cnnx * iy + ix; };
 
 			// Parallelize over coarse-element loops; use atomics when updating shared fine-node arrays
-#pragma omp parallel for collapse(3) schedule(static)
+// #pragma omp parallel for collapse(3) schedule(static)
 			for (int cez = 0; cez < Lc.resZ; ++cez)
 			{
 				for (int cex = 0; cex < Lc.resX; ++cex)
@@ -62,9 +62,9 @@ namespace top3d
 									double sum = 0.0;
 									for (int a = 0; a < 8; a++)
 										sum += W[a] * cv[a];
-#pragma omp atomic
+// #pragma omp atomic
 									xf[fidx] += sum;
-#pragma omp atomic
+// #pragma omp atomic
 									wsum[fidx] += 1.0;
 								}
 							}
