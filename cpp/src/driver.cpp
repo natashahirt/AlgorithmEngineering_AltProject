@@ -78,8 +78,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
-			auto M = make_jacobi_preconditioner(pb, eleMod);
-			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
+			// auto M = make_jacobi_preconditioner(pb, eleMod);
+			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
+			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, MG, pcg_ws);
 			scatter_from_free(pb, uFree, U);
 			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 			CsolidRef = Csolid;
@@ -121,8 +123,10 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			// Ensure warm-start vector matches current system size
 			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
 			// Reuse static MG context for current SIMP-modified modulus
-			auto M = make_jacobi_preconditioner(pb, eleMod);
-			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
+			// auto M = make_jacobi_preconditioner(pb, eleMod);
+			mg::MGPrecondConfig mgcfg; mgcfg.nonDyadic = true; mgcfg.maxLevels = 5; mgcfg.weight = 0.6;
+			auto MG = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfg);
+			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, MG, pcg_ws);
 			scatter_from_free(pb, uFreeWarm, U);
 			auto tSolveTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tSolveStart).count();
 			
