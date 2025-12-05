@@ -25,14 +25,14 @@ struct DOFData {
 
 struct GlobalParams {
 	// Physical
-	float youngsModulus = 1.0f;
-	float poissonRatio = 0.3f;
-	float youngsModulusMin = 1.0e-6f;
-	float simpPenalty = 3.0f;
-	float cellSize = 1.0f;
+	double youngsModulus = 1.0f;
+	double poissonRatio = 0.3f;
+	double youngsModulusMin = 1.0e-6f;
+	double simpPenalty = 3.0f;
+	double cellSize = 1.0f;
 
 	// Solver
-	float cgTol = 1.0e-3f;
+	double cgTol = 1.0e-3f;
 	int cgMaxIt = 800;
 
 	// Optimization
