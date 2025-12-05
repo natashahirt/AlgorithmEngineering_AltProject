@@ -64,7 +64,6 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		std::vector<float> xPhys = x;
 		std::vector<double> ce(ne, 0.0);
 		std::vector<double> eleMod(ne, static_cast<double>(pb.params.youngsModulus));
-		std::vector<double> eleModF(ne, static_cast<float>(pb.params.youngsModulus));
 
 		std::vector<double> uFreeWarm; // warm-start buffer for PCG
 		// PCG workspace reused across solves

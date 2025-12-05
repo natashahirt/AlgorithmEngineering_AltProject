@@ -13,14 +13,14 @@ namespace top3d { namespace mg {
 // ===== MG diagonal-only V-cycle (Adapted) =====
 
 void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
-								  const std::vector<float>& xc, std::vector<float>& xf) {
+								  const std::vector<double>& xc, std::vector<double>& xf) {
 	const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
 	const int cnnx = Lc.resX+1, cnny = Lc.resY+1, cnnz = Lc.resZ+1;
 const int span = Lc.spanWidth;
 	const int grid = span+1;
 
 	xf.assign(fnnx*fnny*fnnz, 0.0);
-	std::vector<float> wsum(xf.size(), 0.0);
+	std::vector<double> wsum(xf.size(), 0.0);
 
 	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
 	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
@@ -40,7 +40,7 @@ const int span = Lc.spanWidth;
 				int c6 = idxC(cex+1, Lc.resY-cey,   cez+1);
 				int c7 = idxC(cex+1, Lc.resY-cey-1, cez+1);
 				int c8 = idxC(cex,   Lc.resY-cey-1, cez+1);
-				float cv[8] = {xc[c1],xc[c2],xc[c3],xc[c4],xc[c5],xc[c6],xc[c7],xc[c8]};
+				double cv[8] = {xc[c1],xc[c2],xc[c3],xc[c4],xc[c5],xc[c6],xc[c7],xc[c8]};
 
                 int fx0 = cex*span, fy0 = (Lc.resY - cey)*span, fz0 = cez*span;
 				for (int iz=0; iz<=span; ++iz) {
@@ -50,8 +50,8 @@ const int span = Lc.spanWidth;
 							int fyi = fy0 - iy;
 							int fzi = fz0 + iz;
 							int fidx = idxF(fxi, fyi, fzi);
-const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
-							float sum = 0.0; for (int a=0;a<8;a++) sum += W[a]*cv[a];
+const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+							double sum = 0.0; for (int a=0;a<8;a++) sum += W[a]*cv[a];
 #ifdef _OPENMP
 							#pragma omp atomic
 							xf[fidx] += sum;
@@ -74,7 +74,7 @@ const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
 }
 
 void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
-								 const std::vector<float>& rf, std::vector<float>& rc) {
+								 const std::vector<double>& rf, std::vector<double>& rc) {
 	const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
 	const int cnnx = Lc.resX+1, cnny = Lc.resY+1, cnnz = Lc.resZ+1;
     const int span = Lc.spanWidth;
@@ -82,7 +82,7 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
 
 	rc.assign(cnnx*cnny*cnnz, 0.0);
     // OPT: Can we just reuse here?
-	std::vector<float> wsum(rc.size(), 0.0);
+	std::vector<double> wsum(rc.size(), 0.0);
 
     // OPT: Probably better to be a macro, might be abstracted by compiler
 	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
@@ -115,8 +115,8 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
 							int fyi = fy0 - iy;
 							int fzi = fz0 + iz;
 							int fidx = idxF(fxi, fyi, fzi);
-                            const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
-							float val = rf[fidx];
+                            const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+							double val = rf[fidx];
 
                             // We can probably vectorize this, but we need a rewrite for the dataflow
                             // since the target indices aren't contiguous currently

@@ -35,14 +35,14 @@ void build_static_once(const Problem& pb, const MGPrecondConfig& cfg,
 Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 														  const MGHierarchy& H,
 														  const std::vector<std::vector<uint8_t>>& fixedMasks,
-														  const std::vector<float>& eleModulus,
+														  const std::vector<double>& eleModulus,
 														  const MGPrecondConfig& cfg) {
 	// 1) Build per-level diagonals
-	std::vector<std::vector<float>> diag;
+	std::vector<std::vector<double>> diag;
 	MG_BuildDiagonals(pb, H, fixedMasks, eleModulus, diag);
 
 	// 2) Build aggregated Ee at coarsest level and factorize
-	std::vector<float> Lcoarse; int Ncoarse = 0;
+	std::vector<double> Lcoarse; int Ncoarse = 0;
 	{
 		const auto& Lc = H.levels.back();
 		Ncoarse = 3*Lc.numNodes;
@@ -51,11 +51,11 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			Ncoarse = 0; // diagonal fallback
 		} else {
 			// 1) Finest-grid modulus in structured order
-			std::vector<float> emFineFull;
+			std::vector<double> emFineFull;
 			EleMod_CompactToFull_Finest(pb, eleModulus, emFineFull);
 
 			// 2) Coarsest dense K via Galerkin triple products with fine-level BC mask
-			std::vector<float> Kc;
+			std::vector<double> Kc;
 			MG_AssembleCoarsestDenseK_Galerkin(pb, H, emFineFull, fixedMasks.front(), Kc);
 
 			// 3) Safety: impose coarsest-level BCs too
@@ -78,22 +78,22 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 	// 3) Return preconditioner closure (adapt to double free-DOF vectors)
 	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
 		// Convert input free vector to float for MG internals
-		std::vector<float> rFree_f(rFree.size());
-		for (size_t i=0;i<rFree.size();++i) rFree_f[i] = static_cast<float>(rFree[i]);
+		std::vector<double> rFree_f(rFree.size());
+		for (size_t i=0;i<rFree.size();++i) rFree_f[i] = static_cast<double>(rFree[i]);
 		const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
 		const int n0_dofs  = 3*n0_nodes;
 		// Build Morton-ordered DOF vector from free DOFs
-		std::vector<float> r0_morton(n0_dofs, 0.0f);
+		std::vector<double> r0_morton(n0_dofs, 0.0f);
 		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0_morton[pb.freeDofIndex[i]] = rFree_f[i];
 		// Convert to lexicographic node order expected by structured MG transfers
-		std::vector<float> r0_lex(n0_dofs, 0.0f);
+		std::vector<double> r0_lex(n0_dofs, 0.0f);
 		for (int nLex=0; nLex<n0_nodes; ++nLex) {
 			int nMort = pb.mesh.nodMapForward[nLex];
 			for (int c=0;c<3;c++) r0_lex[3*nLex + c] = r0_morton[3*nMort + c];
 		}
 
-		std::vector<std::vector<float>> rLv(H.levels.size());
-		std::vector<std::vector<float>> xLv(H.levels.size());
+		std::vector<std::vector<double>> rLv(H.levels.size());
+		std::vector<std::vector<double>> xLv(H.levels.size());
 		rLv[0] = r0_lex; xLv[0].assign(n0_dofs, 0.0);
 
 		for (int i=0;i<n0_nodes;i++) {
@@ -108,12 +108,12 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
 					const int d = 3*i+c; if (fixedMasks[l][d]) continue;
-					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
+					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30, D[d]);
 				}
 			}
 			rLv[l+1].assign(3*cn_nodes, 0.0f);
 			for (int c=0;c<3;c++) {
-				std::vector<float> rf(fn_nodes), rc;
+				std::vector<double> rf(fn_nodes), rc;
 				for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
 				MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
 				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
@@ -133,15 +133,15 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			xLv[Lidx].assign(3*cn_nodes, 0.0f);
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
 				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
-				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30f, D[d]);
+				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30, D[d]);
 			}
 		}
 
 		for (int l=(int)H.levels.size()-2; l>=0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
-			std::vector<float> add(3*fn_nodes, 0.0f);
+			std::vector<double> add(3*fn_nodes, 0.0f);
 			for (int c=0;c<3;c++) {
-				std::vector<float> xc(H.levels[l+1].numNodes), xf;
+				std::vector<double> xc(H.levels[l+1].numNodes), xf;
 				for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
 				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
 				for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
@@ -152,7 +152,7 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
 			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) {
 				int d = 3*i+c; if (fixedMasks[l][d]) continue;
-				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
+				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30, D[d]);
 			}
 		}
 		// Convert lex solution back to Morton indexing and extract free DOFs
