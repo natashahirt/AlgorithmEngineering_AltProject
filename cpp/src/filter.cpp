@@ -182,7 +182,7 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 	}
 	// Solve (PDE kernel) * x = rhs with PCG and Jacobi precond
 	// Conditional warm-start: reuse lastX if rhs hasn't changed much
-	const double relThresh = 0.1; // relative RHS change threshold for warm-start
+	const double relThresh = 1000.0; // Aggressive warm-start
 	if ((int)pf.lastXNode.size() != nNodes) pf.lastXNode.assign(nNodes, 0.0);
 	if ((int)pf.lastRhsNode.size() != nNodes) pf.lastRhsNode.assign(nNodes, 0.0);
 	double normRhs=0.0, diff=0.0;
@@ -217,15 +217,15 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 		rz += ws.r[i]*ws.z[i];
 	}
 	if (rz==0) rz=1.0; ws.p = ws.z;
-	const double tol = 1e-6;
-	const int maxIt = 400;
+	const double tol = 1e-3;
+	const int maxIt = 80;
 	// Early exit if warm-start already good
 	{
 		double rn2 = 0.0;
 		#pragma omp parallel for reduction(+:rn2)
 		for (int i=0;i<nNodes;++i) rn2 += ws.r[i]*ws.r[i];
 		double rn = std::sqrt(rn2);
-		if (rn < tol) {
+		if (rn < 1.0e-2) {
 			// Node -> Ele (sum/8)
 			dstEle.assign(pb.mesh.numElements, 0.0f);
 			for (int e=0;e<pb.mesh.numElements;e++) {
