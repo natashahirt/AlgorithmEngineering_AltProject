@@ -4,10 +4,11 @@
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
+#SBATCH --nodelist=node[1600-1619]
 
 # Optional: license server (uncomment and set if required)
 # export MLM_LICENSE_FILE=27000@your-license-hostname

@@ -13,13 +13,18 @@ static void ComputeJacobiDiagonalFull(const Problem& pb,
 	const auto& mesh = pb.mesh;
 	diagFull.assign(mesh.numDOFs, 0.0);
 	const auto& Ke = mesh.Ke;
+	
+	// Use OpenMP with coloring or atomic. Atomic is simpler here for conciseness.
+	#pragma omp parallel for
 	for (int e=0; e<mesh.numElements; ++e) {
 		float Ee = eleModulus[e];
 		for (int a=0; a<8; ++a) {
 			int n = mesh.eNodMat[e*8 + a];
 			for (int c=0; c<3; ++c) {
 				int local = 3*a + c;
-				diagFull[3*n + c] += Ke[local*24 + local] * Ee;
+				double val = Ke[local*24 + local] * Ee;
+				#pragma omp atomic
+				diagFull[3*n + c] += val;
 			}
 		}
 	}
@@ -41,6 +46,7 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 	auto idxF = [&](int ix,int iy,int iz){ return (Lf.resX+1)*(Lf.resY+1)*iz + (Lf.resX+1)*iy + ix; };
 	auto idxC = [&](int ix,int iy,int iz){ return (Lc.resX+1)*(Lc.resY+1)*iz + (Lc.resX+1)*iy + ix; };
 
+	#pragma omp parallel for collapse(3)
 	for (int cez=0; cez<Lc.resZ; ++cez) {
 		for (int cex=0; cex<Lc.resX; ++cex) {
 			for (int cey=0; cey<Lc.resY; ++cey) {
@@ -74,7 +80,9 @@ static void MG_CoarsenDiagonal(const MGLevel& Lc, const MGLevel& Lf,
 										// Skip fixed fine contributions to avoid inflating neighboring coarse diagonals
 										continue;
 									}
+									#pragma omp atomic
 									diagCoarse[coarseD] += w2 * diagFine[fineD];
+									#pragma omp atomic
 									wsum[coarseD] += w2;
 								}
 							}

@@ -123,6 +123,7 @@ int PCG_free(const Problem& pb,
 		// Fused restrict (A -> Ap) and denom = p·Ap
 		double denom = 0.0;
 		Ap.resize(p.size());
+		#pragma omp parallel for reduction(+:denom)
 		for (size_t i=0;i<p.size();++i) {
 			int gi = pb.freeDofIndex[i];
 			int n = gi / 3;
@@ -136,6 +137,7 @@ int PCG_free(const Problem& pb,
 
 		// Fused updates of x and r and residual norm
 		double rnorm2 = 0.0;
+		#pragma omp parallel for reduction(+:rnorm2)
 		for (size_t i=0;i<p.size();++i) {
 			xFree[i] += alpha * p[i];
 			r[i]     -= alpha * Ap[i];
@@ -147,12 +149,16 @@ int PCG_free(const Problem& pb,
 		if (M) M(r, z); else z = r;
 		double rz_new;
 		if (M) {
-			rz_new = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
+			// Parallelize dot product for rz_new
+			rz_new = 0.0;
+			#pragma omp parallel for reduction(+:rz_new)
+			for (size_t i=0; i<r.size(); ++i) rz_new += r[i] * z[i];
 		} else {
 			// z == r
 			rz_new = rnorm2;
 		}
 		double beta = rz_new / std::max(1.0e-30, rz_old);
+		#pragma omp parallel for
 		for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
 		rz_old = rz_new;
 	}

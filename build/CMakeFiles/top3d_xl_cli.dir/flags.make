@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/nhirt/AlgorithmEngineering_AltProject/cpp/include
 
-CXX_FLAGS = -fopenmp -O3 -DNDEBUG -std=gnu++17 -fPIE -fopenmp
+CXX_FLAGS = -march=native -fopenmp -O3 -DNDEBUG -std=gnu++17 -fPIE -fopenmp
 

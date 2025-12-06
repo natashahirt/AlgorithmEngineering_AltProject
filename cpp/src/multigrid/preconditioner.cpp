@@ -105,6 +105,8 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			const int cn_nodes = H.levels[l+1].numNodes;
 			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0f);
 			const auto& D = diag[l];
+			// Pre-smoothing
+			#pragma omp parallel for
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
 					const int d = 3*i+c; if (fixedMasks[l][d]) continue;

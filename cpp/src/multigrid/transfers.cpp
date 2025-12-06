@@ -88,6 +88,8 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
 	auto idxF = [&](int ix,int iy,int iz){ return fnnx*fnny*iz + fnnx*iy + ix; };
 	auto idxC = [&](int ix,int iy,int iz){ return cnnx*cnny*iz + cnnx*iy + ix; };
 
+	// Add OpenMP pragma here
+	#pragma omp parallel for collapse(3)
 	for (int cez=0; cez<Lc.resZ; ++cez) {
 		for (int cex=0; cex<Lc.resX; ++cex) {
 			for (int cey=0; cey<Lc.resY; ++cey) {
@@ -120,13 +122,23 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
 
                             // We can probably vectorize this, but we need a rewrite for the dataflow
                             // since the target indices aren't contiguous currently
-							for (int a=0;a<8;a++) { rc[cidx[a]] += W[a]*val; wsum[cidx[a]] += W[a]; }
+							for (int a=0;a<8;a++) { 
+								float contribution = W[a]*val;
+								float weight = W[a];
+								// Use atomic updates to avoid race conditions
+								#pragma omp atomic
+								rc[cidx[a]] += contribution; 
+								#pragma omp atomic
+								wsum[cidx[a]] += weight; 
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+	// Parallelize normalization
+	#pragma omp parallel for
 	for (size_t i=0;i<rc.size();++i) if (wsum[i]>0) rc[i] /= wsum[i];
 }
 

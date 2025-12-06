@@ -6,7 +6,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --mem=8G
 #SBATCH --nodelist=node[1600-1619]
 
@@ -18,7 +18,7 @@ module load cmake/3.27.9
 cd /home/nhirt/AlgorithmEngineering_AltProject
 
 MODE="GLOBAL"
-PARAMS="30 60 30 0.12 30"
+PARAMS="50 100 50 0.12 30"
 SIMULATION_COUNT="1"
 
 DATETIME=$(date +"%Y%m%d_%H%M%S")
