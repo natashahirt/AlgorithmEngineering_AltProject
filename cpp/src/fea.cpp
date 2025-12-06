@@ -419,32 +419,84 @@ void ApplyBoundaryConditions(Problem& pb) {
 	}
 }
 
-// Forward declaration for int-based kernel to satisfy overload used below
-static inline void K_times_u_kernel(
-	int numElements,
+// Helper to process a batch of 8 elements using SIMD
+// We assume BLOCK_SIZE is 8 to map well to AVX2 (4 doubles x 2) or AVX-512 (8 doubles)
+template <int BLOCK_SIZE = 8>
+static inline void ProcessBlock_8(
+	const int* __restrict__ eIndices, // Indices of elements to process
+	int count,                        // Valid elements in this batch (<= 8)
 	const int* __restrict__ eNod,
-	const double* __restrict__ Kptr,
+	const double (* __restrict__ K2D)[24],
+	const double* __restrict__ Ee,
 	const double* __restrict__ ux,
 	const double* __restrict__ uy,
 	const double* __restrict__ uz,
 	double* __restrict__ yx,
 	double* __restrict__ yy,
-	double* __restrict__ yz,
-	const double* __restrict__ Ee
-);
+	double* __restrict__ yz
+) {
+	alignas(64) double ue[24][BLOCK_SIZE];
+	alignas(64) double fe[24][BLOCK_SIZE];
+	double Ee_vals[BLOCK_SIZE];
 
-// Overload using reusable view
-static inline void K_times_u_kernel(
-	const FEAKernelView& view,
-	const double* __restrict__ ux,
-	const double* __restrict__ uy,
-	const double* __restrict__ uz,
-	double* __restrict__ yx,
-	double* __restrict__ yy,
-	double* __restrict__ yz,
-	const double* __restrict__ Ee
-){
-	K_times_u_kernel(view.numElements, view.eNod, view.Kptr, ux, uy, uz, yx, yy, yz, Ee);
+	// 1. Gather Displacements & Moduli
+	for (int k = 0; k < count; ++k) {
+		int e = eIndices[k];
+		Ee_vals[k] = Ee[e];
+		const int* __restrict__ en = eNod + 8 * e;
+		
+		// Unrolled gather of 8 nodes * 3 DOFs
+		#pragma GCC unroll 8
+		for (int a = 0; a < 8; ++a) {
+			int n = en[a];
+			ue[3*a + 0][k] = ux[n];
+			ue[3*a + 1][k] = uy[n];
+			ue[3*a + 2][k] = uz[n];
+		}
+	}
+	// Pad remainder of the block with dummy data to satisfy fixed loop bounds for SIMD
+	for (int k = count; k < BLOCK_SIZE; ++k) {
+		Ee_vals[k] = 0.0;
+		for(int i=0; i<24; ++i) ue[i][k] = 0.0;
+	}
+
+	// 2. Matrix-Vector Product: fe = Ke * ue
+	// The compiler will vectorize the inner loop over 'k' (SIMD across elements)
+	// We unroll the outer loops (i, j) to remove branching overhead
+	#pragma GCC unroll 24
+	for (int i = 0; i < 24; ++i) {
+		// Init accumulator
+		#pragma omp simd
+		for (int k = 0; k < BLOCK_SIZE; ++k) fe[i][k] = 0.0;
+
+		#pragma GCC unroll 24
+		for (int j = 0; j < 24; ++j) {
+			double Kij = K2D[i][j];
+			// Fused Multiply-Add across the batch
+			#pragma omp simd
+			for (int k = 0; k < BLOCK_SIZE; ++k) {
+				fe[i][k] += Kij * ue[j][k];
+			}
+		}
+	}
+
+	// 3. Scatter Forces
+	for (int k = 0; k < count; ++k) {
+		double Eval = Ee_vals[k];
+		if (Eval <= 1.0e-16) continue;
+
+		int e = eIndices[k];
+		const int* __restrict__ en = eNod + 8 * e;
+
+		#pragma GCC unroll 8
+		for (int a = 0; a < 8; ++a) {
+			int n = en[a];
+			// Accumulate forces
+			yx[n] += fe[3*a + 0][k] * Eval;
+			yy[n] += fe[3*a + 1][k] * Eval;
+			yz[n] += fe[3*a + 2][k] * Eval;
+		}
+	}
 }
 
 // Inner kernel: raw-pointer only, to minimize aliasing paranoia
@@ -471,42 +523,37 @@ static inline void K_times_u_kernel(
 	#endif
 	const double (* __restrict__ K2D)[24] =
 		reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
-	alignas(64) double ue[24];
-	alignas(64) double fe[24];
 
-	for (int e = 0; e < numElements; ++e) {
-		const double Ee_e = Ee[e];
-		if (Ee_e <= 1.0e-16) continue;
-
-		const int* __restrict__ en = eNod + 8*e;
-
-		// Gather
-		for (int a = 0; a < 8; ++a) {
-			const int n = en[a];
-			const int base = 3*a;
-			ue[base + 0] = ux[n];
-			ue[base + 1] = uy[n];
-			ue[base + 2] = uz[n];
-		}
-
-		// fe = Ee * Ke * ue
-		for (int i = 0; i < 24; ++i) {
-			const double* __restrict__ Ki = K2D[i];
-			double sum = 0.0;
-			#pragma omp simd reduction(+:sum)
-			for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
-			fe[i] = Ee_e * sum;
-		}
-
-		// Scatter
-		for (int a = 0; a < 8; ++a) {
-			const int n = en[a];
-			const int base = 3*a;
-			yx[n] += fe[base + 0];
-			yy[n] += fe[base + 1];
-			yz[n] += fe[base + 2];
-		}
+	// Batching logic for serial/contiguous case
+	constexpr int BS = 8;
+	int e = 0;
+	int eIdx[BS];
+	
+	// Main blocked loop
+	for (; e <= numElements - BS; e += BS) {
+		for(int k=0; k<BS; ++k) eIdx[k] = e + k;
+		ProcessBlock_8<BS>(eIdx, BS, eNod, K2D, Ee, ux, uy, uz, yx, yy, yz);
 	}
+	// Remainder
+	if (e < numElements) {
+		int count = 0;
+		for(; e < numElements; ++e) eIdx[count++] = e;
+		ProcessBlock_8<BS>(eIdx, count, eNod, K2D, Ee, ux, uy, uz, yx, yy, yz);
+	}
+}
+
+// Overload using reusable view
+static inline void K_times_u_kernel(
+	const FEAKernelView& view,
+	const double* __restrict__ ux,
+	const double* __restrict__ uy,
+	const double* __restrict__ uz,
+	double* __restrict__ yx,
+	double* __restrict__ yy,
+	double* __restrict__ yz,
+	const double* __restrict__ Ee
+){
+	K_times_u_kernel(view.numElements, view.eNod, view.Kptr, ux, uy, uz, yx, yy, yz, Ee);
 }
 
 // Compute ce[e] = u_e' * Ke * u_e and return total compliance sum_e Ee[e]*ce[e]
@@ -668,48 +715,32 @@ void K_times_u_finest(const Problem& pb,
 			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
 		const auto& buckets = mesh.coloring.colorBuckets;
 		const int numColors = mesh.coloring.numColors;
+		
 		#pragma omp parallel
 		{
-			alignas(64) double ue[24];
-			alignas(64) double fe[24];
+			// No local arrays needed here, ProcessBlock has its own stack arrays
 			for (int c = 0; c < numColors; ++c) {
 				const auto& elems = buckets[static_cast<size_t>(c)];
-				#pragma omp for nowait schedule(static, 32)
-				for (int idx = 0; idx < static_cast<int>(elems.size()); ++idx) {
-					const int e = elems[static_cast<size_t>(idx)];
-					const int* __restrict__ en = eNod + 8*e;
-					const double Ee_e = eleModulus[e];
-					if (Ee_e <= 1.0e-16) continue;
-					// Gather
-					for (int a = 0; a < 8; ++a) {
-						const int n = en[a];
-						const int base = 3*a;
-						ue[base + 0] = ux[n];
-						ue[base + 1] = uy[n];
-						ue[base + 2] = uz[n];
-					}
-					// fe = Ee_e * Ke * ue
-					for (int i = 0; i < 24; ++i) {
-						const double* __restrict__ Ki = K2D[i];
-						double sum = 0.0;
-						#pragma omp simd reduction(+:sum)
-						for (int j = 0; j < 24; ++j) sum += Ki[j] * ue[j];
-						fe[i] = Ee_e * sum;
-					}
-					// Scatter
-					for (int a = 0; a < 8; ++a) {
-						const int n = en[a];
-						const int base = 3*a;
-						yx[n] += fe[base + 0];
-						yy[n] += fe[base + 1];
-						yz[n] += fe[base + 2];
-					}
+				const int nElems = static_cast<int>(elems.size());
+				
+				// Process color bucket in chunks of 8
+				constexpr int BS = 8;
+				
+				#pragma omp for schedule(static)
+				for (int baseIdx = 0; baseIdx < nElems; baseIdx += BS) {
+					int count = std::min(BS, nElems - baseIdx);
+					// Load indices from the color bucket
+					// (elems stores indices 'e')
+					const int* ePtr = &elems[baseIdx];
+					ProcessBlock_8<BS>(ePtr, count, eNod, K2D, eleModulus.data(), 
+					                   ux, uy, uz, yx, yy, yz);
 				}
-				#pragma omp barrier
+				// Implicit barrier at end of 'omp for' unless nowait is used
+				// We need barrier between colors to prevent race conditions on nodes
 			}
 		}
 	} else {
-		// Fallback: plain contiguous loop
+		// Fallback: plain contiguous loop (now vectorized via ProcessBlock_8 inside K_times_u_kernel)
 		K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
 	}
 }

@@ -40,14 +40,15 @@ echo "Latest log: $LOG_FILE"
 echo "STL dir: out/stl/"
 echo "NODELIST: ${SLURM_JOB_NODELIST:-$SLURM_NODELIST}"
 
-if [ ! -f build/top3d_xl_cli ]; then
-  echo "Building top3d_xl_cli..."
-  mkdir -p build
-  cd build
-  cmake ../cpp
-  cmake --build . -j
-  cd ..
-fi
+# Automatically build top3d_xl_cli using the specified build command
+module load gcc/12.2.0 cmake/3.27.9
+rm -rf /home/nhirt/AlgorithmEngineering_AltProject/build
+cmake -S /home/nhirt/AlgorithmEngineering_AltProject/cpp \
+      -B /home/nhirt/AlgorithmEngineering_AltProject/build \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_CXX_COMPILER=g++ \
+      -DCMAKE_CXX_FLAGS="-march=native -fopenmp"
+cmake --build /home/nhirt/AlgorithmEngineering_AltProject/build -j
 
 # Run with single thread for comparability
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK

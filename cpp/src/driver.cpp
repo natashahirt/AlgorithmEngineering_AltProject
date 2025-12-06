@@ -250,8 +250,8 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		
 		// Persist artifacts with a shared tag
 		const std::string tag = generate_unique_tag("GLOBAL");
-		// Write comments markdown only for dims = 30 x 60 x 30
-		if (pb.mesh.origResX == 60 && pb.mesh.origResY == 30 && pb.mesh.origResZ == 30) {
+		// Always write comments markdown
+		{
 			const std::string commentsDir = out_comments_dir_for_cwd();
 			ensure_out_dir(commentsDir);
 			std::ofstream md(commentsDir + tag + ".md");
