@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <memory>
+#include <algorithm>
 
 namespace top3d { namespace mg {
 
@@ -75,37 +77,55 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		}
 	}
 
+    // Allocate workspace once
+    auto ws = std::make_shared<MGWorkspace>();
+    ws->resize(H);
+
 	// 3) Return preconditioner closure (adapt to double free-DOF vectors)
-	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse](const std::vector<double>& rFree, std::vector<double>& zFree) {
+	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse, ws](const std::vector<double>& rFree, std::vector<double>& zFree) mutable {
+        // Alias workspace vectors for brevity
+        auto& rLv = ws->rLv;
+        auto& xLv = ws->xLv;
+
 		// Convert input free vector to float for MG internals
-		std::vector<float> rFree_f(rFree.size());
-		for (size_t i=0;i<rFree.size();++i) rFree_f[i] = static_cast<float>(rFree[i]);
+		// std::vector<float> rFree_f(rFree.size()); // Avoid allocation if possible? workspace doesn't hold this intermediate
+        // We'll just do it on the fly or add to workspace. For now let's just loop.
+        
 		const int n0_nodes = (pb.mesh.resX+1)*(pb.mesh.resY+1)*(pb.mesh.resZ+1);
 		const int n0_dofs  = 3*n0_nodes;
-		// Build Morton-ordered DOF vector from free DOFs
-		std::vector<float> r0_morton(n0_dofs, 0.0f);
-		for (size_t i=0;i<pb.freeDofIndex.size();++i) r0_morton[pb.freeDofIndex[i]] = rFree_f[i];
-		// Convert to lexicographic node order expected by structured MG transfers
-		std::vector<float> r0_lex(n0_dofs, 0.0f);
-		for (int nLex=0; nLex<n0_nodes; ++nLex) {
-			int nMort = pb.mesh.nodMapForward[nLex];
-			for (int c=0;c<3;c++) r0_lex[3*nLex + c] = r0_morton[3*nMort + c];
-		}
+        
+        // Zero out finest residual buffer first
+        std::fill(rLv[0].begin(), rLv[0].end(), 0.0f);
+        
+		// Build Morton-ordered DOF vector from free DOFs -> Lexicographic
+        // We can go directly Free -> Lex to save a buffer if we are careful about mapping
+		for (size_t i=0;i<pb.freeDofIndex.size();++i) {
+             int dMort = pb.freeDofIndex[i];
+             int nMort = dMort / 3;
+             int comp  = dMort % 3;
+             int nLex = pb.mesh.nodMapBack[nMort]; // nMort -> nLex
+             rLv[0][3*nLex + comp] = static_cast<float>(rFree[i]);
+        }
 
-		std::vector<std::vector<float>> rLv(H.levels.size());
-		std::vector<std::vector<float>> xLv(H.levels.size());
-		rLv[0] = r0_lex; xLv[0].assign(n0_dofs, 0.0);
-
+		// Apply BC mask on finest residual immediately (though scatter should have handled it if clean)
 		for (int i=0;i<n0_nodes;i++) {
-			for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
+			for (int c=0;c<3;c++) if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0f;
 		}
+
+        // xLv[0] needs to be zeroed? Actually it's an output of the cycle, initialized to 0.
+        std::fill(xLv[0].begin(), xLv[0].end(), 0.0f);
 
 		for (size_t l=0; l+1<H.levels.size(); ++l) {
 			const int fn_nodes = H.levels[l].numNodes;
 			const int cn_nodes = H.levels[l+1].numNodes;
-			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0f);
+            
+            // Ensure xLv is correct size (resize handled in setup, just safe check or fill)
+            // xLv[l] is 3*fn_nodes
+            std::fill(xLv[l].begin(), xLv[l].end(), 0.0f); // Pre-smoothing guess = 0 usually? Or Richardson step on 0?
+            
 			const auto& D = diag[l];
-			// Pre-smoothing
+			// Pre-smoothing: x = D^-1 * r
+            // Note: Richardson iteration x = x + w * D^-1 * (b - Ax). If initial x=0, then x = w * D^-1 * b.
 			#pragma omp parallel for
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
@@ -113,45 +133,88 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
 				}
 			}
-			rLv[l+1].assign(3*cn_nodes, 0.0f);
+
+            // Calculate residual for restriction?
+            // Standard V-cycle: r_coarse = R * (r_fine - A * x_fine)
+            // But here we might be doing a simpler update since it's just diagonal precond?
+            // If x_fine was just computed as M^-1 * r_fine, the residual is r_fine - A*x_fine.
+            // But this implementation seems to just restrict 'rLv' ?? 
+            // The original code was:
+            // xLv[l] += weight * rLv[l] / D
+            // rf = rLv[l]  <-- Wait, this implies we are restricting the original residual, not the defect?
+            // Ah, looking at the loop:
+            // 1. Smooth: x = S(r)
+            // 2. Restrict: rc = R * r ??
+            // If we simply restrict r, we are NOT doing a standard MG correction unless we update r.
+            // Usually: r_next = R * (r_current - A * x_current).
+            // This implementation seems to be doing: x_pre = S(r); r_next = R * r; 
+            // This suggests it ignores the pre-smoothing effect on the residual! 
+            // That is valid for "Additive MG" or specific variants, but standard V-cycle usually updates residual.
+            // HOWEVER, I will keep the logic EXACTLY as in the original file for now to avoid breaking math, just optimizing memory.
+            // Original: for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c]; -> MG_Restrict -> rLv[l+1]
+            
+            // We use workspace tmp buffers for component-wise restriction
+            // NOTE: rLv[l+1] needs to be cleared or assigned? MG_Restrict assigns.
+            // But we can optimize to use the tmp buffers.
+            
+            std::fill(rLv[l+1].begin(), rLv[l+1].end(), 0.0f);
+            
 			for (int c=0;c<3;c++) {
-				std::vector<float> rf(fn_nodes), rc;
-				for (int i=0;i<fn_nodes;i++) rf[i] = rLv[l][3*i+c];
-				MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
-				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = rc[i];
+                // Copy strided rLv to tmp_rf
+                #pragma omp parallel for
+				for (int i=0;i<fn_nodes;i++) ws->tmp_rf[i] = rLv[l][3*i+c];
+                
+				MG_Restrict_nodes(H.levels[l+1], H.levels[l], ws->tmp_rf, ws->tmp_rc);
+				
+                // Copy tmp_rc to strided rLv[l+1]
+                #pragma omp parallel for
+				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = ws->tmp_rc[i];
 			}
-			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
-			xLv[l+1].assign(3*cn_nodes, 0.0f);
+            
+			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0f;
+            
+            // xLv[l+1] will be computed in next steps
+            std::fill(xLv[l+1].begin(), xLv[l+1].end(), 0.0f);
 		}
 
 		const size_t Lidx = H.levels.size()-1;
 		if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
 			chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
 			const int cn_nodes = H.levels[Lidx].numNodes;
-			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
+			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0f;
 		} else {
 			const auto& D = diag[Lidx];
 			const int cn_nodes = H.levels[Lidx].numNodes;
-			xLv[Lidx].assign(3*cn_nodes, 0.0f);
+			// xLv[Lidx] already 0
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
-				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
+				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0f; continue; }
 				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30f, D[d]);
 			}
 		}
 
 		for (int l=(int)H.levels.size()-2; l>=0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
-			std::vector<float> add(3*fn_nodes, 0.0f);
+            
+            // tmp_add needs to be zeroed? MG_Prolongate assigns, but we accumulate 3 comps.
+            // Let's zero it.
+            // Actually we can just accumulate into xLv[l].
+            
 			for (int c=0;c<3;c++) {
-				std::vector<float> xc(H.levels[l+1].numNodes), xf;
-				for (int i=0;i<H.levels[l+1].numNodes;i++) xc[i] = xLv[l+1][3*i+c];
-				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], xc, xf);
-				for (int i=0;i<fn_nodes;i++) add[3*i+c] = xf[i];
+                // Copy strided xLv[l+1] to tmp_xc
+                #pragma omp parallel for
+				for (int i=0;i<H.levels[l+1].numNodes;i++) ws->tmp_xc[i] = xLv[l+1][3*i+c];
+				
+				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], ws->tmp_xc, ws->tmp_xf);
+				
+                // Accumulate back
+                #pragma omp parallel for
+				for (int i=0;i<fn_nodes;i++) xLv[l][3*i+c] += ws->tmp_xf[i];
 			}
-			if ((int)xLv[l].size() != 3*fn_nodes) xLv[l].assign(3*fn_nodes, 0.0f);
-			for (int i=0;i<3*fn_nodes;i++) xLv[l][i] += add[i];
+            
 			const auto& D = diag[l];
-			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
+			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0f;
+            
+            // Post-smoothing
 			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) {
 				int d = 3*i+c; if (fixedMasks[l][d]) continue;
 				xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30f, D[d]);
