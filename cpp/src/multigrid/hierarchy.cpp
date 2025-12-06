@@ -1,4 +1,3 @@
-
 // Multigrid hierarchy construction
 #include "core.hpp"
 #include "multigrid/multigrid.hpp"
@@ -82,7 +81,7 @@ static MGLevel build_structured_level(int nx, int ny, int nz, int span) {
 }
 
 // Heuristic: adapt MG level count to keep coarsest DOFs <= NlimitDofs and stop when tiny
-int ComputeAdaptiveMaxLevels(const Problem& pb, bool nonDyadic, int cap, int NlimitDofs) {
+int ComputeAdaptiveMaxLevels(const Problem& pb, bool nonDyadic, int cap, int /*NlimitDofs*/) {
 	int nx = pb.mesh.resX;
 	int ny = pb.mesh.resY;
 	int nz = pb.mesh.resZ;
@@ -96,10 +95,11 @@ int ComputeAdaptiveMaxLevels(const Problem& pb, bool nonDyadic, int cap, int Nli
 		int nnx = nx / span, nny = ny / span, nnz = nz / span;
 		if (nnx < 1 || nny < 1 || nnz < 1) break;
 
-		long long nodes = 1LL*(nnx+1)*(nny+1)*(nnz+1);
-		long long dofs  = 3LL * nodes;
-		// Stop before exceeding coarsest dense factorization limit
-		if (dofs > NlimitDofs) break;
+		// Removed premature break based on dof count > NlimitDofs.
+		// We want to coarsen as much as possible geometrically.
+		// long long nodes = 1LL*(nnx+1)*(nny+1)*(nnz+1);
+		// long long dofs  = 3LL * nodes;
+		// if (dofs > NlimitDofs) break;
 
 		// Accept this level
 		nx = nnx; ny = nny; nz = nnz;
