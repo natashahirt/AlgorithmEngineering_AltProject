@@ -1,5 +1,7 @@
 # --- Topvoxel files ---
 *.TopVoxel
+*.dat
+*.nii
 
 # perf recordings
 out/perf/**/perf.data
