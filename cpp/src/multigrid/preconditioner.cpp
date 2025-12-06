@@ -135,15 +135,8 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
             std::fill(rLv[l+1].begin(), rLv[l+1].end(), 0.0);
             
 			for (int c=0;c<3;c++) {
-                // Copy strided rLv to tmp_rf
-                #pragma omp parallel for
-				for (int i=0;i<fn_nodes;i++) ws->tmp_rf[i] = rLv[l][3*i+c];
-                
-				MG_Restrict_nodes(H.levels[l+1], H.levels[l], ws->tmp_rf, ws->tmp_rc);
-				
-                // Copy tmp_rc to strided rLv[l+1]
-                #pragma omp parallel for
-				for (int i=0;i<cn_nodes;i++) rLv[l+1][3*i+c] = ws->tmp_rc[i];
+                // Direct Strided Restriction: rLv[l] -> rLv[l+1]
+				MG_Restrict_nodes_Strided(H.levels[l+1], H.levels[l], rLv[l], rLv[l+1], c, 3);
 			}
             
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
@@ -171,11 +164,19 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
             
             // Prolongate Correction: x_fine = x_fine + Prolongate(x_coarse)
 			for (int c=0;c<3;c++) {
+                // Optimized transfer: xLv[l+1](stride 3) -> tmp_xf(stride 1)
+                // Use generic tmp_xc buffer as intermediary if needed, but wait:
+                // MG_Prolongate_nodes_Strided logic assumes src and dst have same stride.
+                // My implementation: `xc[cbase00 * stride + component]` and `xf[fidx * stride + component]`.
+                // So I cannot mix strides easily with that implementation.
+                // I will revert to copy-based prolongation but use the faster stencil kernel.
+                
                 // Copy strided xLv[l+1] to tmp_xc
                 #pragma omp parallel for
 				for (int i=0;i<H.levels[l+1].numNodes;i++) ws->tmp_xc[i] = xLv[l+1][3*i+c];
 				
-				MG_Prolongate_nodes(H.levels[l+1], H.levels[l], ws->tmp_xc, ws->tmp_xf);
+                // Fast stencil prolongation (stride 1->1)
+				MG_Prolongate_nodes_Strided(H.levels[l+1], H.levels[l], ws->tmp_xc, ws->tmp_xf, 0, 1);
 				
                 // Accumulate back
                 #pragma omp parallel for
