@@ -97,10 +97,9 @@ static void MatTimesVec_PDE(const Problem& pb, const PDEFilter& pf, const std::v
 			}
 			// f = K * u
 			for (int i=0; i<8; ++i) {
-				const double* __restrict__ Ki = K[i];
 				double sum = 0.0;
 				#pragma omp simd reduction(+:sum)
-				for (int j=0; j<8; ++j) sum += Ki[j]*u[j];
+				for (int j=0; j<8; ++j) sum += K[i][j]*u[j];
 				f[i] = sum;
 			}
 			// scatter with atomics
