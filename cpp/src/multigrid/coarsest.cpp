@@ -9,10 +9,10 @@ namespace top3d { namespace mg {
 
 // ===== Coarsest-level assembly and Cholesky (to mirror MATLAB direct solve) =====
 
-bool chol_spd_inplace(std::vector<float>& A, int N) {
+bool chol_spd_inplace(std::vector<double>& A, int N) {
 	for (int i=0;i<N;i++) {
 		for (int j=0;j<=i;j++) {
-			float sum = A[i*N + j];
+			double sum = A[i*N + j];
 			for (int k=0;k<j;k++) sum -= A[i*N + k]*A[j*N + k];
 			if (i==j) {
 				if (sum <= 0.0) return false;
@@ -26,18 +26,18 @@ bool chol_spd_inplace(std::vector<float>& A, int N) {
 	return true;
 }
 
-void chol_solve_lower(const std::vector<float>& L,
-							  const std::vector<float>& b,
-							  std::vector<float>& x, int N) {
-	std::vector<float> y(N, 0.0);
+void chol_solve_lower(const std::vector<double>& L,
+							  const std::vector<double>& b,
+							  std::vector<double>& x, int N) {
+	std::vector<double> y(N, 0.0);
 	for (int i=0;i<N;i++) {
-		float sum = b[i];
+		double sum = b[i];
 		for (int k=0;k<i;k++) sum -= L[i*N+k]*y[k];
 		y[i] = sum / L[i*N+i];
 	}
 	x.assign(N, 0.0);
 	for (int i=N-1;i>=0;i--) {
-		float sum = y[i];
+		double sum = y[i];
 		for (int k=i+1;k<N;k++) sum -= L[k*N+i]*x[k];
 		x[i] = sum / L[i*N+i];
 	}
@@ -46,8 +46,8 @@ void chol_solve_lower(const std::vector<float>& L,
 
 // Expand compact element moduli to full structured fine grid order (level 0)
 void EleMod_CompactToFull_Finest(const Problem& pb,
-										const std::vector<float>& eleModCompact,
-										std::vector<float>& eleModFull) {
+										const std::vector<double>& eleModCompact,
+										std::vector<double>& eleModFull) {
 	int nx = pb.mesh.resX, ny = pb.mesh.resY, nz = pb.mesh.resZ;
 	eleModFull.assign(nx*ny*nz, 0.0);
 	for (int e=0; e<pb.mesh.numElements; ++e) {
@@ -59,13 +59,13 @@ void EleMod_CompactToFull_Finest(const Problem& pb,
 // Assemble coarsest dense K using Galerkin triple-products with BC at fine level
 void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
 											   const MGHierarchy& H,
-											   const std::vector<float>& eleModFineFull,
+											   const std::vector<double>& eleModFineFull,
 											   const std::vector<uint8_t>& fineFixedDofMask,
-											   std::vector<float>& Kc) {
+											   std::vector<double>& Kc) {
 	const MGLevel& Lf = H.levels.front();
 	const MGLevel& Lc = H.levels.back();
 	const int N = 3*Lc.numNodes;
-	Kc.assign(N*N, 0.0);
+	std::vector<double> KcGlobal(N*N, 0.0);
 	const int s = Lc.spanWidth;
 	const int grid = s + 1;
 
@@ -73,96 +73,107 @@ void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
 		return (Lf.resY*Lf.resX)*ez + (Lf.resY)*ex + (Lf.resY - 1 - ey);
 	};
 
-	// Loop coarse elements
-	for (int cez=0; cez<Lc.resZ; ++cez) {
-		for (int cex=0; cex<Lc.resX; ++cex) {
-			for (int cey=0; cey<Lc.resY; ++cey) {
-				// coarse element global dofs
-				int c_dof[24];
-				for (int a=0;a<8;a++) {
-					int n = Lc.eNodMat[(cez*Lc.resX*Lc.resY + cex*Lc.resY + cey)*8 + a];
-					c_dof[3*a+0] = 3*n+0;
-					c_dof[3*a+1] = 3*n+1;
-					c_dof[3*a+2] = 3*n+2;
-				}
-				float Kce[24*24]; for (int i=0;i<24*24;i++) Kce[i]=0.0;
+	#pragma omp parallel
+	{
+		std::vector<double> KcLocal(N*N, 0.0);
 
-				int fx0 = cex*s;
-				int fy0 = (Lc.resY - cey)*s;
-				int fz0 = cez*s;
-				// iterate s^3 sub-elements
-				for (int iz=0; iz<s; ++iz) {
-					for (int iy=0; iy<s; ++iy) {
-						for (int ix=0; ix<s; ++ix) {
-							int fex = fx0 + ix;
-							int fey = fy0 - iy - 1;
-							int fez = fz0 + iz;
-							int ef = idxElemF(fex, fey, fez);
-							float Ee = std::max(pb.params.youngsModulusMin, eleModFineFull[ef]);
+		// Loop coarse elements
+		#pragma omp for collapse(3) nowait
+		for (int cez=0; cez<Lc.resZ; ++cez) {
+			for (int cex=0; cex<Lc.resX; ++cex) {
+				for (int cey=0; cey<Lc.resY; ++cey) {
+					// coarse element global dofs
+					int c_dof[24];
+					for (int a=0;a<8;a++) {
+						int n = Lc.eNodMat[(cez*Lc.resX*Lc.resY + cex*Lc.resY + cey)*8 + a];
+						c_dof[3*a+0] = 3*n+0;
+						c_dof[3*a+1] = 3*n+1;
+						c_dof[3*a+2] = 3*n+2;
+					}
+					double Kce[24*24]; for (int i=0;i<24*24;i++) Kce[i]=0.0;
 
-							// Build Kf = Ee * Ke (24x24)
-							float Kf[24*24];
-							for (int i=0;i<24;i++) {
-								for (int j=0;j<24;j++) {
-									Kf[i*24+j] = Ee * pb.mesh.Ke[i*24+j];
-								}
-							}
-							// Apply fine-level BC mask on this fine element's dofs
-							for (int v=0; v<8; ++v) {
-								int n_f = Lf.eNodMat[ef*8 + v];
-								for (int c=0;c<3;c++) {
-									if (fineFixedDofMask[3*n_f + c]) {
-										int d = 3*v + c;
-										for (int j=0;j<24;j++) { Kf[d*24+j] = 0.0; Kf[j*24+d] = 0.0; }
-										Kf[d*24 + d] = 1.0;
+					int fx0 = cex*s;
+					int fy0 = (Lc.resY - cey)*s;
+					int fz0 = cez*s;
+					// iterate s^3 sub-elements
+					for (int iz=0; iz<s; ++iz) {
+						for (int iy=0; iy<s; ++iy) {
+							for (int ix=0; ix<s; ++ix) {
+								int fex = fx0 + ix;
+								int fey = fy0 - iy - 1;
+								int fez = fz0 + iz;
+								int ef = idxElemF(fex, fey, fez);
+								double Ee = std::max((double)pb.params.youngsModulusMin, eleModFineFull[ef]);
+
+								// Build Kf = Ee * Ke (24x24)
+								double Kf[24*24];
+								for (int i=0;i<24;i++) {
+									for (int j=0;j<24;j++) {
+										Kf[i*24+j] = Ee * pb.mesh.Ke[i*24+j];
 									}
 								}
-							}
-							// Build T (24x24): maps coarse local dofs to fine local dofs at the 8 vertices
-							float T[24*24]; for (int i=0;i<24*24;i++) T[i]=0.0;
-							for (int v=0; v<8; ++v) {
-								int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
-								int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
-								int vz = (v<=3) ? 0 : 1;
-								const float* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
-								for (int a=0; a<8; ++a) {
+								// Apply fine-level BC mask on this fine element's dofs
+								for (int v=0; v<8; ++v) {
+									int n_f = Lf.eNodMat[ef*8 + v];
 									for (int c=0;c<3;c++) {
-										int row = 3*v + c;
-										int col = 3*a + c;
-										T[row*24 + col] = W[a];
+										if (fineFixedDofMask[3*n_f + c]) {
+											int d = 3*v + c;
+											for (int j=0;j<24;j++) { Kf[d*24+j] = 0.0; Kf[j*24+d] = 0.0; }
+											Kf[d*24 + d] = 1.0;
+										}
 									}
 								}
-							}
-							// Kce += T^T * Kf * T
-							float M[24*24];
-							for (int i=0;i<24;i++) {
-								for (int j=0;j<24;j++) {
-									float ssum=0.0;
-									for (int k=0;k<24;k++) ssum += Kf[i*24+k]*T[k*24+j];
-									M[i*24+j] = ssum;
+								// Build T (24x24): maps coarse local dofs to fine local dofs at the 8 vertices
+								double T[24*24]; for (int i=0;i<24*24;i++) T[i]=0.0;
+								for (int v=0; v<8; ++v) {
+									int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
+									int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
+									int vz = (v<=3) ? 0 : 1;
+									const double* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
+									for (int a=0; a<8; ++a) {
+										for (int c=0;c<3;c++) {
+											int row = 3*v + c;
+											int col = 3*a + c;
+											T[row*24 + col] = W[a];
+										}
+									}
 								}
-							}
-							for (int i=0;i<24;i++) {
-								for (int j=0;j<24;j++) {
-									float ssum=0.0;
-									for (int k=0;k<24;k++) ssum += T[k*24+i]*M[k*24+j];
-									Kce[i*24 + j] += ssum;
+								// Kce += T^T * Kf * T
+								double M[24*24];
+								for (int i=0;i<24;i++) {
+									for (int j=0;j<24;j++) {
+										double ssum=0.0;
+										for (int k=0;k<24;k++) ssum += Kf[i*24+k]*T[k*24+j];
+										M[i*24+j] = ssum;
+									}
+								}
+								for (int i=0;i<24;i++) {
+									for (int j=0;j<24;j++) {
+										double ssum=0.0;
+										for (int k=0;k<24;k++) ssum += T[k*24+i]*M[k*24+j];
+										Kce[i*24 + j] += ssum;
+									}
 								}
 							}
 						}
 					}
-				}
-				// Scatter Kce to global
-				for (int i=0;i<24;i++) {
-					int gi = c_dof[i];
-					for (int j=0;j<24;j++) {
-						int gj = c_dof[j];
-						Kc[gi*N + gj] += Kce[i*24 + j];
+					// Scatter Kce to local
+					for (int i=0;i<24;i++) {
+						int gi = c_dof[i];
+						for (int j=0;j<24;j++) {
+							int gj = c_dof[j];
+							KcLocal[gi*N + gj] += Kce[i*24 + j];
+						}
 					}
 				}
 			}
 		}
+		#pragma omp critical
+		{
+			for(int i=0;i<N*N;i++) KcGlobal[i] += KcLocal[i];
+		}
 	}
+	Kc = std::move(KcGlobal);
 }
 
 } } // namespace top3d::mg

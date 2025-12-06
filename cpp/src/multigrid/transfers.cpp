@@ -18,7 +18,7 @@ namespace top3d { namespace mg {
 // Gather-based Prolongation (Interpolation)
 // Parallelizes over FINE nodes (output), avoiding race conditions.
 void MG_Prolongate_nodes(const MGLevel& Lc, const MGLevel& Lf,
-								  const std::vector<float>& xc, std::vector<float>& xf) {
+								  const std::vector<double>& xc, std::vector<double>& xf) {
 	const int fnnx = Lf.resX+1, fnny = Lf.resY+1, fnnz = Lf.resZ+1;
 const int span = Lc.spanWidth;
 	const int grid = span+1;
@@ -65,7 +65,7 @@ const int span = Lc.spanWidth;
                 
                 // 2. Retrieve Weights for local position (ix, iy, iz)
                 // weightsNode is stored as [((iz*grid + iy)*grid + ix)*8 + a]
-const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
+                const double* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
                 
                 // 3. Retrieve Coarse Node Values
                 // Map the 8 corners of element (cex, cey, cez) to global coarse indices
@@ -82,7 +82,7 @@ const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
                 int cy_top = Lc.resY - cey;     // Higher Y index
                 int cy_bot = Lc.resY - cey - 1; // Lower Y index
                 
-                float cvals[8];
+                double cvals[8];
                 cvals[0] = xc[idxC_raw(cex,   cy_top, cez)];
                 cvals[1] = xc[idxC_raw(cex+1, cy_top, cez)];
                 cvals[2] = xc[idxC_raw(cex+1, cy_bot, cez)];
@@ -93,7 +93,7 @@ const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
                 cvals[7] = xc[idxC_raw(cex,   cy_bot, cez+1)];
                 
                 // 4. Interpolate
-                float sum = 0.0f;
+                double sum = 0.0;
                 // #pragma omp simd reduction(+:sum) // Hint for vectorization
                 for (int a=0; a<8; ++a) {
                     sum += W[a] * cvals[a];
@@ -110,7 +110,7 @@ const float* W = &Lc.weightsNode[((iz*grid+iy)*grid+ix)*8];
 // Gather-based Restriction
 // Parallelizes over COARSE nodes (output), gathering contributions from Fine neighbors.
 void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
-								 const std::vector<float>& rf, std::vector<float>& rc) {
+								 const std::vector<double>& rf, std::vector<double>& rc) {
 	const int cnnx = Lc.resX+1, cnny = Lc.resY+1, cnnz = Lc.resZ+1;
     const int fnnx = Lf.resX+1, fnny = Lf.resY+1; // fnnz unused
     const int span = Lc.spanWidth;
@@ -198,14 +198,14 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
                             for (int iz = 0; iz <= span; ++iz) {
                                 for (int iy = 0; iy <= span; ++iy) {
                                     for (int ix = 0; ix <= span; ++ix) {
-                                        float w = Lc.weightsNode[((iz*grid+iy)*grid+ix)*8 + a];
-                                        if (w == 0.0f) continue;
+                                        double w = Lc.weightsNode[((iz*grid+iy)*grid+ix)*8 + a];
+                                        if (w == 0.0) continue;
                                         
                                         int fix = fx0 + ix;
                                         int fiz = fz0 + iz;
                                         int fiy = fy_top - iy; 
                                         
-                                        float val = rf[idxF_raw(fix, fiy, fiz)];
+                                        double val = rf[idxF_raw(fix, fiy, fiz)];
                                         sum += w * val;
                                         wsum += w;
                                     }
@@ -216,7 +216,7 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
                 }
                 
                 int cidx = cnnx*cnny*cz + cnnx*cy + cx;
-                rc[cidx] = (wsum > 1e-12) ? (float)(sum / wsum) : 0.0f;
+                rc[cidx] = (wsum > 1e-12) ? (sum / wsum) : 0.0;
             }
         }
     }

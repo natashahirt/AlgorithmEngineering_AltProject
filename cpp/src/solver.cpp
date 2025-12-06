@@ -79,59 +79,53 @@ int PCG_free(const Problem& pb,
 			  double tol, int maxIt,
 			  Preconditioner M,
 			  PCGFreeWorkspace& ws) {
-	std::vector<double> r = bFree;
-	std::vector<double> z(r.size(), 0.0), p(r.size(), 0.0), Ap(r.size(), 0.0);
+	std::vector<double>& r  = ws.r;
+	std::vector<double>& z  = ws.z;
+	std::vector<double>& p  = ws.p;
+	std::vector<double>& Ap = ws.Ap;
 
-	// Initialize workspace buffers
-	const int nNodes = pb.mesh.numNodes;
-	ws.xfull.ux.assign(nNodes, 0.0);
-	ws.xfull.uy.assign(nNodes, 0.0);
-	ws.xfull.uz.assign(nNodes, 0.0);
-	ws.yfull.ux.assign(nNodes, 0.0);
-	ws.yfull.uy.assign(nNodes, 0.0);
-	ws.yfull.uz.assign(nNodes, 0.0);
-	ws.tmpFree.resize(static_cast<int>(bFree.size()));
-	auto& X = ws.xfull;
-	auto& Y = ws.yfull;
-	auto& F = ws.tmpFree;
+	// Ensure workspace size
+	if (r.size() != bFree.size()) {
+		r.resize(bFree.size());
+		z.resize(bFree.size());
+		p.resize(bFree.size());
+		Ap.resize(bFree.size());
+	}
+
+	// r = b
+	std::copy(bFree.begin(), bFree.end(), r.begin());
 
 	// r = b - A*x (if nonzero initial guess)
 	if (!xFree.empty()) {
-		std::fill(X.ux.begin(), X.ux.end(), 0.0);
-		std::fill(X.uy.begin(), X.uy.end(), 0.0);
-		std::fill(X.uz.begin(), X.uz.end(), 0.0);
-		scatter_from_free(pb, xFree, X);
-		K_times_u_finest(pb, eleModulus, X, Y);
-		restrict_to_free(pb, Y, F);
-		for (size_t i=0;i<r.size();++i) r[i] -= F[i];
+		K_times_u_finest_free(pb, eleModulus, xFree, Ap);
+		#pragma omp parallel for
+		for (size_t i=0;i<r.size();++i) r[i] -= Ap[i];
+	} else {
+		xFree.assign(r.size(), 0.0);
 	}
-	if (xFree.empty()) xFree.assign(r.size(), 0.0);
 
-	if (M) M(r, z); else z = r;
-	double rz_old = std::inner_product(r.begin(), r.end(), z.begin(), 0.0);
-	p = z;
+	if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
+	
+	double rz_old = 0.0;
+	#pragma omp parallel for reduction(+:rz_old)
+	for (size_t i=0; i<r.size(); ++i) rz_old += r[i] * z[i];
+	
+	std::copy(z.begin(), z.end(), p.begin());
 
-	const double normb = std::sqrt(std::inner_product(bFree.begin(), bFree.end(), bFree.begin(), 0.0));
+	double normb2 = 0.0;
+	#pragma omp parallel for reduction(+:normb2)
+	for (size_t i=0; i<bFree.size(); ++i) normb2 += bFree[i] * bFree[i];
+	const double normb = std::sqrt(normb2);
+
 	for (int it=0; it<maxIt; ++it) {
-		// Ap = A * p, using workspace buffers
-		std::fill(X.ux.begin(), X.ux.end(), 0.0);
-		std::fill(X.uy.begin(), X.uy.end(), 0.0);
-		std::fill(X.uz.begin(), X.uz.end(), 0.0);
-		scatter_from_free(pb, p, X);
-		K_times_u_finest(pb, eleModulus, X, Y);
+		// Ap = A * p
+		K_times_u_finest_free(pb, eleModulus, p, Ap);
 
-		// Fused restrict (A -> Ap) and denom = p·Ap
+		// denom = p·Ap
 		double denom = 0.0;
-		Ap.resize(p.size());
 		#pragma omp parallel for reduction(+:denom)
-		for (size_t i=0;i<p.size();++i) {
-			int gi = pb.freeDofIndex[i];
-			int n = gi / 3;
-			int c = gi % 3;
-			double api = (c==0 ? Y.ux[n] : (c==1 ? Y.uy[n] : Y.uz[n]));
-			Ap[i] = api;
-			denom += p[i] * api;
-		}
+		for (size_t i=0;i<p.size();++i) denom += p[i] * Ap[i];
+		
 		denom = std::max(1.0e-30, denom);
 		double alpha = rz_old / denom;
 
@@ -146,7 +140,7 @@ int PCG_free(const Problem& pb,
 		double res = std::sqrt(rnorm2) / std::max(1.0e-30, normb);
 		if (res < tol) return it+1;
 
-		if (M) M(r, z); else z = r;
+		if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
 		double rz_new;
 		if (M) {
 			// Parallelize dot product for rz_new

@@ -10,6 +10,10 @@ int main(int argc, char** argv) {
     // ./top3d_xl_cli GLOBAL nely nelx nelz V0 nLoop
     if (argc < 8) { std::cerr << "Usage: GLOBAL nely nelx nelz V0 nLoop" << std::endl; return 1; }
 
+    // Force unbuffered output to ensure logs appear immediately in SLURM/CI environments
+    std::cout << std::unitbuf;
+    std::cerr << std::unitbuf;
+
     std::string mode = argv[1];
     if (mode != "GLOBAL") {
         std::cerr << "Only GLOBAL mode is supported in this build." << std::endl;

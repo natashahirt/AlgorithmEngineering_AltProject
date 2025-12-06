@@ -8,11 +8,10 @@ void restrict_to_free(const Problem&, const DOFData& full, std::vector<double>& 
 void scatter_from_free(const Problem&, const std::vector<double>& freev, DOFData& full);
 
 struct PCGFreeWorkspace {
-	// Full DOF vectors in SoA (size per comp = mesh.numNodes)
-	DOFData xfull;  // holds full-space vector (e.g. pfull, xfull)
-	DOFData yfull;  // holds K * xfull result (e.g. Apfull, yfull)
-	// Temporary free-space buffer, if needed
-	std::vector<double> tmpFree;
+	std::vector<double> r;
+	std::vector<double> z;
+	std::vector<double> p;
+	std::vector<double> Ap;
 };
 
 // Simple Jacobi (diagonal) preconditioner built from element Ke and eleE

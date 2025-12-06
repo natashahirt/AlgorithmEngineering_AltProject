@@ -50,6 +50,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 		PDEFilterWorkspace filter_ws;
 		// Build MG hierarchy and fixed masks once; reuse across solves
+		std::cout << "Building Multigrid Hierarchy..." << std::endl;
 		mg::MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
 		mg::MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; mg::build_static_once(pb, mgcfgStatic_tv, H, fixedMasks);
 		
@@ -78,8 +79,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
-			std::vector<float> eleModF(eleMod.begin(), eleMod.end());
-			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleModF, mgcfgStatic_tv);
+			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFree, U);
 			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
@@ -122,8 +122,7 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			// Ensure warm-start vector matches current system size
 			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
 			// Reuse static MG context for current SIMP-modified modulus
-			std::vector<float> eleModF(eleMod.begin(), eleMod.end());
-			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleModF, mgcfgStatic_tv);
+			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFreeWarm, U);
 			auto tSolveTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tSolveStart).count();

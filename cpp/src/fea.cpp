@@ -417,6 +417,23 @@ void ApplyBoundaryConditions(Problem& pb) {
 		pb.freeNodeIndex[i] = gi / 3;
 		pb.freeCompIndex[i] = gi % 3;
 	}
+
+	// Build eDofFreeMat: mapping from element dofs to free dof indices (or -1)
+	pb.eDofFreeMat.assign(pb.mesh.numElements * 24, -1);
+	std::vector<int> globalToFree(pb.mesh.numDOFs, -1);
+	for (size_t i=0; i<pb.freeDofIndex.size(); ++i) {
+		globalToFree[pb.freeDofIndex[i]] = static_cast<int>(i);
+	}
+	// Parallelize if large (though this is only done once)
+	#if defined(_OPENMP)
+	#pragma omp parallel for
+	#endif
+	for (int e=0; e<pb.mesh.numElements; ++e) {
+		for (int j=0; j<24; ++j) {
+			int globalDof = pb.mesh.eDofMat[e*24 + j];
+			pb.eDofFreeMat[e*24 + j] = globalToFree[globalDof];
+		}
+	}
 }
 
 // Helper to process a batch of 8 elements using SIMD
@@ -742,6 +759,151 @@ void K_times_u_finest(const Problem& pb,
 	} else {
 		// Fallback: plain contiguous loop (now vectorized via ProcessBlock_8 inside K_times_u_kernel)
 		K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
+	}
+}
+
+// Helper to process a batch of 8 elements using SIMD directly on free DOFs
+template <int BLOCK_SIZE = 8>
+static inline void ProcessBlock_8_Free(
+	const int* __restrict__ eIndices,
+	int count,
+	const int32_t* __restrict__ eDofFree,
+	const double (* __restrict__ K2D)[24],
+	const double* __restrict__ Ee,
+	const double* __restrict__ uFree,
+	double* __restrict__ yFree
+) {
+	alignas(64) double ue[24][BLOCK_SIZE];
+	alignas(64) double fe[24][BLOCK_SIZE];
+	double Ee_vals[BLOCK_SIZE];
+
+	// 1. Gather Displacements & Moduli
+	for (int k = 0; k < count; ++k) {
+		int e = eIndices[k];
+		Ee_vals[k] = Ee[e];
+		const int32_t* __restrict__ ed = eDofFree + 24 * e;
+		
+		// Unrolled gather of 24 DOFs
+		#pragma GCC unroll 24
+		for (int a = 0; a < 24; ++a) {
+			int idx = ed[a];
+			if (idx >= 0) ue[a][k] = uFree[idx];
+            else ue[a][k] = 0.0;
+		}
+	}
+	// Pad remainder
+	for (int k = count; k < BLOCK_SIZE; ++k) {
+		Ee_vals[k] = 0.0;
+		for(int i=0; i<24; ++i) ue[i][k] = 0.0;
+	}
+
+	// 2. Matrix-Vector Product: fe = Ke * ue
+	#pragma GCC unroll 24
+	for (int i = 0; i < 24; ++i) {
+		#pragma omp simd
+		for (int k = 0; k < BLOCK_SIZE; ++k) fe[i][k] = 0.0;
+		#pragma GCC unroll 24
+		for (int j = 0; j < 24; ++j) {
+			double Kij = K2D[i][j];
+			#pragma omp simd
+			for (int k = 0; k < BLOCK_SIZE; ++k) {
+				fe[i][k] += Kij * ue[j][k];
+			}
+		}
+	}
+
+	// 3. Scatter Forces
+	for (int k = 0; k < count; ++k) {
+		double Eval = Ee_vals[k];
+		if (Eval <= 1.0e-16) continue;
+
+		int e = eIndices[k];
+		const int32_t* __restrict__ ed = eDofFree + 24 * e;
+
+		#pragma GCC unroll 24
+		for (int a = 0; a < 24; ++a) {
+			int idx = ed[a];
+			if (idx >= 0) {
+				yFree[idx] += fe[a][k] * Eval;
+			}
+		}
+	}
+}
+
+void K_times_u_finest_free(const Problem& pb,
+                      const std::vector<double>& eleModulus,
+                      const std::vector<double>& uFree,
+                      std::vector<double>& yFree)
+{
+	const auto& mesh = pb.mesh;
+	const auto& Ke   = mesh.Ke;
+	const int numElements = mesh.numElements;
+
+    // Zero output
+    if (yFree.size() != uFree.size()) yFree.assign(uFree.size(), 0.0);
+    else std::fill(yFree.begin(), yFree.end(), 0.0);
+
+	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
+	const double* __restrict__ Kptr = Ke.data();
+	const double* __restrict__ uF   = uFree.data();
+	      double* __restrict__ yF   = yFree.data();
+
+	// Decide whether to use colored parallel assembly
+#if defined(_OPENMP)
+	int maxThreads = omp_get_max_threads();
+	bool useColoring =
+		(maxThreads > 1) &&
+		(mesh.coloring.numColors > 0) &&
+		!mesh.coloring.colorBuckets.empty() &&
+		(numElements > 1000);
+#else
+	bool useColoring = false;
+#endif
+
+	if (useColoring) {
+		#if defined(__GNUC__) || defined(__clang__)
+		const double* __restrict__ KptrAligned =
+			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
+		#else
+		const double* __restrict__ KptrAligned = Kptr;
+		#endif
+		const double (* __restrict__ K2D)[24] =
+			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
+		const auto& buckets = mesh.coloring.colorBuckets;
+		const int numColors = mesh.coloring.numColors;
+		
+		#pragma omp parallel
+		{
+			for (int c = 0; c < numColors; ++c) {
+				const auto& elems = buckets[static_cast<size_t>(c)];
+				const int nElems = static_cast<int>(elems.size());
+				constexpr int BS = 8;
+				
+				#pragma omp for schedule(static)
+				for (int baseIdx = 0; baseIdx < nElems; baseIdx += BS) {
+					int count = std::min(BS, nElems - baseIdx);
+					const int* ePtr = &elems[baseIdx];
+					ProcessBlock_8_Free<BS>(ePtr, count, eDofFree, K2D, eleModulus.data(), 
+					                   uF, yF);
+				}
+			}
+		}
+	} else {
+		// Fallback: plain contiguous loop
+        const double (* __restrict__ K2D)[24] =
+			reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
+        constexpr int BS = 8;
+        int eIdx[BS];
+        int e=0;
+        for (; e <= numElements - BS; e += BS) {
+            for(int k=0;k<BS;k++) eIdx[k] = e+k;
+            ProcessBlock_8_Free<BS>(eIdx, BS, eDofFree, K2D, eleModulus.data(), uF, yF);
+        }
+        if(e < numElements) {
+            int count=0;
+            for(;e<numElements;e++) eIdx[count++]=e;
+            ProcessBlock_8_Free<BS>(eIdx, count, eDofFree, K2D, eleModulus.data(), uF, yF);
+        }
 	}
 }
 

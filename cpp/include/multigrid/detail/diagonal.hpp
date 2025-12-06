@@ -9,8 +9,8 @@ namespace top3d { namespace mg {
 void MG_BuildDiagonals(const Problem&,
                        const MGHierarchy&,
                        const std::vector<std::vector<uint8_t>>& fixedMasks,
-                       const std::vector<float>& eleModulus,
-                       std::vector<std::vector<float>>& diagLevels);
+                       const std::vector<double>& eleModulus,
+                       std::vector<std::vector<double>>& diagLevels);
 
 } } // namespace top3d::mg
 

@@ -28,7 +28,7 @@ void MG_BuildFixedMasks(const Problem& pb, const MGHierarchy& H,
 		const int cnn = H.levels[l+1].numNodes;
 		fixedMasks[l+1].assign(3*cnn, 0);
 		for (int c=0;c<3;c++) {
-			std::vector<float> rf(fnn), rc;
+			std::vector<double> rf(fnn), rc;
 			for (int n=0;n<fnn;n++) rf[n] = fixedMasks[l][3*n+c] ? 1.0 : 0.0;
 			MG_Restrict_nodes(H.levels[l+1], H.levels[l], rf, rc);
 			for (int n=0;n<cnn;n++) fixedMasks[l+1][3*n+c] = (rc[n] > 0.5) ? 1 : 0;

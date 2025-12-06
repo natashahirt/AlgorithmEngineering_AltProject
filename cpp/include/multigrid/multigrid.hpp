@@ -24,7 +24,7 @@ struct MGLevel {
 
 	// Per-element nodal weights from 8 coarse vertices to embedded (span+1)^3 fine vertices
 	// Stored as weightsNode[(iz*grid + iy)*grid + ix]*8 + a, grid = spanWidth+1, a in [0..7]
-	std::vector<float> weightsNode;   // size = (span+1)^3 * 8
+	std::vector<double> weightsNode;   // size = (span+1)^3 * 8
 };
 
 struct MGHierarchy {
@@ -33,15 +33,15 @@ struct MGHierarchy {
 };
 
 struct MGWorkspace {
-    std::vector<std::vector<float>> rLv;
-    std::vector<std::vector<float>> xLv;
+    std::vector<std::vector<double>> rLv;
+    std::vector<std::vector<double>> xLv;
     
     // Intermediate buffers for component-wise transfers
-    std::vector<float> tmp_rf; 
-    std::vector<float> tmp_rc;
-    std::vector<float> tmp_xc;
-    std::vector<float> tmp_xf;
-    std::vector<float> tmp_add; // Used in prolongation
+    std::vector<double> tmp_rf; 
+    std::vector<double> tmp_rc;
+    std::vector<double> tmp_xc;
+    std::vector<double> tmp_xf;
+    std::vector<double> tmp_add; // Used in prolongation
 
     void resize(const MGHierarchy& H) {
         rLv.resize(H.levels.size());
@@ -65,6 +65,6 @@ void BuildMGHierarchy(const Problem&, bool nonDyadic, MGHierarchy&, int maxLevel
 void build_static_once(const Problem&, const MGPrecondConfig&, MGHierarchy&, std::vector<std::vector<uint8_t>>&);
 Preconditioner make_diagonal_preconditioner_from_static(const Problem&, const MGHierarchy&,
     const std::vector<std::vector<uint8_t>>& fixedMasks,
-    const std::vector<float>& eleE, const MGPrecondConfig&);
+    const std::vector<double>& eleE, const MGPrecondConfig&);
       
 } } // namespace top3d::mg

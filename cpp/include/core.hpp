@@ -90,6 +90,10 @@ struct Problem {
     std::vector<int> freeNodeIndex; // same length as freeDofIndex
     std::vector<int> freeCompIndex; // values in {0,1,2}
 
+    // Mapping from element local DOFs to free DOF index (or -1)
+    // Size: numElements * 24
+    std::vector<int32_t> eDofFreeMat;
+
     // Design variables
     std::vector<float> density;    // per element x, size = numElements
 };
