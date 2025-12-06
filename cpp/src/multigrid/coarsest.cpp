@@ -4,6 +4,7 @@
 #include "multigrid/multigrid.hpp"
 #include <vector>
 #include <cmath>
+#include <algorithm> // Required for std::fill
 
 namespace top3d { namespace mg {
 
@@ -73,6 +74,52 @@ void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
 		return (Lf.resY*Lf.resX)*ez + (Lf.resY)*ex + (Lf.resY - 1 - ey);
 	};
 
+    // OPTIMIZATION 3: Precompute T^T * Ke * T templates
+    // This avoids O(N_fine * 24^3) FLOPS.
+    std::vector<std::vector<double>> templates(s*s*s);
+    {
+        for (int iz=0; iz<s; ++iz) {
+            for (int iy=0; iy<s; ++iy) {
+                for (int ix=0; ix<s; ++ix) {
+                    int idx = (iz*s + iy)*s + ix;
+                    templates[idx].assign(24*24, 0.0);
+                    
+                    // Build T (24x24) for this sub-position
+                    double T[24*24]; std::fill(std::begin(T), std::end(T), 0.0);
+                    for (int v=0; v<8; ++v) {
+                        int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
+                        int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
+                        int vz = (v<=3) ? 0 : 1;
+                        const double* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
+                        for (int a=0; a<8; ++a) {
+                            for (int c=0;c<3;c++) {
+                                T[(3*v+c)*24 + (3*a+c)] = W[a];
+                            }
+                        }
+                    }
+                    
+                    // M = Ke * T
+                    double M[24*24];
+                    for (int i=0;i<24;i++) {
+                        for (int j=0;j<24;j++) {
+                            double sum=0.0;
+                            for (int k=0;k<24;k++) sum += pb.mesh.Ke[i*24+k] * T[k*24+j];
+                            M[i*24+j] = sum;
+                        }
+                    }
+                    // Ksub = T^T * M
+                    for (int i=0;i<24;i++) {
+                        for (int j=0;j<24;j++) {
+                            double sum=0.0;
+                            for (int k=0;k<24;k++) sum += T[k*24+i] * M[k*24+j];
+                            templates[idx][i*24+j] = sum;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 	#pragma omp parallel
 	{
 		std::vector<double> KcLocal(N*N, 0.0);
@@ -90,11 +137,12 @@ void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
 						c_dof[3*a+1] = 3*n+1;
 						c_dof[3*a+2] = 3*n+2;
 					}
-					double Kce[24*24]; for (int i=0;i<24*24;i++) Kce[i]=0.0;
+					double Kce[24*24]; std::fill(std::begin(Kce), std::end(Kce), 0.0);
 
 					int fx0 = cex*s;
 					int fy0 = (Lc.resY - cey)*s;
 					int fz0 = cez*s;
+					
 					// iterate s^3 sub-elements
 					for (int iz=0; iz<s; ++iz) {
 						for (int iy=0; iy<s; ++iy) {
@@ -105,55 +153,64 @@ void MG_AssembleCoarsestDenseK_Galerkin(const Problem& pb,
 								int ef = idxElemF(fex, fey, fez);
 								double Ee = std::max((double)pb.params.youngsModulusMin, eleModFineFull[ef]);
 
-								// Build Kf = Ee * Ke (24x24)
-								double Kf[24*24];
-								for (int i=0;i<24;i++) {
-									for (int j=0;j<24;j++) {
-										Kf[i*24+j] = Ee * pb.mesh.Ke[i*24+j];
-									}
-								}
-								// Apply fine-level BC mask on this fine element's dofs
-								for (int v=0; v<8; ++v) {
-									int n_f = Lf.eNodMat[ef*8 + v];
-									for (int c=0;c<3;c++) {
-										if (fineFixedDofMask[3*n_f + c]) {
-											int d = 3*v + c;
-											for (int j=0;j<24;j++) { Kf[d*24+j] = 0.0; Kf[j*24+d] = 0.0; }
-											Kf[d*24 + d] = 1.0;
-										}
-									}
-								}
-								// Build T (24x24): maps coarse local dofs to fine local dofs at the 8 vertices
-								double T[24*24]; for (int i=0;i<24*24;i++) T[i]=0.0;
-								for (int v=0; v<8; ++v) {
-									int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
-									int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
-									int vz = (v<=3) ? 0 : 1;
-									const double* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
-									for (int a=0; a<8; ++a) {
-										for (int c=0;c<3;c++) {
-											int row = 3*v + c;
-											int col = 3*a + c;
-											T[row*24 + col] = W[a];
-										}
-									}
-								}
-								// Kce += T^T * Kf * T
-								double M[24*24];
-								for (int i=0;i<24;i++) {
-									for (int j=0;j<24;j++) {
-										double ssum=0.0;
-										for (int k=0;k<24;k++) ssum += Kf[i*24+k]*T[k*24+j];
-										M[i*24+j] = ssum;
-									}
-								}
-								for (int i=0;i<24;i++) {
-									for (int j=0;j<24;j++) {
-										double ssum=0.0;
-										for (int k=0;k<24;k++) ssum += T[k*24+i]*M[k*24+j];
-										Kce[i*24 + j] += ssum;
-									}
-								}
+                                // Check for BC mask on this fine element
+                                bool isMasked = false;
+                                for (int v=0; v<8; ++v) {
+                                    int n_f = Lf.eNodMat[ef*8 + v];
+                                    // Check if any dof is fixed
+                                    if (fineFixedDofMask[3*n_f] | fineFixedDofMask[3*n_f+1] | fineFixedDofMask[3*n_f+2]) {
+                                        isMasked = true; break;
+                                    }
+                                }
+
+                                if (!isMasked) {
+                                    // FAST PATH: Use precomputed template
+                                    int tplIdx = (iz*s + iy)*s + ix;
+                                    const double* Ksub = templates[tplIdx].data();
+                                    for (int i=0; i<24*24; ++i) Kce[i] += Ee * Ksub[i];
+                                } else {
+                                    // SLOW PATH: Full assembly for masked elements (boundary only)
+    								double Kf[24*24];
+    								for (int i=0;i<24*24;i++) Kf[i] = Ee * pb.mesh.Ke[i];
+    								
+    								for (int v=0; v<8; ++v) {
+    									int n_f = Lf.eNodMat[ef*8 + v];
+    									for (int c=0;c<3;c++) {
+    										if (fineFixedDofMask[3*n_f + c]) {
+    											int d = 3*v + c;
+    											for (int j=0;j<24;j++) { Kf[d*24+j] = 0.0; Kf[j*24+d] = 0.0; }
+    											Kf[d*24 + d] = 1.0;
+    										}
+    									}
+    								}
+    								// Rebuild T locally
+    								double T[24*24]; std::fill(std::begin(T), std::end(T), 0.0);
+    								for (int v=0; v<8; ++v) {
+    									int vx = (v==0||v==3||v==4||v==7) ? 0 : 1;
+    									int vy = (v==0||v==1||v==4||v==5) ? 0 : 1;
+    									int vz = (v<=3) ? 0 : 1;
+    									const double* W = &Lc.weightsNode[(((iz+vz)*grid + (iy+vy))*grid + (ix+vx))*8];
+    									for (int a=0; a<8; ++a) {
+    										for (int c=0;c<3;c++) T[(3*v+c)*24 + (3*a+c)] = W[a];
+    									}
+    								}
+    								// Kce += T^T * Kf * T
+    								double M[24*24];
+    								for (int i=0;i<24;i++) {
+    									for (int j=0;j<24;j++) {
+    										double ssum=0.0;
+    										for (int k=0;k<24;k++) ssum += Kf[i*24+k]*T[k*24+j];
+    										M[i*24+j] = ssum;
+    									}
+    								}
+    								for (int i=0;i<24;i++) {
+    									for (int j=0;j<24;j++) {
+    										double ssum=0.0;
+    										for (int k=0;k<24;k++) ssum += T[k*24+i]*M[k*24+j];
+    										Kce[i*24 + j] += ssum;
+    									}
+    								}
+                                } // end masked
 							}
 						}
 					}

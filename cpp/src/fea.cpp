@@ -678,90 +678,6 @@ static inline double compute_compliance_kernel(
 	return compute_compliance_kernel(view.numElements, view.eNod, view.Kptr, ux, uy, uz, Ee, ceOut);
 }
 
-void K_times_u_finest(const Problem& pb,
-                      const std::vector<double>& eleModulus,
-                      const DOFData& U,
-                      DOFData& Y)
-{
-	const auto& mesh = pb.mesh;
-	const auto& Ke   = mesh.Ke;
-
-	const int numNodes    = mesh.numNodes;
-	const int numElements = mesh.numElements;
-
-	// Zero Y (no realloc if size matches)
-	if ((int)Y.ux.size() != numNodes) Y.ux.assign(numNodes, 0.0);
-	else std::fill(Y.ux.begin(), Y.ux.end(), 0.0);
-	if ((int)Y.uy.size() != numNodes) Y.uy.assign(numNodes, 0.0);
-	else std::fill(Y.uy.begin(), Y.uy.end(), 0.0);
-	if ((int)Y.uz.size() != numNodes) Y.uz.assign(numNodes, 0.0);
-	else std::fill(Y.uz.begin(), Y.uz.end(), 0.0);
-
-	const int*    __restrict__ eNod = mesh.eNodMat.data();
-	const double* __restrict__ Kptr = Ke.data();
-	const double* __restrict__ ux   = U.ux.data();
-	const double* __restrict__ uy   = U.uy.data();
-	const double* __restrict__ uz   = U.uz.data();
-	      double* __restrict__ yx   = Y.ux.data();
-	      double* __restrict__ yy   = Y.uy.data();
-	      double* __restrict__ yz   = Y.uz.data();
-
-	// Decide whether to use colored parallel assembly
-#if defined(_OPENMP)
-	int maxThreads = omp_get_max_threads();
-	bool useColoring =
-		(maxThreads > 1) &&
-		(mesh.coloring.numColors > 0) &&
-		!mesh.coloring.colorBuckets.empty() &&
-		(numElements > 1000);
-#else
-	bool useColoring = false;
-#endif
-
-	if (useColoring) {
-		#if defined(__GNUC__) || defined(__clang__)
-		const double* __restrict__ KptrAligned =
-			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
-		#else
-		const double* __restrict__ KptrAligned = Kptr;
-		#endif
-		#ifndef NDEBUG
-		assert_aligned_64(KptrAligned);
-		#endif
-		const double (* __restrict__ K2D)[24] =
-			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
-		const auto& buckets = mesh.coloring.colorBuckets;
-		const int numColors = mesh.coloring.numColors;
-		
-		#pragma omp parallel
-		{
-			// No local arrays needed here, ProcessBlock has its own stack arrays
-			for (int c = 0; c < numColors; ++c) {
-				const auto& elems = buckets[static_cast<size_t>(c)];
-				const int nElems = static_cast<int>(elems.size());
-				
-				// Process color bucket in chunks of 8
-				constexpr int BS = 8;
-				
-				#pragma omp for schedule(static)
-				for (int baseIdx = 0; baseIdx < nElems; baseIdx += BS) {
-					int count = std::min(BS, nElems - baseIdx);
-					// Load indices from the color bucket
-					// (elems stores indices 'e')
-					const int* ePtr = &elems[baseIdx];
-					ProcessBlock_8<BS>(ePtr, count, eNod, K2D, eleModulus.data(), 
-					                   ux, uy, uz, yx, yy, yz);
-				}
-				// Implicit barrier at end of 'omp for' unless nowait is used
-				// We need barrier between colors to prevent race conditions on nodes
-			}
-		}
-	} else {
-		// Fallback: plain contiguous loop (now vectorized via ProcessBlock_8 inside K_times_u_kernel)
-		K_times_u_kernel(numElements, eNod, Kptr, ux, uy, uz, yx, yy, yz, eleModulus.data());
-	}
-}
-
 // Helper to process a batch of 8 elements using SIMD directly on free DOFs
 template <int BLOCK_SIZE = 8>
 static inline void ProcessBlock_8_Free(
@@ -830,7 +746,7 @@ static inline void ProcessBlock_8_Free(
 	}
 }
 
-void K_times_u_finest_free(const Problem& pb,
+void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const std::vector<double>& uFree,
                       std::vector<double>& yFree)

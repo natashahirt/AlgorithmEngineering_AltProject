@@ -97,7 +97,7 @@ int PCG_free(const Problem& pb,
 
 	// r = b - A*x (if nonzero initial guess)
 	if (!xFree.empty()) {
-		K_times_u_finest_free(pb, eleModulus, xFree, Ap);
+		K_times_u_finest(pb, eleModulus, xFree, Ap);
 		#pragma omp parallel for
 		for (size_t i=0;i<r.size();++i) r[i] -= Ap[i];
 	} else {
@@ -119,7 +119,7 @@ int PCG_free(const Problem& pb,
 
 	for (int it=0; it<maxIt; ++it) {
 		// Ap = A * p
-		K_times_u_finest_free(pb, eleModulus, p, Ap);
+		K_times_u_finest(pb, eleModulus, p, Ap);
 
 		// denom = p·Ap
 		double denom = 0.0;
