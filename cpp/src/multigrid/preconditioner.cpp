@@ -147,10 +147,8 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			}
 
 			// Restrict Residual: r_coarse = Restrict(r_fine)
-			// Process all 3 components (already parallelized internally)
-			for (int c = 0; c < 3; ++c) {
-				MG_Restrict_nodes_Strided(H.levels[l+1], H.levels[l], rLv[l], rLv[l+1], c, 3);
-			}
+			// Fused 3-component transfer (single parallel region)
+			MG_Restrict_nodes_Vec3(H.levels[l+1], H.levels[l], rLv[l], rLv[l+1]);
 
 			// Apply BC mask on coarse residual
 			#pragma omp parallel for schedule(static)
@@ -190,26 +188,18 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		// Upward pass (prolongation + post-smoothing)
 		for (int l = (int)H.levels.size()-2; l >= 0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
-			const int cn_nodes = H.levels[l+1].numNodes;
+			const int fn_dofs = 3 * fn_nodes;
 			const auto& D = diag[l];
 			const double w = cfg.weight;
 
-			// Prolongate Correction for all 3 components
-			for (int c = 0; c < 3; ++c) {
-				// Copy strided xLv[l+1] to tmp_xc
-				#pragma omp parallel for schedule(static)
-				for (int i = 0; i < cn_nodes; ++i) {
-					ws->tmp_xc[i] = xLv[l+1][3*i+c];
-				}
+			// Prolongate Correction: fused 3-component transfer (single parallel region)
+			// Use tmp_xf as temporary for interleaved prolongation result
+			MG_Prolongate_nodes_Vec3(H.levels[l+1], H.levels[l], xLv[l+1], ws->tmp_xf);
 
-				// Fast stencil prolongation (stride 1->1)
-				MG_Prolongate_nodes_Strided(H.levels[l+1], H.levels[l], ws->tmp_xc, ws->tmp_xf, 0, 1);
-
-				// Accumulate back
-				#pragma omp parallel for schedule(static)
-				for (int i = 0; i < fn_nodes; ++i) {
-					xLv[l][3*i+c] += ws->tmp_xf[i];
-				}
+			// Accumulate prolongated correction into xLv[l]
+			#pragma omp parallel for schedule(static)
+			for (int i = 0; i < fn_dofs; ++i) {
+				xLv[l][i] += ws->tmp_xf[i];
 			}
 
 			// BC mask + Post-smoothing in one pass

@@ -22,4 +22,12 @@ void MG_Restrict_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
                                const std::vector<double>& rf, std::vector<double>& rc,
                                int component, int stride);
 
+// Fused 3-component transfers: process all xyz components in a single parallel region
+// Input/output are interleaved as [x0,y0,z0, x1,y1,z1, ...]
+void MG_Prolongate_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
+                              const std::vector<double>& xc, std::vector<double>& xf);
+
+void MG_Restrict_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
+                            const std::vector<double>& rf, std::vector<double>& rc);
+
 } } // namespace top3d::mg

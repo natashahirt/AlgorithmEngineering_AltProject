@@ -56,7 +56,7 @@ struct MGWorkspace {
         tmp_rf.resize(maxNodes);
         tmp_rc.resize(maxNodes);
         tmp_xc.resize(maxNodes);
-        tmp_xf.resize(maxNodes);
+        tmp_xf.resize(3*maxNodes);  // Sized for interleaved Vec3 data
         tmp_add.resize(3*maxNodes);
     }
 };

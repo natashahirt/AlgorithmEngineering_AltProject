@@ -788,59 +788,140 @@ void K_times_u_finest(const Problem& pb,
 
 		double* __restrict__ yF_out = yFree.data();
 
-		// Use atomics for scatter - avoids reduction overhead entirely
-		// Modern CPUs handle atomic FP adds efficiently
-		#pragma omp parallel
-		{
-			constexpr int BS = 8;
-			alignas(64) double ue[24][BS];
-			alignas(64) double fe[24][BS];
-			double Ee_vals[BS];
+		// For high thread counts (>16), use thread-local accumulation to avoid atomic contention
+		// For low thread counts, atomics have less overhead
+		const bool useThreadLocal = (maxThreads > 16);
 
-			#pragma omp for schedule(static)
-			for (int baseE = 0; baseE < numElements; baseE += BS) {
-				int count = std::min(BS, numElements - baseE);
+		if (useThreadLocal) {
+			// Thread-local accumulation path (better for many-core systems)
+			ws.resize(maxThreads, numDOFs);
 
-				// 1. Gather
-				for (int k = 0; k < count; ++k) {
-					int e = baseE + k;
-					Ee_vals[k] = eleModulus[e];
-					const int32_t* __restrict__ ed = eDofFree + 24 * e;
-					for (int a = 0; a < 24; ++a) {
-						int idx = ed[a];
-						ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
+			// Zero all thread-local buffers in parallel
+			#pragma omp parallel
+			{
+				int tid = omp_get_thread_num();
+				double* __restrict__ myY = ws.getThreadBuffer(tid);
+				#pragma omp simd
+				for (size_t i = 0; i < numDOFs; ++i) myY[i] = 0.0;
+			}
+
+			// Main parallel region: accumulate to thread-local buffers
+			#pragma omp parallel
+			{
+				int tid = omp_get_thread_num();
+				double* __restrict__ myY = ws.getThreadBuffer(tid);
+
+				constexpr int BS = 8;
+				alignas(64) double ue[24][BS];
+				alignas(64) double fe[24][BS];
+				double Ee_vals[BS];
+
+				#pragma omp for schedule(static)
+				for (int baseE = 0; baseE < numElements; baseE += BS) {
+					int count = std::min(BS, numElements - baseE);
+
+					for (int k = 0; k < count; ++k) {
+						int e = baseE + k;
+						Ee_vals[k] = eleModulus[e];
+						const int32_t* __restrict__ ed = eDofFree + 24 * e;
+						for (int a = 0; a < 24; ++a) {
+							int idx = ed[a];
+							ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
+						}
 					}
-				}
-				for (int k = count; k < BS; ++k) {
-					Ee_vals[k] = 0.0;
-					for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
-				}
+					for (int k = count; k < BS; ++k) {
+						Ee_vals[k] = 0.0;
+						for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
+					}
 
-				// 2. Local matvec
-				for (int i = 0; i < 24; ++i) {
-					#pragma omp simd
-					for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
-					for (int j = 0; j < 24; ++j) {
-						double Kij = K2D[i][j];
+					for (int i = 0; i < 24; ++i) {
 						#pragma omp simd
-						for (int k = 0; k < BS; ++k) {
-							fe[i][k] += Kij * ue[j][k];
+						for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
+						for (int j = 0; j < 24; ++j) {
+							double Kij = K2D[i][j];
+							#pragma omp simd
+							for (int k = 0; k < BS; ++k) {
+								fe[i][k] += Kij * ue[j][k];
+							}
+						}
+					}
+
+					for (int k = 0; k < count; ++k) {
+						double Eval = Ee_vals[k];
+						if (Eval <= 1.0e-16) continue;
+						int e = baseE + k;
+						const int32_t* __restrict__ ed = eDofFree + 24 * e;
+						for (int a = 0; a < 24; ++a) {
+							int idx = ed[a];
+							if (idx >= 0) {
+								myY[idx] += fe[a][k] * Eval;
+							}
 						}
 					}
 				}
+			}
 
-				// 3. Scatter with atomics
-				for (int k = 0; k < count; ++k) {
-					double Eval = Ee_vals[k];
-					if (Eval <= 1.0e-16) continue;
-					int e = baseE + k;
-					const int32_t* __restrict__ ed = eDofFree + 24 * e;
-					for (int a = 0; a < 24; ++a) {
-						int idx = ed[a];
-						if (idx >= 0) {
-							double val = fe[a][k] * Eval;
-							#pragma omp atomic
-							yF_out[idx] += val;
+			// Reduce all thread-local buffers into yFree
+			const int nThreads = ws.numThreads;
+			#pragma omp parallel for schedule(static)
+			for (size_t i = 0; i < numDOFs; ++i) {
+				double sum = 0.0;
+				for (int t = 0; t < nThreads; ++t) {
+					sum += ws.threadLocalY_flat[static_cast<size_t>(t) * numDOFs + i];
+				}
+				yF_out[i] = sum;
+			}
+		} else {
+			// Atomic scatter path (better for low thread counts)
+			#pragma omp parallel
+			{
+				constexpr int BS = 8;
+				alignas(64) double ue[24][BS];
+				alignas(64) double fe[24][BS];
+				double Ee_vals[BS];
+
+				#pragma omp for schedule(static)
+				for (int baseE = 0; baseE < numElements; baseE += BS) {
+					int count = std::min(BS, numElements - baseE);
+
+					for (int k = 0; k < count; ++k) {
+						int e = baseE + k;
+						Ee_vals[k] = eleModulus[e];
+						const int32_t* __restrict__ ed = eDofFree + 24 * e;
+						for (int a = 0; a < 24; ++a) {
+							int idx = ed[a];
+							ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
+						}
+					}
+					for (int k = count; k < BS; ++k) {
+						Ee_vals[k] = 0.0;
+						for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
+					}
+
+					for (int i = 0; i < 24; ++i) {
+						#pragma omp simd
+						for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
+						for (int j = 0; j < 24; ++j) {
+							double Kij = K2D[i][j];
+							#pragma omp simd
+							for (int k = 0; k < BS; ++k) {
+								fe[i][k] += Kij * ue[j][k];
+							}
+						}
+					}
+
+					for (int k = 0; k < count; ++k) {
+						double Eval = Ee_vals[k];
+						if (Eval <= 1.0e-16) continue;
+						int e = baseE + k;
+						const int32_t* __restrict__ ed = eDofFree + 24 * e;
+						for (int a = 0; a < 24; ++a) {
+							int idx = ed[a];
+							if (idx >= 0) {
+								double val = fe[a][k] * Eval;
+								#pragma omp atomic
+								yF_out[idx] += val;
+							}
 						}
 					}
 				}
