@@ -448,13 +448,9 @@ void MG_Prolongate_nodes_Vec3_Inner(const MGLevel& Lc, const MGLevel& Lf,
 
     const double invSpan = 1.0 / span;
 
-    // Initialize weights - W is thread-local so this is safe
-    // Ensure size before the parallel for
+    // Initialize weights - W is thread-local so no barrier needed
     if ((int)W.size() < span) W.resize(span);
     for (int i = 0; i < span; ++i) W[i] = (double)i * invSpan;
-
-    // Ensure all threads have initialized their W before proceeding
-    #pragma omp barrier
 
     #pragma omp for collapse(2) schedule(static)
     for (int cz = 0; cz < cResZ; ++cz) {
@@ -546,14 +542,11 @@ void MG_Restrict_nodes_Vec3_Inner(const MGLevel& Lc, const MGLevel& Lf,
     const double* __restrict__ rf_ptr = rf.data();
     double* __restrict__ rc_ptr = rc.data();
 
-    // Initialize weights - W is thread-local so this is safe
+    // Initialize weights - W is thread-local so no barrier needed
     if ((int)W.size() < wSize) W.resize(wSize);
     for (int i = 0; i < wSize; ++i) {
         W[i] = 1.0 - std::abs(i - (span - 1)) * invSpan;
     }
-
-    // Ensure all threads have initialized their W before proceeding
-    #pragma omp barrier
 
     #pragma omp for collapse(2) schedule(static)
     for (int cz = 0; cz < cNnz; ++cz) {

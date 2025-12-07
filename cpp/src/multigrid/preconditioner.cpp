@@ -236,7 +236,7 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			}
 
 			// === EXIT: Gather back to free DOFs ===
-			#pragma omp for schedule(static)
+			#pragma omp for schedule(static) nowait
 			for (size_t i = 0; i < nFreeDofs; ++i) {
 				int dMort = pb.freeDofIndex[i];
 				int nMort = dMort / 3;
