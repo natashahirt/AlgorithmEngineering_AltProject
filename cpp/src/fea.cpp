@@ -844,27 +844,22 @@ void K_times_u_finest(const Problem& pb,
 		#pragma omp barrier
 
 		// Use single thread for BLAS call (BLAS may use internal threading)
-		#pragma omp single
-		{
+		const int chunk_size = 32;
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; e += chunk_size) {
+			int current_chunk_size = std::min(chunk_size, numElements - e);
 #ifdef HAVE_CBLAS
-			// Use CBLAS for the big matrix multiply:
-			// fMat (M x N) = uMat (M x K) * Ke^T (K x N)
-			// where M = numElements, K = 24, N = 24
-			// Ke is row-major, so Ke^T in row-major = Ke in column-major
-			// C = alpha * A * B + beta * C
-			// fMat = 1.0 * uMat * Ke^T + 0.0 * fMat
 			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-			            numElements, 24, 24,    // M, N, K
-			            1.0,                     // alpha
-			            uMat, 24,               // A (M x K), lda
-			            Kptr, 24,               // B (N x K) -> B^T is (K x N), ldb
-			            0.0,                     // beta
-			            fMat, 24);              // C (M x N), ldc
+						current_chunk_size, 24, 24,
+						1.0,
+						uMat + e * 24, 24,
+						Kptr, 24,
+						0.0,
+						fMat + e * 24, 24);
 #else
-			// Manual fallback - single threaded to avoid nested parallelism
-			for (int e = 0; e < numElements; ++e) {
-				const double* uRow = uMat + e * 24;
-				double* fRow = fMat + e * 24;
+			for (int ee = e; ee < e + current_chunk_size; ++ee) {
+				const double* uRow = uMat + ee * 24;
+				double* fRow = fMat + ee * 24;
 				for (int i = 0; i < 24; ++i) {
 					double sum = 0.0;
 					for (int j = 0; j < 24; ++j) {
