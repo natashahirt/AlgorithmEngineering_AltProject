@@ -92,71 +92,121 @@ int PCG_free(const Problem& pb,
 		Ap.resize(bFree.size());
 	}
 
-	// r = b
-	std::copy(bFree.begin(), bFree.end(), r.begin());
+    // Shared scalars for reductions
+    double rz_old = 0.0;
+    double rz_new = 0.0;
+    double normb2 = 0.0;
+    double rnorm2 = 0.0;
+    double denom  = 0.0;
+    double alpha  = 0.0;
+    double beta   = 0.0;
+    double res    = 0.0;
+    int finalIt   = 0;
 
-	// r = b - A*x (if nonzero initial guess)
-	if (!xFree.empty()) {
-		K_times_u_finest(pb, eleModulus, xFree, Ap);
-		#pragma omp parallel for
-		for (size_t i=0;i<r.size();++i) r[i] -= Ap[i];
-	} else {
-		xFree.assign(r.size(), 0.0);
-	}
+    #pragma omp parallel
+    {
+	    // r = b
+	    #pragma omp for
+	    for(size_t i=0; i<bFree.size(); ++i) r[i] = bFree[i];
 
-	if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
-	
-	double rz_old = 0.0;
-	#pragma omp parallel for reduction(+:rz_old)
-	for (size_t i=0; i<r.size(); ++i) rz_old += r[i] * z[i];
-	
-	std::copy(z.begin(), z.end(), p.begin());
+	    // r = b - A*x (if nonzero initial guess)
+	    if (!xFree.empty()) {
+		    K_times_u_finest(pb, eleModulus, xFree, Ap);
+		    #pragma omp for
+		    for (size_t i=0;i<r.size();++i) r[i] -= Ap[i];
+	    } else {
+            #pragma omp for
+		    for(size_t i=0; i<r.size(); ++i) xFree[i] = 0.0;
+	    }
 
-	double normb2 = 0.0;
-	#pragma omp parallel for reduction(+:normb2)
-	for (size_t i=0; i<bFree.size(); ++i) normb2 += bFree[i] * bFree[i];
-	const double normb = std::sqrt(normb2);
+	    if (M) M(r, z); 
+        else {
+            #pragma omp for
+            for(size_t i=0; i<r.size(); ++i) z[i] = r[i];
+        }
+	    
+	    #pragma omp for reduction(+:rz_old)
+	    for (size_t i=0; i<r.size(); ++i) rz_old += r[i] * z[i];
+	    
+        #pragma omp for
+	    for(size_t i=0; i<z.size(); ++i) p[i] = z[i];
 
-	for (int it=0; it<maxIt; ++it) {
-		// Ap = A * p
-		K_times_u_finest(pb, eleModulus, p, Ap);
+	    #pragma omp for reduction(+:normb2)
+	    for (size_t i=0; i<bFree.size(); ++i) normb2 += bFree[i] * bFree[i];
+	    
+        #pragma omp single
+        {
+            const double normb = std::sqrt(normb2);
+            res = 1.0; // Force entry
+        }
 
-		// denom = p·Ap
-		double denom = 0.0;
-		#pragma omp parallel for reduction(+:denom)
-		for (size_t i=0;i<p.size();++i) denom += p[i] * Ap[i];
-		
-		denom = std::max(1.0e-30, denom);
-		double alpha = rz_old / denom;
+	    for (int it=0; it<maxIt; ++it) {
+		    // Ap = A * p
+		    K_times_u_finest(pb, eleModulus, p, Ap);
 
-		// Fused updates of x and r and residual norm
-		double rnorm2 = 0.0;
-		#pragma omp parallel for reduction(+:rnorm2)
-		for (size_t i=0;i<p.size();++i) {
-			xFree[i] += alpha * p[i];
-			r[i]     -= alpha * Ap[i];
-			rnorm2   += r[i] * r[i];
-		}
-		double res = std::sqrt(rnorm2) / std::max(1.0e-30, normb);
-		if (res < tol) return it+1;
+		    // denom = p·Ap
+            #pragma omp single
+		    denom = 0.0;
+		    #pragma omp for reduction(+:denom)
+		    for (size_t i=0;i<p.size();++i) denom += p[i] * Ap[i];
+		    
+            #pragma omp single
+            {
+		        denom = std::max(1.0e-30, denom);
+		        alpha = rz_old / denom;
+                rnorm2 = 0.0;
+            }
 
-		if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
-		double rz_new;
-		if (M) {
-			// Parallelize dot product for rz_new
-			rz_new = 0.0;
-			#pragma omp parallel for reduction(+:rz_new)
-			for (size_t i=0; i<r.size(); ++i) rz_new += r[i] * z[i];
-		} else {
-			// z == r
-			rz_new = rnorm2;
-		}
-		double beta = rz_new / std::max(1.0e-30, rz_old);
-		#pragma omp parallel for
-		for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
-		rz_old = rz_new;
-	}
-	return maxIt;
+		    // Fused updates of x and r and residual norm
+		    #pragma omp for reduction(+:rnorm2)
+		    for (size_t i=0;i<p.size();++i) {
+			    xFree[i] += alpha * p[i];
+			    r[i]     -= alpha * Ap[i];
+			    rnorm2   += r[i] * r[i];
+		    }
+            
+            bool converged = false;
+            #pragma omp single
+            {
+		        res = std::sqrt(rnorm2) / std::max(1.0e-30, std::sqrt(normb2));
+                if (res < tol) {
+                    converged = true;
+                    finalIt = it + 1;
+                }
+            }
+            if (converged) break;
+
+		    if (M) M(r, z); 
+            else {
+                #pragma omp for
+                for(size_t i=0; i<r.size(); ++i) z[i] = r[i];
+            }
+
+		    if (M) {
+                #pragma omp single
+			    rz_new = 0.0;
+			    #pragma omp for reduction(+:rz_new)
+			    for (size_t i=0; i<r.size(); ++i) rz_new += r[i] * z[i];
+		    } else {
+                #pragma omp single
+			    rz_new = rnorm2;
+		    }
+            
+            #pragma omp single
+            {
+		        beta = rz_new / std::max(1.0e-30, rz_old);
+                rz_old = rz_new;
+            }
+
+            #pragma omp for
+		    for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
+            
+            #pragma omp single
+            finalIt = it + 1;
+	    }
+    } // End Parallel
+
+	return finalIt;
 }
 
 } // namespace top3d

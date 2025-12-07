@@ -28,10 +28,12 @@ void MG_Prolongate_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
     // Inverse span for weight calculation
     const double invSpan = 1.0 / span;
 
-    if (xf.size() < (size_t)(fnnx * fnny * fnnz * stride)) 
+    if (xf.size() < (size_t)(fnnx * fnny * fnnz * stride)) {
+        #pragma omp single
         xf.resize(fnnx * fnny * fnnz * stride);
+    }
 
-    #pragma omp parallel for collapse(3)
+    #pragma omp for collapse(3) schedule(static) nowait
     for (int fz = 0; fz < fnnz; ++fz) {
         for (int fy = 0; fy < fnny; ++fy) {
             for (int fx = 0; fx < fnnx; ++fx) {
@@ -106,10 +108,12 @@ void MG_Restrict_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
     const int span = Lc.spanWidth;
     const double invSpan = 1.0 / span;
 
-    if (rc.size() < (size_t)(cnnx * cnny * cnnz * stride)) 
+    if (rc.size() < (size_t)(cnnx * cnny * cnnz * stride)) {
+        #pragma omp single
         rc.resize(cnnx * cnny * cnnz * stride);
+    }
 
-    #pragma omp parallel for collapse(3)
+    #pragma omp for collapse(3) schedule(static) nowait
     for (int cz = 0; cz < cnnz; ++cz) {
         for (int cy = 0; cy < cnny; ++cy) {
             for (int cx = 0; cx < cnnx; ++cx) {

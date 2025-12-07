@@ -118,9 +118,8 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
             std::fill(xLv[l].begin(), xLv[l].end(), 0.0); 
             
 			const auto& D = diag[l];
-			// Pre-smoothing: x = w * D^-1 * r
-            // (Richardson iteration with initial x=0)
-			#pragma omp parallel for
+			// Pre-smoothing: x = w * D^-1 * r (Richardson with x=0)
+			#pragma omp for schedule(static, 128) nowait
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
 					const int d = 3*i+c; if (fixedMasks[l][d]) continue;
@@ -128,73 +127,71 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 				}
 			}
 
-            // Restrict Residual: r_coarse = Restrict(r_fine)
-            // Note: "Adapted" V-cycle in TOP3D_XL restricts the *original* residual, NOT the defect (r - Ax).
-            // This is an "Additive" correction approach.
-            
-            std::fill(rLv[l+1].begin(), rLv[l+1].end(), 0.0);
-            
+			// Restrict residual rLv[l] -> rLv[l+1] (independent of smoothing writes)
 			for (int c=0;c<3;c++) {
-                // Direct Strided Restriction: rLv[l] -> rLv[l+1]
 				MG_Restrict_nodes_Strided(H.levels[l+1], H.levels[l], rLv[l], rLv[l+1], c, 3);
 			}
-            
+
+			// Single barrier for the level before consuming rLv[l+1]
+			#pragma omp barrier
+
+			// Apply coarse mask
+			#pragma omp for schedule(static, 128) nowait
 			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
-            
-            // xLv[l+1] will be computed in next steps (init to 0 for safety)
-            std::fill(xLv[l+1].begin(), xLv[l+1].end(), 0.0);
+
+			// Init next-level x
+			#pragma omp for schedule(static) nowait
+			for(size_t i=0; i<xLv[l+1].size(); ++i) xLv[l+1][i] = 0.0;
+
+			#pragma omp barrier
 		}
 
 		const size_t Lidx = H.levels.size()-1;
-		if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
-			chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
-			const int cn_nodes = H.levels[Lidx].numNodes;
-			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
-		} else {
-			const auto& D = diag[Lidx];
-			const int cn_nodes = H.levels[Lidx].numNodes;
-			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
+        // Coarse Solve
+        #pragma omp single
+        {
+		    if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
+			    chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
+			    const int cn_nodes = H.levels[Lidx].numNodes;
+			    for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
+		    }
+        }
+        // If no direct solve, do diagonal fallback in parallel
+        if (Lcoarse.empty() || (int)rLv[Lidx].size() != Ncoarse) {
+             const auto& D = diag[Lidx];
+             const int cn_nodes = H.levels[Lidx].numNodes;
+             #pragma omp for schedule(static, 128) nowait
+             for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) {
 				const int d = 3*i+c; if (fixedMasks[Lidx][d]) { xLv[Lidx][d] = 0.0; continue; }
 				xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30, D[d]);
 			}
-		}
+        }
+        #pragma omp barrier
 
 		for (int l=(int)H.levels.size()-2; l>=0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
             
             // Prolongate Correction: x_fine = x_fine + Prolongate(x_coarse)
 			for (int c=0;c<3;c++) {
-                // Optimized transfer: xLv[l+1](stride 3) -> tmp_xf(stride 1)
-                // Use generic tmp_xc buffer as intermediary if needed, but wait:
-                // MG_Prolongate_nodes_Strided logic assumes src and dst have same stride.
-                // My implementation: `xc[cbase00 * stride + component]` and `xf[fidx * stride + component]`.
-                // So I cannot mix strides easily with that implementation.
-                // I will revert to copy-based prolongation but use the faster stencil kernel.
-                
-                // Copy strided xLv[l+1] to tmp_xc
-                #pragma omp parallel for
-				for (int i=0;i<H.levels[l+1].numNodes;i++) ws->tmp_xc[i] = xLv[l+1][3*i+c];
-				
-                // Fast stencil prolongation (stride 1->1)
-				MG_Prolongate_nodes_Strided(H.levels[l+1], H.levels[l], ws->tmp_xc, ws->tmp_xf, 0, 1);
-				
-                // Accumulate back
-                #pragma omp parallel for
+				// Prolong directly from strided xLv[l+1] (stride 3) to ws->tmp_xf (stride 1)
+				MG_Prolongate_nodes_Strided(H.levels[l+1], H.levels[l], xLv[l+1], ws->tmp_xf, c, 3);
+				// Accumulate back
+				#pragma omp for schedule(static) nowait
 				for (int i=0;i<fn_nodes;i++) xLv[l][3*i+c] += ws->tmp_xf[i];
 			}
+			// One barrier for all components before reusing tmp_xf
+			#pragma omp barrier
             
 			const auto& D = diag[l];
-			for (int i=0;i<fn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l][3*i+c]) xLv[l][3*i+c] = 0.0;
-            
-            // Post-smoothing (Additive): x = x + w * D^-1 * r
-            // Note: Uses original 'rLv[l]', not updated residual.
-			#pragma omp parallel for
+            // Post-smoothing
+            #pragma omp for schedule(static, 128) nowait
 			for (int i=0;i<fn_nodes;i++) {
 				for (int c=0;c<3;c++) {
 					const int d = 3*i+c; if (fixedMasks[l][d]) continue;
 					xLv[l][d] += cfg.weight * rLv[l][d] / std::max(1.0e-30, D[d]);
 				}
 			}
+            #pragma omp barrier
 		}
         
 		// Convert lex solution back to Morton indexing and extract free DOFs

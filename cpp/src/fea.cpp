@@ -766,6 +766,7 @@ void K_times_u_finest(const Problem& pb,
 
 	// Decide whether to use colored parallel assembly
 #if defined(_OPENMP)
+	// Use max_threads to decide capability, but num_threads for runtime check if needed
 	int maxThreads = omp_get_max_threads();
 	bool useColoring =
 		(maxThreads > 1) &&
@@ -788,7 +789,8 @@ void K_times_u_finest(const Problem& pb,
 		const auto& buckets = mesh.coloring.colorBuckets;
 		const int numColors = mesh.coloring.numColors;
 		
-		#pragma omp parallel
+        // REMOVED: #pragma omp parallel 
+        // We assume this is called from within a parallel region
 		{
 			for (int c = 0; c < numColors; ++c) {
 				const auto& elems = buckets[static_cast<size_t>(c)];
@@ -802,6 +804,7 @@ void K_times_u_finest(const Problem& pb,
 					ProcessBlock_8_Free<BS>(ePtr, count, eDofFree, K2D, eleModulus.data(), 
 					                   uF, yF);
 				}
+                // Implicit barrier here ensures color c is done before c+1 starts
 			}
 		}
 	} else {
