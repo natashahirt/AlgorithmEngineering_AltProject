@@ -763,11 +763,10 @@ static inline void ProcessBlock_8_Free(
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const std::vector<double>& uFree,
-                      std::vector<double>& yFree,
-                      KTimesUWorkspace& ws)
+                      std::vector<double>& yFree)
 {
 	const auto& mesh = pb.mesh;
-	const auto& Ke   = mesh.Ke;
+	const double* __restrict__ Kptr = mesh.Ke.data();
 	const int numElements = mesh.numElements;
 	const size_t numFreeDofs = uFree.size();
 
@@ -775,49 +774,9 @@ void K_times_u_finest(const Problem& pb,
 	if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
 	else std::fill(yFree.begin(), yFree.end(), 0.0);
 
-	// Resize workspace
-	ws.resize(numElements, numFreeDofs);
-
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
-	const double* __restrict__ Kptr = Ke.data();
 	const double* __restrict__ uF = uFree.data();
-	double* __restrict__ uMat = ws.uMat.data();
-	double* __restrict__ fMat = ws.fMat.data();
 	double* __restrict__ yF_out = yFree.data();
-
-	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
-	if (!ws.scatterIndexBuilt) {
-		// Count contributions per DOF
-		std::vector<int> dofCount(numFreeDofs + 1, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) dofCount[idx + 1]++;
-			}
-		}
-		// Prefix sum to get boundaries
-		ws.dofBoundaries.resize(numFreeDofs + 1);
-		ws.dofBoundaries[0] = 0;
-		for (size_t i = 1; i <= numFreeDofs; ++i) {
-			ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
-		}
-		// Fill scatter indices (just the fMat index, grouped by output DOF)
-		size_t totalPairs = ws.dofBoundaries[numFreeDofs];
-		ws.scatterIdx.resize(totalPairs);
-		std::vector<int> dofPos(numFreeDofs, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) {
-					int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
-					ws.scatterIdx[pos] = e * 24 + a;
-				}
-			}
-		}
-		ws.scatterIndexBuilt = true;
-	}
 
 #if defined(_OPENMP)
 	for (int c = 0; c < mesh.coloring.numColors; ++c) {
