@@ -757,10 +757,9 @@ static inline void ProcessBlock_8_Free(
 }
 
 // MATLAB-style batched K*u implementation
-// Minimizes OpenMP overhead by using single BLAS call (let MKL handle threading)
 // Step 1: Gather all element displacements into uMat (numElements x 24)
-// Step 2: Single batch matrix multiply: fMat = uMat * Ke^T using BLAS (MKL threads internally)
-// Step 3: Scale by element modulus and scatter using precomputed indices
+// Step 2: Batch matrix multiply: fMat = uMat * Ke^T, then scale by Ee
+// Step 3: Scatter using precomputed sorted indices (no atomics)
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const std::vector<double>& uFree,
@@ -782,7 +781,6 @@ void K_times_u_finest(const Problem& pb,
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	const double* __restrict__ Kptr = Ke.data();
 	const double* __restrict__ uF = uFree.data();
-	const double* __restrict__ Ee = eleModulus.data();
 	double* __restrict__ uMat = ws.uMat.data();
 	double* __restrict__ fMat = ws.fMat.data();
 	double* __restrict__ yF_out = yFree.data();
@@ -821,32 +819,90 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
+#if defined(_OPENMP)
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
+	const double* __restrict__ Ee = eleModulus.data();
 
-	// ============ STEP 1: Gather (parallel, simple) ============
-	// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
-#if defined(_OPENMP)
-	#pragma omp parallel for schedule(static)
+	// Single parallel region to minimize thread fork/join overhead
+	#pragma omp parallel
+	{
+		// ============ STEP 1: Parallel Gather ============
+		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* __restrict__ ed = eDofFree + 24 * e;
+			double* __restrict__ uRow = uMat + e * 24;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+			}
+		}
+		// Implicit barrier after omp for
+
+		// ============ STEP 2: Single BLAS call ============
+		// Use omp single so only one thread calls BLAS (avoids MKL/OpenMP conflict)
+		// MKL can use its own threading internally if MKL_NUM_THREADS > 1
+		#pragma omp single
+		{
+#ifdef HAVE_CBLAS
+			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+			            numElements, 24, 24,
+			            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
+#else
+			for (int e = 0; e < numElements; ++e) {
+				const double* uRow = uMat + e * 24;
+				double* fRow = fMat + e * 24;
+				for (int i = 0; i < 24; ++i) {
+					double sum = 0.0;
+					for (int j = 0; j < 24; ++j) {
+						sum += uRow[j] * Kptr[j * 24 + i];
+					}
+					fRow[i] = sum;
+				}
+			}
 #endif
+		}
+		// Implicit barrier after omp single
+
+		// ============ STEP 3: Scale and Scatter (fused, parallel by output DOF) ============
+		// Each output DOF sums contributions from multiple elements, scaling by Ee
+		#pragma omp for schedule(static)
+		for (size_t d = 0; d < numFreeDofs; ++d) {
+			double sum = 0.0;
+			const int start = dofBnd[d];
+			const int end = dofBnd[d + 1];
+			for (int k = start; k < end; ++k) {
+				const int fMatIdx = scatIdx[k];
+				const int elemIdx = fMatIdx / 24;
+				sum += fMat[fMatIdx] * Ee[elemIdx];
+			}
+			yF_out[d] = sum;
+		}
+	}
+
+#else
+	// Serial fallback
+	const double* Ee = eleModulus.data();
+	const int32_t* scatIdx = ws.scatterIdx.data();
+	const int32_t* dofBnd = ws.dofBoundaries.data();
+
+	// Step 1: Gather
 	for (int e = 0; e < numElements; ++e) {
-		const int32_t* __restrict__ ed = eDofFree + 24 * e;
-		double* __restrict__ uRow = uMat + e * 24;
+		const int32_t* ed = eDofFree + 24 * e;
+		double* uRow = uMat + e * 24;
 		for (int a = 0; a < 24; ++a) {
 			int idx = ed[a];
 			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 		}
 	}
 
-	// ============ STEP 2: Single BLAS call (let MKL handle threading) ============
-	// fMat = uMat * Ke^T
-	// This is a single large matrix multiply: (numElements x 24) * (24 x 24)^T = (numElements x 24)
+	// Step 2: Matvec using CBLAS if available
 #ifdef HAVE_CBLAS
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
 	            numElements, 24, 24,
 	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
 #else
-	// Manual implementation if no BLAS
 	for (int e = 0; e < numElements; ++e) {
 		const double* uRow = uMat + e * 24;
 		double* fRow = fMat + e * 24;
@@ -860,12 +916,7 @@ void K_times_u_finest(const Problem& pb,
 	}
 #endif
 
-	// ============ STEP 3: Scale by Ee and scatter (parallel by output DOF) ============
-	// For each free DOF d, sum all contributions from fMat scaled by element modulus
-	// This is the MATLAB accumarray equivalent - parallel over output DOFs, no atomics needed
-#if defined(_OPENMP)
-	#pragma omp parallel for schedule(static)
-#endif
+	// Step 3: Scale and scatter (fused)
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
 		const int start = dofBnd[d];
@@ -877,6 +928,7 @@ void K_times_u_finest(const Problem& pb,
 		}
 		yF_out[d] = sum;
 	}
+#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)
