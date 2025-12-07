@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "fea.hpp"
 #include "multigrid/padding.hpp"
 #include <algorithm>
 #include <numeric>
@@ -746,37 +747,36 @@ static inline void ProcessBlock_8_Free(
 	}
 }
 
+// New implementation with thread-local accumulators (no coloring barriers)
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const std::vector<double>& uFree,
-                      std::vector<double>& yFree)
+                      std::vector<double>& yFree,
+                      KTimesUWorkspace& ws)
 {
 	const auto& mesh = pb.mesh;
 	const auto& Ke   = mesh.Ke;
 	const int numElements = mesh.numElements;
+	const size_t numDOFs = uFree.size();
 
-    // Zero output
-    if (yFree.size() != uFree.size()) yFree.assign(uFree.size(), 0.0);
-    else std::fill(yFree.begin(), yFree.end(), 0.0);
+	// Zero output
+	if (yFree.size() != numDOFs) yFree.assign(numDOFs, 0.0);
+	else std::fill(yFree.begin(), yFree.end(), 0.0);
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	const double* __restrict__ Kptr = Ke.data();
 	const double* __restrict__ uF   = uFree.data();
-	      double* __restrict__ yF   = yFree.data();
 
-	// Decide whether to use colored parallel assembly
 #if defined(_OPENMP)
 	int maxThreads = omp_get_max_threads();
-	bool useColoring =
-		(maxThreads > 1) &&
-		(mesh.coloring.numColors > 0) &&
-		!mesh.coloring.colorBuckets.empty() &&
-		(numElements > 1000);
+	bool useParallel = (maxThreads > 1) && (numElements > 1000);
 #else
-	bool useColoring = false;
+	int maxThreads = 1;
+	bool useParallel = false;
 #endif
 
-	if (useColoring) {
+	if (useParallel) {
+#if defined(_OPENMP)
 		#if defined(__GNUC__) || defined(__clang__)
 		const double* __restrict__ KptrAligned =
 			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
@@ -785,42 +785,97 @@ void K_times_u_finest(const Problem& pb,
 		#endif
 		const double (* __restrict__ K2D)[24] =
 			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
-		const auto& buckets = mesh.coloring.colorBuckets;
-		const int numColors = mesh.coloring.numColors;
-		
+
+		double* __restrict__ yF_out = yFree.data();
+
+		// Use atomics for scatter - avoids reduction overhead entirely
+		// Modern CPUs handle atomic FP adds efficiently
 		#pragma omp parallel
 		{
-			for (int c = 0; c < numColors; ++c) {
-				const auto& elems = buckets[static_cast<size_t>(c)];
-				const int nElems = static_cast<int>(elems.size());
-				constexpr int BS = 8;
-				
-				#pragma omp for schedule(static)
-				for (int baseIdx = 0; baseIdx < nElems; baseIdx += BS) {
-					int count = std::min(BS, nElems - baseIdx);
-					const int* ePtr = &elems[baseIdx];
-					ProcessBlock_8_Free<BS>(ePtr, count, eDofFree, K2D, eleModulus.data(), 
-					                   uF, yF);
+			constexpr int BS = 8;
+			alignas(64) double ue[24][BS];
+			alignas(64) double fe[24][BS];
+			double Ee_vals[BS];
+
+			#pragma omp for schedule(static)
+			for (int baseE = 0; baseE < numElements; baseE += BS) {
+				int count = std::min(BS, numElements - baseE);
+
+				// 1. Gather
+				for (int k = 0; k < count; ++k) {
+					int e = baseE + k;
+					Ee_vals[k] = eleModulus[e];
+					const int32_t* __restrict__ ed = eDofFree + 24 * e;
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
+					}
+				}
+				for (int k = count; k < BS; ++k) {
+					Ee_vals[k] = 0.0;
+					for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
+				}
+
+				// 2. Local matvec
+				for (int i = 0; i < 24; ++i) {
+					#pragma omp simd
+					for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
+					for (int j = 0; j < 24; ++j) {
+						double Kij = K2D[i][j];
+						#pragma omp simd
+						for (int k = 0; k < BS; ++k) {
+							fe[i][k] += Kij * ue[j][k];
+						}
+					}
+				}
+
+				// 3. Scatter with atomics
+				for (int k = 0; k < count; ++k) {
+					double Eval = Ee_vals[k];
+					if (Eval <= 1.0e-16) continue;
+					int e = baseE + k;
+					const int32_t* __restrict__ ed = eDofFree + 24 * e;
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						if (idx >= 0) {
+							double val = fe[a][k] * Eval;
+							#pragma omp atomic
+							yF_out[idx] += val;
+						}
+					}
 				}
 			}
 		}
+#endif
 	} else {
-		// Fallback: plain contiguous loop
-        const double (* __restrict__ K2D)[24] =
+		// Serial fallback
+		const double (* __restrict__ K2D)[24] =
 			reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
-        constexpr int BS = 8;
-        int eIdx[BS];
-        int e=0;
-        for (; e <= numElements - BS; e += BS) {
-            for(int k=0;k<BS;k++) eIdx[k] = e+k;
-            ProcessBlock_8_Free<BS>(eIdx, BS, eDofFree, K2D, eleModulus.data(), uF, yF);
-        }
-        if(e < numElements) {
-            int count=0;
-            for(;e<numElements;e++) eIdx[count++]=e;
-            ProcessBlock_8_Free<BS>(eIdx, count, eDofFree, K2D, eleModulus.data(), uF, yF);
-        }
+		constexpr int BS = 8;
+		int eIdx[BS];
+		int e = 0;
+		for (; e <= numElements - BS; e += BS) {
+			for (int k = 0; k < BS; k++) eIdx[k] = e + k;
+			ProcessBlock_8_Free<BS>(eIdx, BS, eDofFree, K2D, eleModulus.data(), uF, yFree.data());
+		}
+		if (e < numElements) {
+			int count = 0;
+			for (; e < numElements; e++) eIdx[count++] = e;
+			ProcessBlock_8_Free<BS>(eIdx, count, eDofFree, K2D, eleModulus.data(), uF, yFree.data());
+		}
 	}
+}
+
+// Backward-compatible wrapper (allocates workspace internally)
+void K_times_u_finest(const Problem& pb,
+                      const std::vector<double>& eleModulus,
+                      const std::vector<double>& uFree,
+                      std::vector<double>& yFree)
+{
+	// For backward compatibility, use a static thread-local workspace
+	// This avoids allocation on every call but isn't ideal for memory reuse
+	static thread_local KTimesUWorkspace ws;
+	K_times_u_finest(pb, eleModulus, uFree, yFree, ws);
 }
 
 double ComputeCompliance(const Problem& pb,

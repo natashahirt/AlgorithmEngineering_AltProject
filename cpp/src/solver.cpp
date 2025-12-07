@@ -4,10 +4,8 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
-#include <algorithm>
 #include <iostream>
 #include <numeric>
-#include <cmath>
 
 namespace top3d {
 
@@ -116,7 +114,7 @@ int PCG_free(const Problem& pb,
 
     // r = b - A*x
     if (!xFree.empty()) {
-        K_times_u_finest(pb, eleModulus, xFree, Ap);
+        K_times_u_finest(pb, eleModulus, xFree, Ap, ws.kTimesU_ws);
 #pragma omp parallel for
         for (size_t i = 0; i < n; ++i) r[i] -= Ap[i];
     } else {
@@ -154,7 +152,7 @@ int PCG_free(const Problem& pb,
     for (int it = 0; it < maxIt; ++it) {
 
         // 4. Matrix-Vector Multiplication (The Heavy Lifter)
-        K_times_u_finest(pb, eleModulus, p, Ap);
+        K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
         // 5. Alpha Calculation
         double denom = parallel_dot(p, Ap);
