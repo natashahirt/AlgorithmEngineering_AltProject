@@ -91,6 +91,67 @@ void MG_Prolongate_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
     }
 }
 
+// Buffer variant (xf_buf length = (Lf.resX+1)*(Lf.resY+1)*(Lf.resZ+1))
+void MG_Prolongate_nodes_Strided_buf(const MGLevel& Lc, const MGLevel& Lf,
+                                     const std::vector<double>& xc, double* xf_buf,
+                                     int component, int stride) {
+    const int fnnx = Lf.resX + 1;
+    const int fnny = Lf.resY + 1;
+    const int fnnz = Lf.resZ + 1;
+    
+    const int cnnx = Lc.resX + 1;
+    const int cnny = Lc.resY + 1;
+    
+    const int span = Lc.spanWidth;
+    const double invSpan = 1.0 / span;
+
+    #pragma omp for collapse(3) schedule(static) nowait
+    for (int fz = 0; fz < fnnz; ++fz) {
+        for (int fy = 0; fy < fnny; ++fy) {
+            for (int fx = 0; fx < fnnx; ++fx) {
+                int cx = fx / span;
+                int cy = fy / span;
+                int cz = fz / span;
+
+                int rx = fx % span;
+                int ry = fy % span;
+                int rz = fz % span;
+
+                if (cx >= Lc.resX) { cx = Lc.resX - 1; rx = span; }
+                if (cy >= Lc.resY) { cy = Lc.resY - 1; ry = span; }
+                if (cz >= Lc.resZ) { cz = Lc.resZ - 1; rz = span; }
+
+                double wx1 = (double)rx * invSpan; double wx0 = 1.0 - wx1;
+                double wy1 = (double)ry * invSpan; double wy0 = 1.0 - wy1;
+                double wz1 = (double)rz * invSpan; double wz0 = 1.0 - wz1;
+
+                int cbase00 = cnnx * cnny * cz + cnnx * cy + cx;
+                int cbase01 = cbase00 + 1;
+                int cbase10 = cbase00 + cnnx;
+                int cbase11 = cbase10 + 1;
+                
+                int cnext00 = cbase00 + cnnx * cnny;
+                int cnext01 = cnext00 + 1;
+                int cnext10 = cnext00 + cnnx;
+                int cnext11 = cnext10 + 1;
+
+                double val = 
+                    xc[cbase00 * stride + component] * wx0 * wy0 * wz0 +
+                    xc[cbase01 * stride + component] * wx1 * wy0 * wz0 +
+                    xc[cbase10 * stride + component] * wx0 * wy1 * wz0 +
+                    xc[cbase11 * stride + component] * wx1 * wy1 * wz0 +
+                    xc[cnext00 * stride + component] * wx0 * wy0 * wz1 +
+                    xc[cnext01 * stride + component] * wx1 * wy0 * wz1 +
+                    xc[cnext10 * stride + component] * wx0 * wy1 * wz1 +
+                    xc[cnext11 * stride + component] * wx1 * wy1 * wz1;
+
+                int fidx = fnnx * fnny * fz + fnnx * fy + fx;
+                xf_buf[fidx] = val;
+            }
+        }
+    }
+}
+
 // Optimized Strided Restriction
 // Scatters from Fine (rf) to Coarse (rc) using linear hat function (weighted average)
 // Parallelizes over COARSE nodes to avoid atomics

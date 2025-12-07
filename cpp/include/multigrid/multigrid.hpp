@@ -66,5 +66,16 @@ void build_static_once(const Problem&, const MGPrecondConfig&, MGHierarchy&, std
 Preconditioner make_diagonal_preconditioner_from_static(const Problem&, const MGHierarchy&,
     const std::vector<std::vector<uint8_t>>& fixedMasks,
     const std::vector<double>& eleE, const MGPrecondConfig&);
+
+// Transfer helpers
+void MG_Prolongate_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
+                                 const std::vector<double>& xc, std::vector<double>& xf,
+                                 int component, int stride);
+void MG_Prolongate_nodes_Strided_buf(const MGLevel& Lc, const MGLevel& Lf,
+                                     const std::vector<double>& xc, double* xf_buf,
+                                     int component, int stride);
+void MG_Restrict_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
+                               const std::vector<double>& rf, std::vector<double>& rc,
+                               int component, int stride);
       
 } } // namespace top3d::mg

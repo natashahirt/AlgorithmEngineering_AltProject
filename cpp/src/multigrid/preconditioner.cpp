@@ -135,13 +135,13 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 			// Single barrier for the level before consuming rLv[l+1]
 			#pragma omp barrier
 
-			// Apply coarse mask
+			// Apply coarse mask and init next-level x in one pass
+			const int cn_dofs = 3 * cn_nodes;
 			#pragma omp for schedule(static, 128) nowait
-			for (int i=0;i<cn_nodes;i++) for (int c=0;c<3;c++) if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
-
-			// Init next-level x
-			#pragma omp for schedule(static) nowait
-			for(size_t i=0; i<xLv[l+1].size(); ++i) xLv[l+1][i] = 0.0;
+			for (int d=0; d<cn_dofs; ++d) {
+				if (fixedMasks[l+1][d]) rLv[l+1][d] = 0.0;
+				xLv[l+1][d] = 0.0;
+			}
 
 			#pragma omp barrier
 		}
@@ -170,16 +170,17 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 
 		for (int l=(int)H.levels.size()-2; l>=0; --l) {
 			const int fn_nodes = H.levels[l].numNodes;
+			const size_t bufSize = ws->tmp_xf.size();
             
             // Prolongate Correction: x_fine = x_fine + Prolongate(x_coarse)
 			for (int c=0;c<3;c++) {
-				// Prolong directly from strided xLv[l+1] (stride 3) to ws->tmp_xf (stride 1)
-				MG_Prolongate_nodes_Strided(H.levels[l+1], H.levels[l], xLv[l+1], ws->tmp_xf, c, 3);
+				double* buf = ws->tmp_add.data() + c * bufSize;
+				MG_Prolongate_nodes_Strided_buf(H.levels[l+1], H.levels[l], xLv[l+1], buf, c, 3);
 				// Accumulate back
 				#pragma omp for schedule(static) nowait
-				for (int i=0;i<fn_nodes;i++) xLv[l][3*i+c] += ws->tmp_xf[i];
+				for (int i=0;i<fn_nodes;i++) xLv[l][3*i+c] += buf[i];
 			}
-			// One barrier for all components before reusing tmp_xf
+			// One barrier for all components before proceeding
 			#pragma omp barrier
             
 			const auto& D = diag[l];
