@@ -14,12 +14,8 @@ struct KTimesUWorkspace {
     // Batched element forces: fMat[e * 24 + a] = force for element e, local DOF a
     std::vector<double> fMat;    // numElements * 24
 
-    // Precomputed scatter indices (built once per problem)
-    // scatterIdx[k] = element_idx * 24 + local_dof (index into fMat)
-    // Grouped by global_free_dof for efficient accumulation
-    std::vector<int32_t> scatterIdx;
-    std::vector<int32_t> dofBoundaries;  // boundaries[i] = start of DOF i in scatterIdx
-    bool scatterIndexBuilt = false;
+	// Thread-local storage for scatter
+	std::vector<std::vector<double>> y_thread_local;
 
     int numElements = 0;
     size_t numFreeDofs = 0;
@@ -30,8 +26,12 @@ struct KTimesUWorkspace {
         numFreeDofs = nFreeDofs;
         uMat.resize(static_cast<size_t>(nElements) * 24);
         fMat.resize(static_cast<size_t>(nElements) * 24);
-        scatterIndexBuilt = false;  // Need to rebuild scatter indices
     }
+
+	void resize_thread_local(int nthreads, size_t nFreeDofs) {
+		if (y_thread_local.size() == nthreads) return;
+		y_thread_local.resize(nthreads, std::vector<double>(nFreeDofs));
+	}
 };
 
 std::array<double,24*24> ComputeVoxelKe(double nu, double cellSize);
