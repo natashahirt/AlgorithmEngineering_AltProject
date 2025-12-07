@@ -747,7 +747,10 @@ static inline void ProcessBlock_8_Free(
 	}
 }
 
-// New implementation with thread-local accumulators (no coloring barriers)
+// MATLAB-style batched K*u implementation
+// Step 1: Gather all element displacements into uMat (numElements x 24)
+// Step 2: Batch matrix multiply: fMat = uMat * Ke^T, then scale by Ee
+// Step 3: Scatter using precomputed sorted indices (no atomics)
 void K_times_u_finest(const Problem& pb,
                       const std::vector<double>& eleModulus,
                       const std::vector<double>& uFree,
@@ -757,93 +760,155 @@ void K_times_u_finest(const Problem& pb,
 	const auto& mesh = pb.mesh;
 	const auto& Ke   = mesh.Ke;
 	const int numElements = mesh.numElements;
-	const size_t numDOFs = uFree.size();
+	const size_t numFreeDofs = uFree.size();
 
 	// Zero output
-	if (yFree.size() != numDOFs) yFree.assign(numDOFs, 0.0);
+	if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
 	else std::fill(yFree.begin(), yFree.end(), 0.0);
+
+	// Resize workspace
+	ws.resize(numElements, numFreeDofs);
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	const double* __restrict__ Kptr = Ke.data();
-	const double* __restrict__ uF   = uFree.data();
+	const double* __restrict__ uF = uFree.data();
+	double* __restrict__ uMat = ws.uMat.data();
+	double* __restrict__ fMat = ws.fMat.data();
+	double* __restrict__ yF_out = yFree.data();
 
-#if defined(_OPENMP)
-	int maxThreads = omp_get_max_threads();
-	bool useParallel = (maxThreads > 1) && (numElements > 1000);
-#else
-	int maxThreads = 1;
-	bool useParallel = false;
-#endif
-
-	if (useParallel) {
-#if defined(_OPENMP)
-		double* __restrict__ yF_out = yFree.data();
-
-		// Element-by-element with atomics
-		// Column-major matvec: fe[i] = sum_j K[i][j] * ue[j]
-		// Rewritten as: fe = sum_j K[:,j] * ue[j] for better vectorization
-		#pragma omp parallel
-		{
-			alignas(64) double ue[24];
-			alignas(64) double fe[24];
-
-			#pragma omp for schedule(static)
-			for (int e = 0; e < numElements; ++e) {
-				const double Eval = eleModulus[e];
-				if (Eval <= 1.0e-16) continue;
-
-				const int32_t* __restrict__ ed = eDofFree + 24 * e;
-
-				// Gather
-				for (int a = 0; a < 24; ++a) {
-					int idx = ed[a];
-					ue[a] = (idx >= 0) ? uF[idx] : 0.0;
-				}
-
-				// Local matvec: fe = Ke * ue
-				// Column-major approach: fe = sum_j K[:,j] * ue[j]
-				// This allows vectorizing over the 24 rows
-				for (int i = 0; i < 24; ++i) fe[i] = 0.0;
-
-				for (int j = 0; j < 24; ++j) {
-					double uj = ue[j] * Eval;
-					// K is row-major: K[i][j] = Kptr[i*24 + j]
-					// For column j, elements are at Kptr[0*24+j], Kptr[1*24+j], ...
-					// Stride of 24 - not ideal for vectorization but
-					// let's let the compiler try
-					for (int i = 0; i < 24; ++i) {
-						fe[i] += Kptr[i * 24 + j] * uj;
-					}
-				}
-
-				// Scatter with atomics
-				for (int a = 0; a < 24; ++a) {
-					int idx = ed[a];
-					if (idx >= 0) {
-						#pragma omp atomic
-						yF_out[idx] += fe[a];
-					}
+	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
+	if (!ws.scatterIndexBuilt) {
+		// Count contributions per DOF
+		std::vector<int> dofCount(numFreeDofs + 1, 0);
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* ed = eDofFree + 24 * e;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				if (idx >= 0) dofCount[idx + 1]++;
+			}
+		}
+		// Prefix sum to get boundaries
+		ws.dofBoundaries.resize(numFreeDofs + 1);
+		ws.dofBoundaries[0] = 0;
+		for (size_t i = 1; i <= numFreeDofs; ++i) {
+			ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
+		}
+		// Fill scatter indices (just the fMat index, grouped by output DOF)
+		size_t totalPairs = ws.dofBoundaries[numFreeDofs];
+		ws.scatterIdx.resize(totalPairs);
+		std::vector<int> dofPos(numFreeDofs, 0);
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* ed = eDofFree + 24 * e;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				if (idx >= 0) {
+					int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
+					ws.scatterIdx[pos] = e * 24 + a;
 				}
 			}
 		}
-#endif
-	} else {
-		// Serial fallback
-		const double (* __restrict__ K2D)[24] =
-			reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
-		constexpr int BS = 8;
-		int eIdx[BS];
-		int e = 0;
-		for (; e <= numElements - BS; e += BS) {
-			for (int k = 0; k < BS; k++) eIdx[k] = e + k;
-			ProcessBlock_8_Free<BS>(eIdx, BS, eDofFree, K2D, eleModulus.data(), uF, yFree.data());
+		ws.scatterIndexBuilt = true;
+	}
+
+#if defined(_OPENMP)
+	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
+	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
+
+	// Single parallel region for all three steps to reduce barrier overhead
+	#pragma omp parallel
+	{
+		// ============ STEP 1: Parallel Gather ============
+		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* __restrict__ ed = eDofFree + 24 * e;
+			double* __restrict__ uRow = uMat + e * 24;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+			}
 		}
-		if (e < numElements) {
-			int count = 0;
-			for (; e < numElements; e++) eIdx[count++] = e;
-			ProcessBlock_8_Free<BS>(eIdx, count, eDofFree, K2D, eleModulus.data(), uF, yFree.data());
+
+		// ============ STEP 2: Batched Matrix Multiply ============
+		// fMat[e,:] = uMat[e,:] * Ke * Ee[e]
+		// Need barrier here because matvec reads uMat written by gather
+		#pragma omp barrier
+
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const double Eval = eleModulus[e];
+			const double* __restrict__ uRow = uMat + e * 24;
+			double* __restrict__ fRow = fMat + e * 24;
+
+			if (Eval <= 1.0e-16) {
+				for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+			} else {
+				// fRow[i] = sum_j uRow[j] * Ke[j][i] * Eval
+				for (int i = 0; i < 24; ++i) {
+					double sum = 0.0;
+					for (int j = 0; j < 24; ++j) {
+						sum += uRow[j] * Kptr[j * 24 + i];
+					}
+					fRow[i] = sum * Eval;
+				}
+			}
+		}
+
+		// ============ STEP 3: Parallel Scatter (no atomics) ============
+		// Need barrier here because scatter reads fMat written by matvec
+		#pragma omp barrier
+
+		#pragma omp for schedule(static)
+		for (size_t d = 0; d < numFreeDofs; ++d) {
+			double sum = 0.0;
+			int start = dofBnd[d];
+			int end = dofBnd[d + 1];
+			for (int k = start; k < end; ++k) {
+				sum += fMat[scatIdx[k]];
+			}
+			yF_out[d] = sum;
 		}
 	}
+
+#else
+	// Serial fallback
+	// Step 1: Gather
+	for (int e = 0; e < numElements; ++e) {
+		const int32_t* ed = eDofFree + 24 * e;
+		double* uRow = uMat + e * 24;
+		for (int a = 0; a < 24; ++a) {
+			int idx = ed[a];
+			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+		}
+	}
+	// Step 2: Matvec
+	for (int e = 0; e < numElements; ++e) {
+		const double Eval = eleModulus[e];
+		const double* uRow = uMat + e * 24;
+		double* fRow = fMat + e * 24;
+		if (Eval <= 1.0e-16) {
+			for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+		} else {
+			for (int i = 0; i < 24; ++i) {
+				double sum = 0.0;
+				for (int j = 0; j < 24; ++j) {
+					sum += uRow[j] * Kptr[j * 24 + i];
+				}
+				fRow[i] = sum * Eval;
+			}
+		}
+	}
+	// Step 3: Scatter
+	for (size_t d = 0; d < numFreeDofs; ++d) {
+		double sum = 0.0;
+		int start = ws.dofBoundaries[d];
+		int end = ws.dofBoundaries[d + 1];
+		for (int k = start; k < end; ++k) {
+			sum += fMat[ws.scatterIdx[k]];
+		}
+		yF_out[d] = sum;
+	}
+#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)

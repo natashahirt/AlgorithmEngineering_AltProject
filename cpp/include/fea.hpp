@@ -2,28 +2,35 @@
 #include "core.hpp"
 #include <array>
 #include <vector>
+#include <cstdint>
 
 namespace top3d {
 
-// Workspace for K_times_u with thread-local accumulators
-// Allocate once, reuse across all matvec calls to avoid repeated allocation
+// Workspace for batched K*u (MATLAB-style)
+// Stores intermediate matrices for batch matvec + sorting-based scatter
 struct KTimesUWorkspace {
-    // Flat storage: threadLocalY_flat[t * numDOFs + i] for thread t, DOF i
-    // This layout allows better cache reuse during reduction
-    std::vector<double> threadLocalY_flat;
-    int numThreads = 0;
-    size_t numDOFs = 0;
+    // Batched element displacements: uMat[e * 24 + a] = displacement for element e, local DOF a
+    std::vector<double> uMat;    // numElements * 24
+    // Batched element forces: fMat[e * 24 + a] = force for element e, local DOF a
+    std::vector<double> fMat;    // numElements * 24
 
-    void resize(int nThreads, size_t nDOFs) {
-        if (numThreads == nThreads && numDOFs == nDOFs) return;
-        numThreads = nThreads;
-        numDOFs = nDOFs;
-        threadLocalY_flat.resize(static_cast<size_t>(nThreads) * nDOFs, 0.0);
-    }
+    // Precomputed scatter indices (built once per problem)
+    // scatterIdx[k] = element_idx * 24 + local_dof (index into fMat)
+    // Grouped by global_free_dof for efficient accumulation
+    std::vector<int32_t> scatterIdx;
+    std::vector<int32_t> dofBoundaries;  // boundaries[i] = start of DOF i in scatterIdx
+    bool scatterIndexBuilt = false;
 
-    // Get pointer to thread t's buffer
-    double* getThreadBuffer(int t) {
-        return threadLocalY_flat.data() + static_cast<size_t>(t) * numDOFs;
+    int numElements = 0;
+    size_t numFreeDofs = 0;
+
+    void resize(int nElements, size_t nFreeDofs) {
+        if (numElements == nElements && numFreeDofs == nFreeDofs) return;
+        numElements = nElements;
+        numFreeDofs = nFreeDofs;
+        uMat.resize(static_cast<size_t>(nElements) * 24);
+        fMat.resize(static_cast<size_t>(nElements) * 24);
+        scatterIndexBuilt = false;  // Need to rebuild scatter indices
     }
 };
 

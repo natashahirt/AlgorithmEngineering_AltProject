@@ -11,6 +11,17 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 endif()
 
+# Find BLAS for batched matrix operations
+# On macOS: uses Accelerate framework
+# On Linux: uses OpenBLAS or other BLAS implementation
+find_package(BLAS)
+if (BLAS_FOUND)
+    message(STATUS "BLAS found: ${BLAS_LIBRARIES}")
+    add_compile_definitions(HAVE_BLAS)
+else()
+    message(STATUS "BLAS not found - using manual implementation")
+endif()
+
 add_library(top3d_xl
     src/core.cpp
     src/fea.cpp
@@ -50,4 +61,9 @@ target_link_libraries(top3d_xl_cli PRIVATE top3d_xl)
 find_package(OpenMP REQUIRED)
 if (OpenMP_CXX_FOUND)
     target_link_libraries(top3d_xl PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# Link BLAS if found
+if (BLAS_FOUND)
+    target_link_libraries(top3d_xl PUBLIC ${BLAS_LIBRARIES})
 endif()
