@@ -819,13 +819,15 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
-	// No OpenMP here - let BLAS handle threading internally (set MKL_NUM_THREADS)
-	// Gather and scatter are memory-bound, explicit parallelism adds barrier overhead
+	// Parallel gather/scatter, single-threaded BLAS (MKL_NUM_THREADS=1 is optimal for 24x24)
 	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
 
-	// ============ STEP 1: Gather ============
+	// ============ STEP 1: Parallel Gather ============
+#if defined(_OPENMP)
+	#pragma omp parallel for schedule(static)
+#endif
 	for (int e = 0; e < numElements; ++e) {
 		const int32_t* __restrict__ ed = eDofFree + 24 * e;
 		double* __restrict__ uRow = uMat + e * 24;
@@ -835,8 +837,8 @@ void K_times_u_finest(const Problem& pb,
 		}
 	}
 
-	// ============ STEP 2: BLAS matrix multiply ============
-	// fMat = uMat * Ke^T  (let MKL use MKL_NUM_THREADS for parallelism)
+	// ============ STEP 2: BLAS matrix multiply (single-threaded, MKL_NUM_THREADS=1) ============
+	// 24x24 matrix is too small for multi-threaded BLAS - threading overhead dominates
 #ifdef HAVE_CBLAS
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
 	            numElements, 24, 24,
@@ -855,7 +857,10 @@ void K_times_u_finest(const Problem& pb,
 	}
 #endif
 
-	// ============ STEP 3: Scale and scatter ============
+	// ============ STEP 3: Parallel Scale and Scatter ============
+#if defined(_OPENMP)
+	#pragma omp parallel for schedule(static)
+#endif
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
 		const int start = dofBnd[d];
