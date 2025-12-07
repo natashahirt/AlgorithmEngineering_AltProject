@@ -819,31 +819,68 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
-	// Parallel gather/scatter, single-threaded BLAS (MKL_NUM_THREADS=1 is optimal for 24x24)
+	// Single parallel region - avoid fork/join overhead between phases
 	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
 
-	// ============ STEP 1: Parallel Gather ============
 #if defined(_OPENMP)
-	#pragma omp parallel for schedule(static)
-#endif
+	#pragma omp parallel
+	{
+		// ============ STEP 1: Parallel Gather ============
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* __restrict__ ed = eDofFree + 24 * e;
+			double* __restrict__ uRow = uMat + e * 24;
+			for (int a = 0; a < 24; ++a) {
+				const int idx = ed[a];
+				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+			}
+		}
+		// Implicit barrier after omp for
+
+		// ============ STEP 2: Parallel Matrix Multiply (manual, no BLAS) ============
+		// Avoids MKL/OpenMP threading conflict entirely
+		// fMat[e] = uMat[e] * Ke^T for each element
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; ++e) {
+			const double* __restrict__ uRow = uMat + e * 24;
+			double* __restrict__ fRow = fMat + e * 24;
+			// Compute fRow = uRow * Ke^T (i.e., fRow[i] = sum_j uRow[j] * Ke[j][i])
+			for (int i = 0; i < 24; ++i) {
+				double sum = 0.0;
+				for (int j = 0; j < 24; ++j) {
+					sum += uRow[j] * Kptr[j * 24 + i];
+				}
+				fRow[i] = sum;
+			}
+		}
+		// Implicit barrier after omp for
+
+		// ============ STEP 3: Parallel Scale and Scatter ============
+		#pragma omp for schedule(static)
+		for (size_t d = 0; d < numFreeDofs; ++d) {
+			double sum = 0.0;
+			const int start = dofBnd[d];
+			const int end = dofBnd[d + 1];
+			for (int k = start; k < end; ++k) {
+				const int fMatIdx = scatIdx[k];
+				const int elemIdx = fMatIdx / 24;
+				sum += fMat[fMatIdx] * Ee[elemIdx];
+			}
+			yF_out[d] = sum;
+		}
+	}
+#else
+	// Serial fallback
 	for (int e = 0; e < numElements; ++e) {
-		const int32_t* __restrict__ ed = eDofFree + 24 * e;
-		double* __restrict__ uRow = uMat + e * 24;
+		const int32_t* ed = eDofFree + 24 * e;
+		double* uRow = uMat + e * 24;
 		for (int a = 0; a < 24; ++a) {
-			const int idx = ed[a];
+			int idx = ed[a];
 			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 		}
 	}
-
-	// ============ STEP 2: BLAS matrix multiply (single-threaded, MKL_NUM_THREADS=1) ============
-	// 24x24 matrix is too small for multi-threaded BLAS - threading overhead dominates
-#ifdef HAVE_CBLAS
-	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-	            numElements, 24, 24,
-	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
-#else
 	for (int e = 0; e < numElements; ++e) {
 		const double* uRow = uMat + e * 24;
 		double* fRow = fMat + e * 24;
@@ -855,12 +892,6 @@ void K_times_u_finest(const Problem& pb,
 			fRow[i] = sum;
 		}
 	}
-#endif
-
-	// ============ STEP 3: Parallel Scale and Scatter ============
-#if defined(_OPENMP)
-	#pragma omp parallel for schedule(static)
-#endif
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
 		const int start = dofBnd[d];
@@ -872,6 +903,7 @@ void K_times_u_finest(const Problem& pb,
 		}
 		yF_out[d] = sum;
 	}
+#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)
