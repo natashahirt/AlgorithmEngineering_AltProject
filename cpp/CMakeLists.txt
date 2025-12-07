@@ -32,13 +32,8 @@ if(BLAS_FOUND)
         message(STATUS "CBLAS header found: ${CBLAS_INCLUDE_DIR}")
     endif()
 else()
-    find_library(CBLAS_STATIC_LIB
-            NAMES cblas)
-    if(CBLAS_STATIC_LIB)
-        message(STATUS "Found CBLAS but no full BLAS package")
-        add_compile_definitions(HAVE_CBLAS)
-    endif()
-    message(STATUS "BLAS not found - using manual implementation")
+    add_compile_definitions(HAVE_CBLAS)
+    message(STATUS "BLAS not found - using manual implementation. Still enabling, but ensure you have the module loaded")
 endif()
 
 add_library(top3d_xl
@@ -54,6 +49,7 @@ add_library(top3d_xl
     src/multigrid/preconditioner.cpp
     src/io.cpp
     src/driver.cpp
+        include/cblas.h
 )
 
 target_include_directories(top3d_xl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
