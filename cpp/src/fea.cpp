@@ -10,14 +10,7 @@
 #include <omp.h>
 #endif
 
-// CBLAS for optimized matrix operations
-#ifdef HAVE_CBLAS
-  #ifdef __APPLE__
-    #include <Accelerate/Accelerate.h>
-  #else
-    #include <cblas.h>
-  #endif
-#endif
+
 
 namespace top3d {
 
@@ -846,7 +839,7 @@ void K_times_u_finest(const Problem& pb,
 		// Use single thread for BLAS call (BLAS may use internal threading)
 		#pragma omp single
 		{
-#ifdef HAVE_CBLAS
+#if 0
 			// Use CBLAS for the big matrix multiply:
 			// fMat (M x N) = uMat (M x K) * Ke^T (K x N)
 			// where M = numElements, K = 24, N = 24
@@ -918,7 +911,7 @@ void K_times_u_finest(const Problem& pb,
 	}
 
 	// Step 2: Matvec using CBLAS if available
-#ifdef HAVE_CBLAS
+#if 0
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
 	            numElements, 24, 24,
 	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
