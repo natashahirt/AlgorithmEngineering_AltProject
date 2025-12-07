@@ -149,67 +149,66 @@ int PCG_free(const Problem& pb,
     const double stop_tol = std::max(1.0e-30, normb) * tol; // Pre-calc threshold
 
     // --- MAIN LOOP ---
-    // Fused operations to minimize parallel region overhead
+    // Use raw pointers for better optimization
+    double* __restrict__ r_ptr = r.data();
+    double* __restrict__ z_ptr_w = z.data();
+    double* __restrict__ p_ptr = p.data();
+    double* __restrict__ Ap_ptr = Ap.data();
+    double* __restrict__ x_ptr = xFree.data();
+
     for (int it = 0; it < maxIt; ++it) {
 
-        // 4. Matrix-Vector Multiplication (The Heavy Lifter)
+        // 1. Matrix-Vector Multiplication
         K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-        // 5-6. Fused: dot(p,Ap) + x update + r update + rnorm2
+        // 2. Compute denom = dot(p, Ap)
         double denom = 0.0;
-        double rnorm2 = 0.0;
-
-        #pragma omp parallel for reduction(+:denom,rnorm2)
+        #pragma omp parallel for reduction(+:denom) schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            double pi = p[i];
-            double Api = Ap[i];
-            denom += pi * Api;  // For alpha = rz_old / denom
-
-            // Can't update x,r yet - need alpha first
+            denom += p_ptr[i] * Ap_ptr[i];
         }
 
         double alpha = rz_old / std::max(1.0e-30, denom);
 
-        // Update x, r, and compute rnorm2 in single pass
-        #pragma omp parallel for reduction(+:rnorm2)
+        // 3. Update x, r and compute rnorm2
+        double rnorm2 = 0.0;
+        #pragma omp parallel for reduction(+:rnorm2) schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            xFree[i] += alpha * p[i];
-            double val_r = r[i] - alpha * Ap[i];
-            r[i] = val_r;
+            x_ptr[i] += alpha * p_ptr[i];
+            double val_r = r_ptr[i] - alpha * Ap_ptr[i];
+            r_ptr[i] = val_r;
             rnorm2 += val_r * val_r;
         }
 
-        // Convergence Check (Fast fail)
+        // Convergence Check
         if (std::sqrt(rnorm2) < stop_tol) return it + 1;
 
-        // 7-8. Preconditioner, rz_new, beta, and p update
-        double rz_new = 0.0;
-
+        // 4. Preconditioner
         if (M) {
-            M(r, z); // Writes to ws.z - has its own parallel region
+            M(r, z);
 
-            // Compute rz_new = dot(r, z)
-            #pragma omp parallel for reduction(+:rz_new)
+            // 5. Compute rz_new = dot(r, z)
+            double rz_new = 0.0;
+            #pragma omp parallel for reduction(+:rz_new) schedule(static)
             for (size_t i = 0; i < n; ++i) {
-                rz_new += r[i] * z[i];
+                rz_new += r_ptr[i] * z_ptr_w[i];
             }
 
             double beta = rz_new / std::max(1.0e-30, rz_old);
             rz_old = rz_new;
 
-            // p = z + beta * p
-            #pragma omp parallel for
+            // 6. p = z + beta * p
+            #pragma omp parallel for schedule(static)
             for (size_t i = 0; i < n; ++i) {
-                p[i] = z[i] + beta * p[i];
+                p_ptr[i] = z_ptr_w[i] + beta * p_ptr[i];
             }
         } else {
-            // No preconditioner: z == r, so rz_new == rnorm2
             double beta = rnorm2 / std::max(1.0e-30, rz_old);
             rz_old = rnorm2;
 
-            #pragma omp parallel for
+            #pragma omp parallel for schedule(static)
             for (size_t i = 0; i < n; ++i) {
-                p[i] = r[i] + beta * p[i];
+                p_ptr[i] = r_ptr[i] + beta * p_ptr[i];
             }
         }
     }
