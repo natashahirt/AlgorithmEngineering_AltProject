@@ -19,7 +19,7 @@ Preconditioner make_jacobi_preconditioner(const Problem& pb, const std::vector<d
 
 int PCG_free(const Problem&, const std::vector<double>& eleE,
              const std::vector<double>& bFree, std::vector<double>& xFree,
-             double tol, int maxIt, Preconditioner M,
+             double tol, int maxIt, const Preconditioner& M,
              PCGFreeWorkspace& ws);
 
 } // namespace top3d

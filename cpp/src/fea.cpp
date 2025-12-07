@@ -681,69 +681,85 @@ static inline double compute_compliance_kernel(
 // Helper to process a batch of 8 elements using SIMD directly on free DOFs
 template <int BLOCK_SIZE = 8>
 static inline void ProcessBlock_8_Free(
-	const int* __restrict__ eIndices,
-	int count,
-	const int32_t* __restrict__ eDofFree,
-	const double (* __restrict__ K2D)[24],
-	const double* __restrict__ Ee,
-	const double* __restrict__ uFree,
-	double* __restrict__ yFree
+        const int* __restrict__ eIndices,
+        int count,
+        const int32_t* __restrict__ eDofFree,
+        const double (* __restrict__ K2D)[24],
+        const double* __restrict__ Ee,
+        const double* __restrict__ uFree,
+        double* __restrict__ yFree
 ) {
-	alignas(64) double ue[24][BLOCK_SIZE];
-	alignas(64) double fe[24][BLOCK_SIZE];
-	double Ee_vals[BLOCK_SIZE];
+    // 1. Setup Local Data (Aligned)
+    // Initialize ue to 0.0 to handle the padding (k >= count) automatically
+    alignas(64) double ue[24][BLOCK_SIZE] = {0};
+    alignas(64) double fe[24][BLOCK_SIZE]; // No init needed, we write it fully
+    double Ee_vals[BLOCK_SIZE];
 
-	// 1. Gather Displacements & Moduli
-	for (int k = 0; k < count; ++k) {
-		int e = eIndices[k];
-		Ee_vals[k] = Ee[e];
-		const int32_t* __restrict__ ed = eDofFree + 24 * e;
-		
-		// Unrolled gather of 24 DOFs
-		#pragma GCC unroll 24
-		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
-			if (idx >= 0) ue[a][k] = uFree[idx];
-            else ue[a][k] = 0.0;
-		}
-	}
-	// Pad remainder
-	for (int k = count; k < BLOCK_SIZE; ++k) {
-		Ee_vals[k] = 0.0;
-		for(int i=0; i<24; ++i) ue[i][k] = 0.0;
-	}
+    // Pre-load Young's Modulus for the batch
+    // We use a safe mask approach for the remainder to avoid bounds checks
+    for (int k = 0; k < count; ++k) Ee_vals[k] = Ee[eIndices[k]];
+    for (int k = count; k < BLOCK_SIZE; ++k) Ee_vals[k] = 0.0;
 
-	// 2. Matrix-Vector Product: fe = Ke * ue
-	#pragma GCC unroll 24
-	for (int i = 0; i < 24; ++i) {
-		#pragma omp simd
-		for (int k = 0; k < BLOCK_SIZE; ++k) fe[i][k] = 0.0;
-		#pragma GCC unroll 24
-		for (int j = 0; j < 24; ++j) {
-			double Kij = K2D[i][j];
-			#pragma omp simd
-			for (int k = 0; k < BLOCK_SIZE; ++k) {
-				fe[i][k] += Kij * ue[j][k];
-			}
-		}
-	}
+    // 2. OPTIMIZED GATHER: Loop Interchange + Branchless
+    // Iterate 'a' outside so 'ue[a][k]' access is contiguous
+#pragma GCC unroll 24
+    for (int a = 0; a < 24; ++a) {
+        // SIMD-friendly loop over the block
+#pragma omp simd
+        for (int k = 0; k < count; ++k) {
+            int e = eIndices[k];
+            // Calc index: base_dof_ptr + row offset
+            // Note: This integer math is fast enough to repeat 24 times
+            int idx = eDofFree[e * 24 + a];
 
-	// 3. Scatter Forces
-	for (int k = 0; k < count; ++k) {
-		double Eval = Ee_vals[k];
-		if (Eval <= 1.0e-16) continue;
+            // Branchless Dirichlet Handling:
+            // If idx == -1, we read from uFree[0] (safe garbage) but multiply by 0.0
+            // This prevents SIMD lane divergence caused by 'if (idx >= 0)'
+            int safe_idx = (idx != -1) ? idx : 0;
+            double mask  = (idx != -1) ? 1.0 : 0.0;
 
-		int e = eIndices[k];
-		const int32_t* __restrict__ ed = eDofFree + 24 * e;
+            ue[a][k] = uFree[safe_idx] * mask;
+        }
+    }
 
-		#pragma GCC unroll 24
-		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
-			if (idx >= 0) {
-				yFree[idx] += fe[a][k] * Eval;
-			}
-		}
-	}
+    // 3. COMPUTE: Matrix-Vector Product (Unchanged, your logic was good)
+    // fe = Ke * ue
+#pragma GCC unroll 24
+    for (int i = 0; i < 24; ++i) {
+        // Initialize accumulator in register
+#pragma omp simd
+        for (int k = 0; k < BLOCK_SIZE; ++k) fe[i][k] = 0.0;
+
+#pragma GCC unroll 24
+        for (int j = 0; j < 24; ++j) {
+            double Kij = K2D[i][j];
+#pragma omp simd
+            for (int k = 0; k < BLOCK_SIZE; ++k) {
+                fe[i][k] += Kij * ue[j][k];
+            }
+        }
+    }
+
+    // 4. OPTIMIZED SCATTER: Loop Interchange
+    // Again, 'a' outside ensures we read 'fe[a][k]' contiguously
+#pragma GCC unroll 24
+    for (int a = 0; a < 24; ++a) {
+        // We cannot vector-scatter easily without AVX-512,
+        // but contiguous reads of fe[][] help significantly.
+        for (int k = 0; k < count; ++k) {
+            double Eval = Ee_vals[k];
+            // Fast skip for empty elements (topology opt feature)
+            if (Eval <= 1.0e-16) continue;
+
+            int e = eIndices[k];
+            int idx = eDofFree[e * 24 + a];
+
+            if (idx >= 0) {
+                // No atomic needed due to Coloring
+                yFree[idx] += fe[a][k] * Eval;
+            }
+        }
+    }
 }
 
 void K_times_u_finest(const Problem& pb,
@@ -755,9 +771,10 @@ void K_times_u_finest(const Problem& pb,
 	const auto& Ke   = mesh.Ke;
 	const int numElements = mesh.numElements;
 
-    // Zero output
-    if (yFree.size() != uFree.size()) yFree.assign(uFree.size(), 0.0);
-    else std::fill(yFree.begin(), yFree.end(), 0.0);
+    // Initialize in parallel
+    if (yFree.size() != uFree.size()) yFree.resize(uFree.size());
+#pragma omp parallel for
+    for (size_t i = 0; i < yFree.size(); ++i) yFree[i] = 0.0;
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	const double* __restrict__ Kptr = Ke.data();

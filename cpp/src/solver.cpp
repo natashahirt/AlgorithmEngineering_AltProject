@@ -2,6 +2,10 @@
 #include "fea.hpp"
 #include "solver.hpp"
 #include <algorithm>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <cmath>
 
@@ -72,91 +76,134 @@ Preconditioner make_jacobi_preconditioner(const Problem& pb, const std::vector<d
 	};
 }
 
+double parallel_dot(const std::vector<double>& a, const std::vector<double>& b) {
+    double sum = 0.0;
+#pragma omp parallel for reduction(+:sum)
+    for (size_t i = 0; i < a.size(); ++i) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+
+
 int PCG_free(const Problem& pb,
-			  const std::vector<double>& eleModulus,
-			  const std::vector<double>& bFree,
-			  std::vector<double>& xFree,
-			  double tol, int maxIt,
-			  Preconditioner M,
-			  PCGFreeWorkspace& ws) {
-	std::vector<double>& r  = ws.r;
-	std::vector<double>& z  = ws.z;
-	std::vector<double>& p  = ws.p;
-	std::vector<double>& Ap = ws.Ap;
+               const std::vector<double>& eleModulus,
+               const std::vector<double>& bFree,
+               std::vector<double>& xFree,
+               double tol, int maxIt,
+               const Preconditioner& M, // std::function<void(const vector&, vector&)>
+               PCGFreeWorkspace& ws) {
 
-	// Ensure workspace size
-	if (r.size() != bFree.size()) {
-		r.resize(bFree.size());
-		z.resize(bFree.size());
-		p.resize(bFree.size());
-		Ap.resize(bFree.size());
-	}
+    // 1. Setup Workspace without reallocation if possible
+    size_t n = bFree.size();
+    if (ws.r.size() != n) {
+        ws.r.resize(n);
+        ws.z.resize(n); // Only needed if M is present, but keep for safety
+        ws.p.resize(n);
+        ws.Ap.resize(n);
+    }
 
-	// r = b
-	std::copy(bFree.begin(), bFree.end(), r.begin());
+    // Direct references for cleaner syntax
+    std::vector<double>& r = ws.r;
+    std::vector<double>& z = ws.z;
+    std::vector<double>& p = ws.p;
+    std::vector<double>& Ap = ws.Ap;
 
-	// r = b - A*x (if nonzero initial guess)
-	if (!xFree.empty()) {
-		K_times_u_finest(pb, eleModulus, xFree, Ap);
-		#pragma omp parallel for
-		for (size_t i=0;i<r.size();++i) r[i] -= Ap[i];
-	} else {
-		xFree.assign(r.size(), 0.0);
-	}
+    // 2. Initialization
+    // r = b
+#pragma omp parallel for
+    for (size_t i = 0; i < n; ++i) r[i] = bFree[i];
 
-	if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
-	
-	double rz_old = 0.0;
-	#pragma omp parallel for reduction(+:rz_old)
-	for (size_t i=0; i<r.size(); ++i) rz_old += r[i] * z[i];
-	
-	std::copy(z.begin(), z.end(), p.begin());
+    // r = b - A*x
+    if (!xFree.empty()) {
+        K_times_u_finest(pb, eleModulus, xFree, Ap);
+#pragma omp parallel for
+        for (size_t i = 0; i < n; ++i) r[i] -= Ap[i];
+    } else {
+        xFree.assign(n, 0.0);
+    }
 
-	double normb2 = 0.0;
-	#pragma omp parallel for reduction(+:normb2)
-	for (size_t i=0; i<bFree.size(); ++i) normb2 += bFree[i] * bFree[i];
-	const double normb = std::sqrt(normb2);
+    // 3. Preconditioning Setup (Zero-Copy Logic)
+    // If M exists, we write to z. If not, we point to r.
+    const double* z_ptr = r.data();
+    if (M) {
+        M(r, z);
+        z_ptr = z.data(); // Point to z data
+    }
+    // Note: If !M, we skipped the std::copy entirely!
 
-	for (int it=0; it<maxIt; ++it) {
-		// Ap = A * p
-		K_times_u_finest(pb, eleModulus, p, Ap);
+    // Initial rz_old
+    double rz_old = 0.0;
+    if (M) {
+        rz_old = parallel_dot(r, z);
+    } else {
+        // If z == r, dot(r, z) == dot(r, r)
+        rz_old = parallel_dot(r, r);
+    }
 
-		// denom = p·Ap
-		double denom = 0.0;
-		#pragma omp parallel for reduction(+:denom)
-		for (size_t i=0;i<p.size();++i) denom += p[i] * Ap[i];
-		
-		denom = std::max(1.0e-30, denom);
-		double alpha = rz_old / denom;
+    // p = z (First iteration copy is unavoidable but fast)
+#pragma omp parallel for
+    for (size_t i = 0; i < n; ++i) p[i] = z_ptr[i];
 
-		// Fused updates of x and r and residual norm
-		double rnorm2 = 0.0;
-		#pragma omp parallel for reduction(+:rnorm2)
-		for (size_t i=0;i<p.size();++i) {
-			xFree[i] += alpha * p[i];
-			r[i]     -= alpha * Ap[i];
-			rnorm2   += r[i] * r[i];
-		}
-		double res = std::sqrt(rnorm2) / std::max(1.0e-30, normb);
-		if (res < tol) return it+1;
+    // Calculate normb for convergence check
+    double normb2 = parallel_dot(bFree, bFree);
+    const double normb = std::sqrt(normb2);
+    const double stop_tol = std::max(1.0e-30, normb) * tol; // Pre-calc threshold
 
-		if (M) M(r, z); else std::copy(r.begin(), r.end(), z.begin());
-		double rz_new;
-		if (M) {
-			// Parallelize dot product for rz_new
-			rz_new = 0.0;
-			#pragma omp parallel for reduction(+:rz_new)
-			for (size_t i=0; i<r.size(); ++i) rz_new += r[i] * z[i];
-		} else {
-			// z == r
-			rz_new = rnorm2;
-		}
-		double beta = rz_new / std::max(1.0e-30, rz_old);
-		#pragma omp parallel for
-		for (size_t i=0;i<p.size();++i) p[i] = z[i] + beta * p[i];
-		rz_old = rz_new;
-	}
-	return maxIt;
+    // --- MAIN LOOP ---
+    for (int it = 0; it < maxIt; ++it) {
+
+        // 4. Matrix-Vector Multiplication (The Heavy Lifter)
+        K_times_u_finest(pb, eleModulus, p, Ap);
+
+        // 5. Alpha Calculation
+        double denom = parallel_dot(p, Ap);
+        double alpha = rz_old / std::max(1.0e-30, denom);
+
+        // 6. Fused Update: x, r, and rnorm2
+        // We avoid separate loops to keep data in cache
+        double rnorm2 = 0.0;
+
+#pragma omp parallel for reduction(+:rnorm2)
+        for (size_t i = 0; i < n; ++i) {
+            double pi = p[i];
+            double Api = Ap[i];
+
+            xFree[i] += alpha * pi;
+            double val_r = r[i] - alpha * Api;
+            r[i] = val_r;
+            rnorm2 += val_r * val_r;
+        }
+
+        // Convergence Check (Fast fail)
+        if (std::sqrt(rnorm2) < stop_tol) return it + 1;
+
+        // 7. Preconditioner & Beta Calculation
+        double rz_new = 0.0;
+
+        if (M) {
+            M(r, z); // Writes to ws.z
+            rz_new = parallel_dot(r, z);
+        } else {
+            // If No Preconditioner, z is effectively r
+            // rz_new is just r*r, which is exactly rnorm2!
+            // We save an entire dot product calculation here.
+            rz_new = rnorm2;
+        }
+
+        double beta = rz_new / std::max(1.0e-30, rz_old);
+        rz_old = rz_new;
+
+        // 8. Update p
+        // Use z_ptr to read from the correct source (z or r) without copying
+        // If !M, z_ptr points to r.
+#pragma omp parallel for
+        for (size_t i = 0; i < n; ++i) {
+            p[i] = z_ptr[i] + beta * p[i];
+        }
+    }
+
+    return maxIt;
 }
 
 } // namespace top3d
