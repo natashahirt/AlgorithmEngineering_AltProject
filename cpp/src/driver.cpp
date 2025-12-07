@@ -65,22 +65,30 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		std::vector<float> xPhys = x;
 		std::vector<double> ce(ne, 0.0);
 		std::vector<double> eleMod(ne, static_cast<double>(pb.params.youngsModulus));
+
+		// OPTIMIZATION: Reuse U and bFree allocations
+		DOFData U;
+		U.ux.assign(pb.mesh.numNodes, 0.0);
+		U.uy.assign(pb.mesh.numNodes, 0.0);
+		U.uz.assign(pb.mesh.numNodes, 0.0);
+		std::vector<double> bFree; 
+		restrict_to_free(pb, pb.F, bFree);
+
 		std::vector<double> uFreeWarm; // warm-start buffer for PCG
 		// PCG workspace reused across solves
 		PCGFreeWorkspace pcg_ws;
 
+		// Preconditioner reused across iterations
+		Preconditioner M;
+
 		// Solve fully solid for reference
 		{
 			tStart = std::chrono::steady_clock::now();
-			DOFData U;
-			U.ux.assign(pb.mesh.numNodes, 0.0);
-			U.uy.assign(pb.mesh.numNodes, 0.0);
-			U.uz.assign(pb.mesh.numNodes, 0.0);
-			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
 			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
-			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
-			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
+			// Local M for this specific solve state
+			auto M_solid = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M_solid, pcg_ws);
 			scatter_from_free(pb, uFree, U);
 			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
 			CsolidRef = Csolid;
@@ -114,15 +122,17 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			
 			// Solve KU=F
 			auto tSolveStart = std::chrono::steady_clock::now();
-			DOFData U;
-			U.ux.assign(pb.mesh.numNodes, 0.0);
-			U.uy.assign(pb.mesh.numNodes, 0.0);
-			U.uz.assign(pb.mesh.numNodes, 0.0);
-			std::vector<double> bFree; restrict_to_free(pb, pb.F, bFree);
+			// Reuse outer U, bFree
+
 			// Ensure warm-start vector matches current system size
 			if (uFreeWarm.size() != bFree.size()) uFreeWarm.assign(bFree.size(), 0.0f);
+			
 			// Reuse static MG context for current SIMP-modified modulus
-			auto M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			// OPTIMIZATION: Lazy preconditioner rebuild (every 5 iters)
+			if (loop == 1 || (loop % 5 == 0)) {
+				M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			}
+			
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);
 			scatter_from_free(pb, uFreeWarm, U);
 			auto tSolveTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tSolveStart).count();

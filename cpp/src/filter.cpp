@@ -78,41 +78,83 @@ static void MatTimesVec_PDE(const Problem& pb, const PDEFilter& pf, const std::v
 	const auto& mesh = pb.mesh;
 	const int numNodes    = mesh.numNodes;
 	const int numElements = mesh.numElements;
-	yNode.assign(numNodes, 0.0);
+	
+    // Resize if needed, but delay zeroing to parallel region
+    if (yNode.size() != numNodes) yNode.resize(numNodes);
+
 	const int* __restrict__ eNod = mesh.eNodMat.data();
 	// 2D view over the 8x8 kernel to aid autovectorization
 	const double (* __restrict__ K)[8] = reinterpret_cast<const double (*)[8]>(pf.kernel.data());
 #if defined(_OPENMP)
 	#pragma omp parallel
 	{
+        // Parallel Zeroing (Fixes cache coherence storm)
+        #pragma omp for schedule(static)
+        for (int i=0; i<numNodes; ++i) yNode[i] = 0.0;
+        
 		alignas(64) double u[8];
 		alignas(64) double f[8];
-		#pragma omp for schedule(static)
-		for (int e=0; e<numElements; ++e) {
-			const int base = e*8;
-			// gather
-			for (int a=0; a<8; ++a) {
-				const int n = eNod[base + a];
-				u[a] = xNode[n];
-			}
-			// f = K * u
-			for (int i=0; i<8; ++i) {
-				const double* __restrict__ Ki = K[i];
-				double sum = 0.0;
-				#pragma omp simd reduction(+:sum)
-				for (int j=0; j<8; ++j) sum += Ki[j]*u[j];
-				f[i] = sum;
-			}
-			// scatter with atomics
-			for (int a=0; a<8; ++a) {
-				const int n = eNod[base + a];
-				#pragma omp atomic update
-				yNode[n] += f[a];
-			}
-		}
+
+        if (mesh.coloring.numColors > 0) {
+            // COLORED PATH: No atomics needed
+            const auto& buckets = mesh.coloring.colorBuckets;
+            for (int c=0; c < mesh.coloring.numColors; ++c) {
+                const auto& elems = buckets[c];
+                int nElems = static_cast<int>(elems.size());
+                
+                #pragma omp for schedule(static) 
+                for (int i=0; i<nElems; ++i) {
+                    int e = elems[i];
+                    const int base = e*8;
+                    
+                    // gather
+                    for (int a=0; a<8; ++a) u[a] = xNode[eNod[base + a]];
+                    
+                    // f = K * u
+                    for (int k=0; k<8; ++k) {
+                        const double* __restrict__ Kk = K[k];
+                        double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (int j=0; j<8; ++j) sum += Kk[j]*u[j];
+                        f[k] = sum;
+                    }
+                    
+                    // scatter WITHOUT atomics (safe due to coloring)
+                    for (int a=0; a<8; ++a) {
+                        yNode[eNod[base + a]] += f[a];
+                    }
+                }
+            }
+        } else {
+            // FALLBACK: Atomic updates
+            #pragma omp for schedule(static)
+            for (int e=0; e<numElements; ++e) {
+                const int base = e*8;
+                // gather
+                for (int a=0; a<8; ++a) {
+                    const int n = eNod[base + a];
+                    u[a] = xNode[n];
+                }
+                // f = K * u
+                for (int i=0; i<8; ++i) {
+                    const double* __restrict__ Ki = K[i];
+                    double sum = 0.0;
+                    #pragma omp simd reduction(+:sum)
+                    for (int j=0; j<8; ++j) sum += Ki[j]*u[j];
+                    f[i] = sum;
+                }
+                // scatter with atomics
+                for (int a=0; a<8; ++a) {
+                    const int n = eNod[base + a];
+                    #pragma omp atomic update
+                    yNode[n] += f[a];
+                }
+            }
+        }
 	}
 #else
 	// Sequential fallback
+    std::fill(yNode.begin(), yNode.end(), 0.0);
 	for (int e=0; e<numElements; ++e) {
 		const int base = e*8;
 		alignas(64) double u[8];
@@ -140,7 +182,7 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 	}
 	// Solve (PDE kernel) * x = rhs with PCG and Jacobi precond
 	// Conditional warm-start: reuse lastX if rhs hasn't changed much
-	const double relThresh = 0.1; // relative RHS change threshold for warm-start
+	const double relThresh = 1000.0; // Aggressive warm-start
 	if ((int)pf.lastXNode.size() != nNodes) pf.lastXNode.assign(nNodes, 0.0);
 	if ((int)pf.lastRhsNode.size() != nNodes) pf.lastRhsNode.assign(nNodes, 0.0);
 	double normRhs=0.0, diff=0.0;
@@ -175,15 +217,15 @@ void ApplyPDEFilter(const Problem& pb, PDEFilter& pf, const std::vector<float>& 
 		rz += ws.r[i]*ws.z[i];
 	}
 	if (rz==0) rz=1.0; ws.p = ws.z;
-	const double tol = 1e-6;
-	const int maxIt = 400;
+	const double tol = 1e-3;
+	const int maxIt = 80;
 	// Early exit if warm-start already good
 	{
 		double rn2 = 0.0;
 		#pragma omp parallel for reduction(+:rn2)
 		for (int i=0;i<nNodes;++i) rn2 += ws.r[i]*ws.r[i];
 		double rn = std::sqrt(rn2);
-		if (rn < tol) {
+		if (rn < 1.0e-2) {
 			// Node -> Ele (sum/8)
 			dstEle.assign(pb.mesh.numElements, 0.0f);
 			for (int e=0;e<pb.mesh.numElements;e++) {

@@ -6,7 +6,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=32
 #SBATCH --mem=8G
 #SBATCH --nodelist=node[1600-1619]
 
@@ -50,7 +50,7 @@ cmake -S /home/nhirt/AlgorithmEngineering_AltProject/cpp \
       -DCMAKE_CXX_FLAGS="-march=native -fopenmp"
 cmake --build /home/nhirt/AlgorithmEngineering_AltProject/build -j
 
-# Run with single thread for comparability
+# Match OpenMP threads to the SLURM allocation to avoid oversubscription
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OMP_PROC_BIND=close
 export OMP_PLACES=cores
