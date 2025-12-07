@@ -819,85 +819,24 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
-#if defined(_OPENMP)
+	// No OpenMP here - let BLAS handle threading internally (set MKL_NUM_THREADS)
+	// Gather and scatter are memory-bound, explicit parallelism adds barrier overhead
+	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
-	const double* __restrict__ Ee = eleModulus.data();
 
-	// Single parallel region to minimize thread fork/join overhead
-	#pragma omp parallel
-	{
-		// ============ STEP 1: Parallel Gather ============
-		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
-		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* __restrict__ ed = eDofFree + 24 * e;
-			double* __restrict__ uRow = uMat + e * 24;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
-			}
-		}
-		// Implicit barrier after omp for
-
-		// ============ STEP 2: Single BLAS call ============
-		// Use omp single so only one thread calls BLAS (avoids MKL/OpenMP conflict)
-		// MKL can use its own threading internally if MKL_NUM_THREADS > 1
-		#pragma omp single
-		{
-#ifdef HAVE_CBLAS
-			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-			            numElements, 24, 24,
-			            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
-#else
-			for (int e = 0; e < numElements; ++e) {
-				const double* uRow = uMat + e * 24;
-				double* fRow = fMat + e * 24;
-				for (int i = 0; i < 24; ++i) {
-					double sum = 0.0;
-					for (int j = 0; j < 24; ++j) {
-						sum += uRow[j] * Kptr[j * 24 + i];
-					}
-					fRow[i] = sum;
-				}
-			}
-#endif
-		}
-		// Implicit barrier after omp single
-
-		// ============ STEP 3: Scale and Scatter (fused, parallel by output DOF) ============
-		// Each output DOF sums contributions from multiple elements, scaling by Ee
-		#pragma omp for schedule(static)
-		for (size_t d = 0; d < numFreeDofs; ++d) {
-			double sum = 0.0;
-			const int start = dofBnd[d];
-			const int end = dofBnd[d + 1];
-			for (int k = start; k < end; ++k) {
-				const int fMatIdx = scatIdx[k];
-				const int elemIdx = fMatIdx / 24;
-				sum += fMat[fMatIdx] * Ee[elemIdx];
-			}
-			yF_out[d] = sum;
-		}
-	}
-
-#else
-	// Serial fallback
-	const double* Ee = eleModulus.data();
-	const int32_t* scatIdx = ws.scatterIdx.data();
-	const int32_t* dofBnd = ws.dofBoundaries.data();
-
-	// Step 1: Gather
+	// ============ STEP 1: Gather ============
 	for (int e = 0; e < numElements; ++e) {
-		const int32_t* ed = eDofFree + 24 * e;
-		double* uRow = uMat + e * 24;
+		const int32_t* __restrict__ ed = eDofFree + 24 * e;
+		double* __restrict__ uRow = uMat + e * 24;
 		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
+			const int idx = ed[a];
 			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 		}
 	}
 
-	// Step 2: Matvec using CBLAS if available
+	// ============ STEP 2: BLAS matrix multiply ============
+	// fMat = uMat * Ke^T  (let MKL use MKL_NUM_THREADS for parallelism)
 #ifdef HAVE_CBLAS
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
 	            numElements, 24, 24,
@@ -916,7 +855,7 @@ void K_times_u_finest(const Problem& pb,
 	}
 #endif
 
-	// Step 3: Scale and scatter (fused)
+	// ============ STEP 3: Scale and scatter ============
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
 		const int start = dofBnd[d];
@@ -928,7 +867,6 @@ void K_times_u_finest(const Problem& pb,
 		}
 		yF_out[d] = sum;
 	}
-#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)
