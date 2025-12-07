@@ -819,7 +819,7 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
-	// Single parallel region - avoid fork/join overhead between phases
+	// Single parallel region with chunked BLAS (use MKL_NUM_THREADS=1 to avoid threading conflict)
 	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
@@ -839,23 +839,34 @@ void K_times_u_finest(const Problem& pb,
 		}
 		// Implicit barrier after omp for
 
-		// ============ STEP 2: Parallel Matrix Multiply (manual, no BLAS) ============
-		// Avoids MKL/OpenMP threading conflict entirely
-		// fMat[e] = uMat[e] * Ke^T for each element
-		// Since Ke is symmetric, Ke^T = Ke, so fRow[i] = sum_j uRow[j] * Ke[i*24+j] (row access)
+		// ============ STEP 2: Chunked BLAS Matrix Multiply ============
+		// Each thread processes chunks independently. Use MKL_NUM_THREADS=1 to avoid nested threading.
+		// fMat = uMat * Ke^T
+		constexpr int chunk_size = 64;
 		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; ++e) {
-			const double* __restrict__ uRow = uMat + e * 24;
-			double* __restrict__ fRow = fMat + e * 24;
-			for (int i = 0; i < 24; ++i) {
-				const double* __restrict__ KeRow = Kptr + i * 24;
-				double sum = 0.0;
-				#pragma omp simd reduction(+:sum)
-				for (int j = 0; j < 24; ++j) {
-					sum += uRow[j] * KeRow[j];
+		for (int e = 0; e < numElements; e += chunk_size) {
+			int actual_chunk = std::min(chunk_size, numElements - e);
+#ifdef HAVE_CBLAS
+			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+			            actual_chunk, 24, 24,
+			            1.0, uMat + e * 24, 24,
+			            Kptr, 24,
+			            0.0, fMat + e * 24, 24);
+#else
+			// Manual fallback
+			for (int ee = e; ee < e + actual_chunk; ++ee) {
+				const double* __restrict__ uRow = uMat + ee * 24;
+				double* __restrict__ fRow = fMat + ee * 24;
+				for (int i = 0; i < 24; ++i) {
+					const double* __restrict__ KeRow = Kptr + i * 24;
+					double sum = 0.0;
+					for (int j = 0; j < 24; ++j) {
+						sum += uRow[j] * KeRow[j];
+					}
+					fRow[i] = sum;
 				}
-				fRow[i] = sum;
 			}
+#endif
 		}
 		// Implicit barrier after omp for
 
@@ -874,7 +885,7 @@ void K_times_u_finest(const Problem& pb,
 		}
 	}
 #else
-	// Serial fallback
+	// Serial fallback with single BLAS call
 	for (int e = 0; e < numElements; ++e) {
 		const int32_t* ed = eDofFree + 24 * e;
 		double* uRow = uMat + e * 24;
@@ -883,6 +894,11 @@ void K_times_u_finest(const Problem& pb,
 			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 		}
 	}
+#ifdef HAVE_CBLAS
+	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+	            numElements, 24, 24,
+	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
+#else
 	for (int e = 0; e < numElements; ++e) {
 		const double* uRow = uMat + e * 24;
 		double* fRow = fMat + e * 24;
@@ -895,6 +911,7 @@ void K_times_u_finest(const Problem& pb,
 			fRow[i] = sum;
 		}
 	}
+#endif
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
 		const int start = dofBnd[d];
