@@ -842,15 +842,17 @@ void K_times_u_finest(const Problem& pb,
 		// ============ STEP 2: Parallel Matrix Multiply (manual, no BLAS) ============
 		// Avoids MKL/OpenMP threading conflict entirely
 		// fMat[e] = uMat[e] * Ke^T for each element
+		// Since Ke is symmetric, Ke^T = Ke, so fRow[i] = sum_j uRow[j] * Ke[i*24+j] (row access)
 		#pragma omp for schedule(static)
 		for (int e = 0; e < numElements; ++e) {
 			const double* __restrict__ uRow = uMat + e * 24;
 			double* __restrict__ fRow = fMat + e * 24;
-			// Compute fRow = uRow * Ke^T (i.e., fRow[i] = sum_j uRow[j] * Ke[j][i])
 			for (int i = 0; i < 24; ++i) {
+				const double* __restrict__ KeRow = Kptr + i * 24;
 				double sum = 0.0;
+				#pragma omp simd reduction(+:sum)
 				for (int j = 0; j < 24; ++j) {
-					sum += uRow[j] * Kptr[j * 24 + i];
+					sum += uRow[j] * KeRow[j];
 				}
 				fRow[i] = sum;
 			}
@@ -885,9 +887,10 @@ void K_times_u_finest(const Problem& pb,
 		const double* uRow = uMat + e * 24;
 		double* fRow = fMat + e * 24;
 		for (int i = 0; i < 24; ++i) {
+			const double* KeRow = Kptr + i * 24;
 			double sum = 0.0;
 			for (int j = 0; j < 24; ++j) {
-				sum += uRow[j] * Kptr[j * 24 + i];
+				sum += uRow[j] * KeRow[j];
 			}
 			fRow[i] = sum;
 		}
