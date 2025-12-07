@@ -788,35 +788,45 @@ void K_times_u_finest(const Problem& pb,
 
 		double* __restrict__ yF_out = yFree.data();
 
-		// Use atomics for scatter - avoids reduction overhead entirely
-		// Modern CPUs handle atomic FP adds efficiently
+		// Block-based approach with atomics (faster than coloring due to fewer barriers)
 		#pragma omp parallel
 		{
-			constexpr int BS = 8;
+			// Block size 16 for better AVX-512 utilization
+			constexpr int BS = 16;
 			alignas(64) double ue[24][BS];
 			alignas(64) double fe[24][BS];
-			double Ee_vals[BS];
+			int activeElems[BS];
 
 			#pragma omp for schedule(static)
 			for (int baseE = 0; baseE < numElements; baseE += BS) {
-				int count = std::min(BS, numElements - baseE);
+				const int blockEnd = std::min(baseE + BS, numElements);
 
-				// 1. Gather
-				for (int k = 0; k < count; ++k) {
-					int e = baseE + k;
-					Ee_vals[k] = eleModulus[e];
+				// 1. Early filter: only gather active elements (modulus > threshold)
+				int activeCount = 0;
+				for (int e = baseE; e < blockEnd; ++e) {
+					if (eleModulus[e] > 1.0e-16) {
+						activeElems[activeCount++] = e;
+					}
+				}
+
+				// Skip entire block if no active elements
+				if (activeCount == 0) continue;
+
+				// 2. Gather only active elements
+				for (int k = 0; k < activeCount; ++k) {
+					int e = activeElems[k];
 					const int32_t* __restrict__ ed = eDofFree + 24 * e;
 					for (int a = 0; a < 24; ++a) {
 						int idx = ed[a];
 						ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
 					}
 				}
-				for (int k = count; k < BS; ++k) {
-					Ee_vals[k] = 0.0;
-					for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
+				// Zero padding for SIMD
+				for (int k = activeCount; k < BS; ++k) {
+					for (int a = 0; a < 24; ++a) ue[a][k] = 0.0;
 				}
 
-				// 2. Local matvec
+				// 3. Local matvec (always process full BS for SIMD efficiency)
 				for (int i = 0; i < 24; ++i) {
 					#pragma omp simd
 					for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
@@ -829,11 +839,10 @@ void K_times_u_finest(const Problem& pb,
 					}
 				}
 
-				// 3. Scatter with atomics
-				for (int k = 0; k < count; ++k) {
-					double Eval = Ee_vals[k];
-					if (Eval <= 1.0e-16) continue;
-					int e = baseE + k;
+				// 4. Scatter only active elements with atomics
+				for (int k = 0; k < activeCount; ++k) {
+					int e = activeElems[k];
+					double Eval = eleModulus[e];
 					const int32_t* __restrict__ ed = eDofFree + 24 * e;
 					for (int a = 0; a < 24; ++a) {
 						int idx = ed[a];

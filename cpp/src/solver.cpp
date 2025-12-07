@@ -149,26 +149,32 @@ int PCG_free(const Problem& pb,
     const double stop_tol = std::max(1.0e-30, normb) * tol; // Pre-calc threshold
 
     // --- MAIN LOOP ---
+    // Fused operations to minimize parallel region overhead
     for (int it = 0; it < maxIt; ++it) {
 
         // 4. Matrix-Vector Multiplication (The Heavy Lifter)
         K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-        // 5. Alpha Calculation
-        double denom = parallel_dot(p, Ap);
-        double alpha = rz_old / std::max(1.0e-30, denom);
-
-        // 6. Fused Update: x, r, and rnorm2
-        // We avoid separate loops to keep data in cache
+        // 5-6. Fused: dot(p,Ap) + x update + r update + rnorm2
+        double denom = 0.0;
         double rnorm2 = 0.0;
 
-#pragma omp parallel for reduction(+:rnorm2)
+        #pragma omp parallel for reduction(+:denom,rnorm2)
         for (size_t i = 0; i < n; ++i) {
             double pi = p[i];
             double Api = Ap[i];
+            denom += pi * Api;  // For alpha = rz_old / denom
 
-            xFree[i] += alpha * pi;
-            double val_r = r[i] - alpha * Api;
+            // Can't update x,r yet - need alpha first
+        }
+
+        double alpha = rz_old / std::max(1.0e-30, denom);
+
+        // Update x, r, and compute rnorm2 in single pass
+        #pragma omp parallel for reduction(+:rnorm2)
+        for (size_t i = 0; i < n; ++i) {
+            xFree[i] += alpha * p[i];
+            double val_r = r[i] - alpha * Ap[i];
             r[i] = val_r;
             rnorm2 += val_r * val_r;
         }
@@ -176,28 +182,35 @@ int PCG_free(const Problem& pb,
         // Convergence Check (Fast fail)
         if (std::sqrt(rnorm2) < stop_tol) return it + 1;
 
-        // 7. Preconditioner & Beta Calculation
+        // 7-8. Preconditioner, rz_new, beta, and p update
         double rz_new = 0.0;
 
         if (M) {
-            M(r, z); // Writes to ws.z
-            rz_new = parallel_dot(r, z);
+            M(r, z); // Writes to ws.z - has its own parallel region
+
+            // First pass: compute rz_new = dot(r, z)
+            #pragma omp parallel for reduction(+:rz_new)
+            for (size_t i = 0; i < n; ++i) {
+                rz_new += r[i] * z[i];
+            }
+
+            double beta = rz_new / std::max(1.0e-30, rz_old);
+            rz_old = rz_new;
+
+            // Second pass: p = z + beta * p
+            #pragma omp parallel for
+            for (size_t i = 0; i < n; ++i) {
+                p[i] = z[i] + beta * p[i];
+            }
         } else {
-            // If No Preconditioner, z is effectively r
-            // rz_new is just r*r, which is exactly rnorm2!
-            // We save an entire dot product calculation here.
-            rz_new = rnorm2;
-        }
+            // No preconditioner: z == r, so rz_new == rnorm2
+            double beta = rnorm2 / std::max(1.0e-30, rz_old);
+            rz_old = rnorm2;
 
-        double beta = rz_new / std::max(1.0e-30, rz_old);
-        rz_old = rz_new;
-
-        // 8. Update p
-        // Use z_ptr to read from the correct source (z or r) without copying
-        // If !M, z_ptr points to r.
-#pragma omp parallel for
-        for (size_t i = 0; i < n; ++i) {
-            p[i] = z_ptr[i] + beta * p[i];
+            #pragma omp parallel for
+            for (size_t i = 0; i < n; ++i) {
+                p[i] = r[i] + beta * p[i];
+            }
         }
     }
 
