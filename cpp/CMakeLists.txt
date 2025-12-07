@@ -32,12 +32,6 @@ if(BLAS_FOUND)
         message(STATUS "CBLAS header found: ${CBLAS_INCLUDE_DIR}")
     endif()
 else()
-    find_library(CBLAS_STATIC_LIB
-            NAMES cblas)
-    if(CBLAS_STATIC_LIB)
-        message(STATUS "Found CBLAS but no full BLAS package")
-        add_compile_definitions(HAVE_CBLAS)
-    endif()
     message(STATUS "BLAS not found - using manual implementation")
 endif()
 
