@@ -114,7 +114,7 @@ int PCG_free(const Problem& pb,
 
     // r = b - A*x
     if (!xFree.empty()) {
-        K_times_u_finest(pb, eleModulus, xFree, Ap, ws.kTimesU_ws);
+        K_times_u_finest(pb, eleModulus, xFree, Ap);
 #pragma omp parallel for
         for (size_t i = 0; i < n; ++i) r[i] -= Ap[i];
     } else {
@@ -153,7 +153,7 @@ int PCG_free(const Problem& pb,
     for (int it = 0; it < maxIt; ++it) {
 
         // 4. Matrix-Vector Multiplication (The Heavy Lifter)
-        K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
+        K_times_u_finest(pb, eleModulus, p, Ap);
 
         // 5-6. Fused: dot(p,Ap) + x update + r update + rnorm2
         double denom = 0.0;
