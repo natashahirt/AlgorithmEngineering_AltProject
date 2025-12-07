@@ -84,6 +84,7 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 
 	// 3) Return preconditioner closure (adapt to double free-DOF vectors)
 	// Single parallel region V-cycle to minimize barrier overhead
+	// Use raw pointers to avoid std::vector operator[] bounds checking overhead
 	return [H, diag, cfg, &pb, fixedMasks, Lcoarse, Ncoarse, ws](const std::vector<double>& rFree, std::vector<double>& zFree) mutable {
         // Alias workspace vectors for brevity
         auto& rLv = ws->rLv;
@@ -100,80 +101,94 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		// Ensure output is sized
 		zFree.resize(rFree.size());
 
+		// Pre-extract raw pointers for hot paths
+		const int* __restrict__ freeDofIdx = pb.freeDofIndex.data();
+		const int* __restrict__ nodMapBack = pb.mesh.nodMapBack.data();
+		const double* __restrict__ rFree_ptr = rFree.data();
+		double* __restrict__ zFree_ptr = zFree.data();
+		double* __restrict__ tmp_xf_ptr = ws->tmp_xf.data();
+
 		// ============ SINGLE PARALLEL REGION FOR ENTIRE V-CYCLE ============
 		#pragma omp parallel
 		{
 			// Thread-local weight buffer for transfer operations
-			std::vector<double> W_local(16); // Max span is typically 4, so 2*4-1=7 is enough
+			std::vector<double> W_local(16);
+
+			// Get raw pointers for level 0
+			double* __restrict__ rLv0 = rLv[0].data();
+			double* __restrict__ xLv0 = xLv[0].data();
+			const uint8_t* __restrict__ mask0 = fixedMasks[0].data();
 
 			// === ENTRY: Zero finest + scatter from free DOFs ===
 			#pragma omp for schedule(static) nowait
 			for (int i = 0; i < n0_dofs; ++i) {
-				rLv[0][i] = 0.0;
-				xLv[0][i] = 0.0;
+				rLv0[i] = 0.0;
+				xLv0[i] = 0.0;
 			}
 
-			#pragma omp barrier  // Need rLv[0] zeroed before scatter
+			#pragma omp barrier
 
 			#pragma omp for schedule(static) nowait
 			for (size_t i = 0; i < nFreeDofs; ++i) {
-				int dMort = pb.freeDofIndex[i];
+				int dMort = freeDofIdx[i];
 				int nMort = dMort / 3;
 				int comp  = dMort % 3;
-				int nLex = pb.mesh.nodMapBack[nMort];
-				rLv[0][3*nLex + comp] = rFree[i];
+				int nLex = nodMapBack[nMort];
+				rLv0[3*nLex + comp] = rFree_ptr[i];
 			}
 
-			#pragma omp barrier  // Need scatter complete before BC mask
+			#pragma omp barrier
 
 			#pragma omp for schedule(static)
 			for (int i = 0; i < n0_nodes; ++i) {
 				for (int c = 0; c < 3; ++c) {
-					if (fixedMasks[0][3*i+c]) rLv[0][3*i+c] = 0.0;
+					if (mask0[3*i+c]) rLv0[3*i+c] = 0.0;
 				}
 			}
-			// implicit barrier here
 
 			// === DOWNWARD PASS ===
 			for (size_t l = 0; l + 1 < numLevels; ++l) {
 				const int fn_nodes = H.levels[l].numNodes;
 				const int cn_nodes = H.levels[l+1].numNodes;
 				const int cn_dofs = 3 * cn_nodes;
-				const auto& D = diag[l];
+				const double* __restrict__ D_ptr = diag[l].data();
+				const uint8_t* __restrict__ maskL = fixedMasks[l].data();
+				const uint8_t* __restrict__ maskL1 = fixedMasks[l+1].data();
+				double* __restrict__ rL = rLv[l].data();
+				double* __restrict__ xL = xLv[l].data();
+				double* __restrict__ rL1 = rLv[l+1].data();
+				double* __restrict__ xL1 = xLv[l+1].data();
 
-				// Pre-smoothing: x = w * D^-1 * r
+				// Pre-smoothing
 				#pragma omp for schedule(static) nowait
 				for (int i = 0; i < fn_nodes; ++i) {
 					for (int c = 0; c < 3; ++c) {
 						const int d = 3*i+c;
-						if (fixedMasks[l][d]) {
-							xLv[l][d] = 0.0;
+						if (maskL[d]) {
+							xL[d] = 0.0;
 						} else {
-							xLv[l][d] = weight * rLv[l][d] / std::max(1.0e-30, D[d]);
+							xL[d] = weight * rL[d] / std::max(1.0e-30, D_ptr[d]);
 						}
 					}
 				}
 
-				// Zero coarse level buffers (can run concurrently with smoothing)
+				// Zero coarse level
 				#pragma omp for schedule(static)
 				for (int i = 0; i < cn_dofs; ++i) {
-					rLv[l+1][i] = 0.0;
-					xLv[l+1][i] = 0.0;
+					rL1[i] = 0.0;
+					xL1[i] = 0.0;
 				}
-				// implicit barrier - need both smoothing and zeroing done before restriction
 
-				// Restriction (uses inner version - no extra parallel region)
+				// Restriction
 				MG_Restrict_nodes_Vec3_Inner(H.levels[l+1], H.levels[l], rLv[l], rLv[l+1], W_local);
-				// implicit barrier at end of omp for inside Inner function
 
-				// Apply BC mask on coarse residual
+				// BC mask on coarse
 				#pragma omp for schedule(static)
 				for (int i = 0; i < cn_nodes; ++i) {
 					for (int c = 0; c < 3; ++c) {
-						if (fixedMasks[l+1][3*i+c]) rLv[l+1][3*i+c] = 0.0;
+						if (maskL1[3*i+c]) rL1[3*i+c] = 0.0;
 					}
 				}
-				// implicit barrier
 			}
 
 			// === COARSEST LEVEL SOLVE ===
@@ -182,67 +197,69 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 				if (!Lcoarse.empty() && (int)rLv[Lidx].size() == Ncoarse) {
 					chol_solve_lower(Lcoarse, rLv[Lidx], xLv[Lidx], Ncoarse);
 				} else {
-					// Diagonal fallback (serial for small coarse grid)
-					const auto& D = diag[Lidx];
+					const double* __restrict__ D_ptr = diag[Lidx].data();
+					const uint8_t* __restrict__ maskC = fixedMasks[Lidx].data();
+					double* __restrict__ rC = rLv[Lidx].data();
+					double* __restrict__ xC = xLv[Lidx].data();
 					for (int i = 0; i < coarse_nodes; ++i) {
 						for (int c = 0; c < 3; ++c) {
 							const int d = 3*i+c;
-							if (fixedMasks[Lidx][d]) {
-								xLv[Lidx][d] = 0.0;
+							if (maskC[d]) {
+								xC[d] = 0.0;
 							} else {
-								xLv[Lidx][d] = rLv[Lidx][d] / std::max(1.0e-30, D[d]);
+								xC[d] = rC[d] / std::max(1.0e-30, D_ptr[d]);
 							}
 						}
 					}
 				}
 			}
-			// implicit barrier after single
 
-			// Apply BC mask on coarsest solution
-			#pragma omp for schedule(static)
-			for (int i = 0; i < coarse_nodes; ++i) {
-				for (int c = 0; c < 3; ++c) {
-					if (fixedMasks[Lidx][3*i+c]) xLv[Lidx][3*i+c] = 0.0;
+			// BC mask on coarsest
+			{
+				const uint8_t* __restrict__ maskC = fixedMasks[Lidx].data();
+				double* __restrict__ xC = xLv[Lidx].data();
+				#pragma omp for schedule(static)
+				for (int i = 0; i < coarse_nodes; ++i) {
+					for (int c = 0; c < 3; ++c) {
+						if (maskC[3*i+c]) xC[3*i+c] = 0.0;
+					}
 				}
 			}
-			// implicit barrier
 
 			// === UPWARD PASS ===
 			for (int l = (int)numLevels - 2; l >= 0; --l) {
 				const int fn_nodes = H.levels[l].numNodes;
-				const int fn_dofs = 3 * fn_nodes;
-				const auto& D = diag[l];
+				const double* __restrict__ D_ptr = diag[l].data();
+				const uint8_t* __restrict__ maskL = fixedMasks[l].data();
+				double* __restrict__ rL = rLv[l].data();
+				double* __restrict__ xL = xLv[l].data();
 
-				// Prolongation (uses inner version - no extra parallel region)
+				// Prolongation
 				MG_Prolongate_nodes_Vec3_Inner(H.levels[l+1], H.levels[l], xLv[l+1], ws->tmp_xf, W_local);
-				// implicit barrier at end of omp for inside Inner function
 
-				// Accumulate prolongated correction + post-smoothing + BC mask (fused)
+				// Accumulate + post-smooth + BC mask
 				#pragma omp for schedule(static)
 				for (int i = 0; i < fn_nodes; ++i) {
 					for (int c = 0; c < 3; ++c) {
 						const int d = 3*i+c;
-						// Accumulate prolongation
-						xLv[l][d] += ws->tmp_xf[d];
-						// Post-smoothing + BC mask
-						if (fixedMasks[l][d]) {
-							xLv[l][d] = 0.0;
+						xL[d] += tmp_xf_ptr[d];
+						if (maskL[d]) {
+							xL[d] = 0.0;
 						} else {
-							xLv[l][d] += weight * rLv[l][d] / std::max(1.0e-30, D[d]);
+							xL[d] += weight * rL[d] / std::max(1.0e-30, D_ptr[d]);
 						}
 					}
 				}
-				// implicit barrier
 			}
 
 			// === EXIT: Gather back to free DOFs ===
 			#pragma omp for schedule(static) nowait
 			for (size_t i = 0; i < nFreeDofs; ++i) {
-				int dMort = pb.freeDofIndex[i];
+				int dMort = freeDofIdx[i];
 				int nMort = dMort / 3;
 				int comp  = dMort % 3;
-				int nLex  = pb.mesh.nodMapBack[nMort];
-				zFree[i] = xLv[0][3*nLex + comp];
+				int nLex  = nodMapBack[nMort];
+				zFree_ptr[i] = xLv0[3*nLex + comp];
 			}
 		} // end parallel region
 	};
