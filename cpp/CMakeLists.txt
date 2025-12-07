@@ -11,13 +11,26 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 endif()
 
-# Find BLAS for batched matrix operations
-# On macOS: uses Accelerate framework
-# On Linux: uses OpenBLAS or other BLAS implementation
+# Find BLAS/CBLAS for optimized matrix operations
+# On macOS: Accelerate framework (includes cblas)
+# On Linux: OpenBLAS, MKL, or other BLAS with cblas interface
 find_package(BLAS)
-if (BLAS_FOUND)
+if(BLAS_FOUND)
     message(STATUS "BLAS found: ${BLAS_LIBRARIES}")
-    add_compile_definitions(HAVE_BLAS)
+    add_compile_definitions(HAVE_CBLAS)
+
+    # Check for cblas.h location
+    find_path(CBLAS_INCLUDE_DIR cblas.h
+        HINTS
+            /usr/include
+            /usr/local/include
+            /usr/include/openblas
+            /usr/local/opt/openblas/include
+            /opt/homebrew/opt/openblas/include
+    )
+    if(CBLAS_INCLUDE_DIR)
+        message(STATUS "CBLAS header found: ${CBLAS_INCLUDE_DIR}")
+    endif()
 else()
     message(STATUS "BLAS not found - using manual implementation")
 endif()
@@ -63,7 +76,10 @@ if (OpenMP_CXX_FOUND)
     target_link_libraries(top3d_xl PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-# Link BLAS if found
-if (BLAS_FOUND)
+# Link BLAS and add include path if found
+if(BLAS_FOUND)
     target_link_libraries(top3d_xl PUBLIC ${BLAS_LIBRARIES})
+    if(CBLAS_INCLUDE_DIR)
+        target_include_directories(top3d_xl PUBLIC ${CBLAS_INCLUDE_DIR})
+    endif()
 endif()

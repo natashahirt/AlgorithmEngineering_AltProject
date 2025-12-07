@@ -10,6 +10,15 @@
 #include <omp.h>
 #endif
 
+// CBLAS for optimized matrix operations
+#ifdef HAVE_CBLAS
+  #ifdef __APPLE__
+    #include <Accelerate/Accelerate.h>
+  #else
+    #include <cblas.h>
+  #endif
+#endif
+
 namespace top3d {
 
 // In debug builds, verify 64-byte alignment when we claim it
@@ -830,27 +839,53 @@ void K_times_u_finest(const Problem& pb,
 		}
 
 		// ============ STEP 2: Batched Matrix Multiply ============
-		// fMat[e,:] = uMat[e,:] * Ke * Ee[e]
+		// fMat = uMat * Ke^T (then scale rows by Ee)
 		// Need barrier here because matvec reads uMat written by gather
 		#pragma omp barrier
 
-		#pragma omp for schedule(static) nowait
-		for (int e = 0; e < numElements; ++e) {
-			const double Eval = eleModulus[e];
-			const double* __restrict__ uRow = uMat + e * 24;
-			double* __restrict__ fRow = fMat + e * 24;
-
-			if (Eval <= 1.0e-16) {
-				for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
-			} else {
-				// fRow[i] = sum_j uRow[j] * Ke[j][i] * Eval
+		// Use single thread for BLAS call (BLAS may use internal threading)
+		#pragma omp single
+		{
+#ifdef HAVE_CBLAS
+			// Use CBLAS for the big matrix multiply:
+			// fMat (M x N) = uMat (M x K) * Ke^T (K x N)
+			// where M = numElements, K = 24, N = 24
+			// Ke is row-major, so Ke^T in row-major = Ke in column-major
+			// C = alpha * A * B + beta * C
+			// fMat = 1.0 * uMat * Ke^T + 0.0 * fMat
+			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+			            numElements, 24, 24,    // M, N, K
+			            1.0,                     // alpha
+			            uMat, 24,               // A (M x K), lda
+			            Kptr, 24,               // B (N x K) -> B^T is (K x N), ldb
+			            0.0,                     // beta
+			            fMat, 24);              // C (M x N), ldc
+#else
+			// Manual fallback - single threaded to avoid nested parallelism
+			for (int e = 0; e < numElements; ++e) {
+				const double* uRow = uMat + e * 24;
+				double* fRow = fMat + e * 24;
 				for (int i = 0; i < 24; ++i) {
 					double sum = 0.0;
 					for (int j = 0; j < 24; ++j) {
 						sum += uRow[j] * Kptr[j * 24 + i];
 					}
-					fRow[i] = sum * Eval;
+					fRow[i] = sum;
 				}
+			}
+#endif
+		}
+		// Implicit barrier after omp single
+
+		// Scale rows by element modulus (parallel)
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const double Eval = eleModulus[e];
+			double* __restrict__ fRow = fMat + e * 24;
+			if (Eval <= 1.0e-16) {
+				for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+			} else {
+				for (int i = 0; i < 24; ++i) fRow[i] *= Eval;
 			}
 		}
 
@@ -881,7 +916,23 @@ void K_times_u_finest(const Problem& pb,
 			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 		}
 	}
-	// Step 2: Matvec
+
+	// Step 2: Matvec using CBLAS if available
+#ifdef HAVE_CBLAS
+	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+	            numElements, 24, 24,
+	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
+	// Scale by element modulus
+	for (int e = 0; e < numElements; ++e) {
+		const double Eval = eleModulus[e];
+		double* fRow = fMat + e * 24;
+		if (Eval <= 1.0e-16) {
+			for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+		} else {
+			for (int i = 0; i < 24; ++i) fRow[i] *= Eval;
+		}
+	}
+#else
 	for (int e = 0; e < numElements; ++e) {
 		const double Eval = eleModulus[e];
 		const double* uRow = uMat + e * 24;
@@ -898,6 +949,8 @@ void K_times_u_finest(const Problem& pb,
 			}
 		}
 	}
+#endif
+
 	// Step 3: Scatter
 	for (size_t d = 0; d < numFreeDofs; ++d) {
 		double sum = 0.0;
