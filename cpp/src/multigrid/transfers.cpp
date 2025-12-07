@@ -124,72 +124,96 @@ void MG_Prolongate_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
 void MG_Restrict_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
                                const std::vector<double>& rf, std::vector<double>& rc,
                                int component, int stride) {
-    const int cnnx = Lc.resX + 1;
-    const int cnny = Lc.resY + 1;
-    const int cnnz = Lc.resZ + 1;
-    
-    const int fnnx = Lf.resX + 1;
-    const int fnny = Lf.resY + 1;
-    const int fnnz = Lf.resZ + 1;
-    
+    // 1. Ensure Output Size
+    size_t numCoarseNodes = (size_t)(Lc.resX + 1) * (Lc.resY + 1) * (Lc.resZ + 1);
+    if (rc.size() != numCoarseNodes * stride) {
+        rc.resize(numCoarseNodes * stride);
+    }
+
+    // Pointers for raw access
+    const double* __restrict__ rf_ptr = rf.data();
+    double* __restrict__ rc_ptr = rc.data();
+
+    const int cNnx = Lc.resX + 1;
+    const int cNny = Lc.resY + 1;
+    const int cNnz = Lc.resZ + 1;
+
+    const int fNnx = Lf.resX + 1;
+    const int fNny = Lf.resY + 1;
+    const int fNnz = Lf.resZ + 1;
+
     const int span = Lc.spanWidth;
     const double invSpan = 1.0 / span;
 
-    if (rc.size() < (size_t)(cnnx * cnny * cnnz * stride)) 
-        rc.resize(cnnx * cnny * cnnz * stride);
+    // 2. Precompute 1D Weights (The "Hat" Function)
+    // Offset range: -span+1 to +span-1
+    int wSize = 2 * span - 1;
+    std::vector<double> W(wSize);
+    for (int i = 0; i < wSize; ++i) {
+        // Map index i to offset: i - (span - 1)
+        W[i] = 1.0 - std::abs(i - (span - 1)) * invSpan;
+    }
 
-    #pragma omp parallel for collapse(3)
-    for (int cz = 0; cz < cnnz; ++cz) {
-        for (int cy = 0; cy < cnny; ++cy) {
-            for (int cx = 0; cx < cnnx; ++cx) {
-                // Center of the hat function in fine coords
+    // 3. Parallel Restriction
+#pragma omp parallel for collapse(2) schedule(static)
+    for (int cz = 0; cz < cNnz; ++cz) {
+        for (int cy = 0; cy < cNny; ++cy) {
+
+            // Pre-calculate Z and Y bounds for the fine grid
+            int fz0 = cz * span;
+            int fy0 = cy * span;
+
+            // Inner Loop over Coarse X
+            for (int cx = 0; cx < cNnx; ++cx) {
                 int fx0 = cx * span;
-                int fy0 = cy * span;
-                int fz0 = cz * span;
 
-                double sum = 0.0;
-                double wsum = 0.0;
+                double valSum = 0.0;
+                double wSum = 0.0;
 
-                // Iterate fine nodes in the support [-span+1, span-1]
-                // Weight is 0 at +/- span, so we can exclude those bounds for efficiency
-                // Clip bounds to fine grid limits
-                
-                int iz_min = std::max(-span + 1, -fz0);
-                int iz_max = std::min(span - 1, fnnz - 1 - fz0);
-                
-                int iy_min = std::max(-span + 1, -fy0);
-                int iy_max = std::min(span - 1, fnny - 1 - fy0);
-                
-                int ix_min = std::max(-span + 1, -fx0);
-                int ix_max = std::min(span - 1, fnnx - 1 - fx0);
+                // --- 3D Stencil Loop (Unrolled via loop bounds) ---
+                // We clamp the loops to the intersection of the Kernel and the Grid
+                // to avoid "if" checks inside the innermost loop.
 
-                for (int iz = iz_min; iz <= iz_max; ++iz) {
-                    double wz = 1.0 - std::abs(iz) * invSpan;
-                    int fz = fz0 + iz;
-                    int fz_offset = fnnx * fnny * fz;
-                    
-                    for (int iy = iy_min; iy <= iy_max; ++iy) {
-                        double wy = 1.0 - std::abs(iy) * invSpan;
+                int iz_start = (fz0 - span + 1 < 0) ? (span - 1 - fz0) : 0;
+                int iz_end   = (fz0 + span - 1 >= fNnz) ? (wSize - (fz0 + span - fNnz)) : wSize;
+
+                for (int iz = iz_start; iz < iz_end; ++iz) {
+                    double wz = W[iz];
+                    int fz = fz0 + (iz - (span - 1));
+                    size_t zOffset = (size_t)fz * fNny * fNnx;
+
+                    int iy_start = (fy0 - span + 1 < 0) ? (span - 1 - fy0) : 0;
+                    int iy_end   = (fy0 + span - 1 >= fNny) ? (wSize - (fy0 + span - fNny)) : wSize;
+
+                    for (int iy = iy_start; iy < iy_end; ++iy) {
+                        double wy = W[iy];
                         double wzy = wz * wy;
-                        int fy = fy0 + iy;
-                        int fy_offset = fnnx * fy;
-                        
-                        for (int ix = ix_min; ix <= ix_max; ++ix) {
-                            double wx = 1.0 - std::abs(ix) * invSpan;
+                        size_t yOffset = (size_t)(fy0 + (iy - (span - 1))) * fNnx;
+
+                        // X is the innermost, optimizing this is key
+                        int ix_start = (fx0 - span + 1 < 0) ? (span - 1 - fx0) : 0;
+                        int ix_end   = (fx0 + span - 1 >= fNnx) ? (wSize - (fx0 + span - fNnx)) : wSize;
+
+#pragma omp simd reduction(+:valSum, wSum)
+                        for (int ix = ix_start; ix < ix_end; ++ix) {
+                            double wx = W[ix];
                             double w = wzy * wx;
-                            
-                            if (w > 1e-9) {
-                                int fx = fx0 + ix;
-                                int fidx = fz_offset + fy_offset + fx;
-                                sum += rf[fidx * stride + component] * w;
-                                wsum += w;
-                            }
+
+                            int fx = fx0 + (ix - (span - 1));
+
+                            // Direct array access: z*Ny*Nx + y*Nx + x
+                            size_t fIdx = zOffset + yOffset + fx;
+
+                            valSum += rf_ptr[fIdx * stride + component] * w;
+                            wSum   += w;
                         }
                     }
                 }
 
-                int cidx = cnnx * cnny * cz + cnnx * cy + cx;
-                rc[cidx * stride + component] = (wsum > 1e-12) ? (sum / wsum) : 0.0;
+                // Write Result
+                size_t cIdx = (size_t)cz * cNny * cNnx + cy * cNnx + cx;
+                if (wSum > 1e-12) rc_ptr[cIdx * stride + component] = valSum / wSum;
+                else              rc_ptr[cIdx * stride + component] = 0.0;
             }
         }
     }
