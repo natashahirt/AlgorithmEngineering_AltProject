@@ -764,19 +764,16 @@ void K_times_u_finest(const Problem& pb,
 	const double* __restrict__ uF   = uFree.data();
 	      double* __restrict__ yF   = yFree.data();
 
-	// Decide whether to use colored parallel assembly
+	// Decide whether to use thread-local parallel assembly
 #if defined(_OPENMP)
 	int maxThreads = omp_get_max_threads();
-	bool useColoring =
-		(maxThreads > 1) &&
-		(mesh.coloring.numColors > 0) &&
-		!mesh.coloring.colorBuckets.empty() &&
-		(numElements > 1000);
+	bool useThreadLocal = (maxThreads > 1) && (numElements > 1000);
 #else
-	bool useColoring = false;
+	bool useThreadLocal = false;
 #endif
 
-	if (useColoring) {
+	if (useThreadLocal) {
+		// Thread-local accumulator strategy: eliminates synchronization and false sharing
 		#if defined(__GNUC__) || defined(__clang__)
 		const double* __restrict__ KptrAligned =
 			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
@@ -785,30 +782,110 @@ void K_times_u_finest(const Problem& pb,
 		#endif
 		const double (* __restrict__ K2D)[24] =
 			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
-		const auto& buckets = mesh.coloring.colorBuckets;
-		const int numColors = mesh.coloring.numColors;
-		
+
+		const size_t nFreeDofs = uFree.size();
+
+		// Allocate thread-local buffers outside parallel region
+		std::vector<std::vector<double>> threadBuffers;
 		#pragma omp parallel
 		{
-			for (int c = 0; c < numColors; ++c) {
-				const auto& elems = buckets[static_cast<size_t>(c)];
-				const int nElems = static_cast<int>(elems.size());
-				constexpr int BS = 8;
-				
-				#pragma omp for schedule(static)
-				for (int baseIdx = 0; baseIdx < nElems; baseIdx += BS) {
-					int count = std::min(BS, nElems - baseIdx);
-					const int* ePtr = &elems[baseIdx];
-					ProcessBlock_8_Free<BS>(ePtr, count, eDofFree, K2D, eleModulus.data(), 
-					                   uF, yF);
+			#pragma omp single
+			{
+				int nThreads = omp_get_num_threads();
+				threadBuffers.resize(nThreads);
+				for (int t = 0; t < nThreads; ++t) {
+					threadBuffers[t].assign(nFreeDofs, 0.0);
 				}
 			}
 		}
+
+		#pragma omp parallel
+		{
+			const int tid = omp_get_thread_num();
+			double* __restrict__ yL = threadBuffers[tid].data();
+
+			constexpr int BS = 16;  // Increased block size for better amortization
+			alignas(64) double ue[24][BS];
+			alignas(64) double fe[24][BS];
+			alignas(64) double Ee_vals[BS];
+			alignas(64) int eIndices[BS];
+
+			#pragma omp for schedule(static, 64) nowait
+			for (int baseIdx = 0; baseIdx < numElements; baseIdx += BS) {
+				int count = std::min(BS, numElements - baseIdx);
+
+				// Gather indices
+				for (int k = 0; k < count; ++k) {
+					eIndices[k] = baseIdx + k;
+				}
+
+				// 1. Gather Displacements & Moduli
+				for (int k = 0; k < count; ++k) {
+					int e = eIndices[k];
+					Ee_vals[k] = eleModulus[e];
+					const int32_t* __restrict__ ed = eDofFree + 24 * e;
+
+					#pragma GCC unroll 24
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
+					}
+				}
+
+				// Pad remainder
+				for (int k = count; k < BS; ++k) {
+					Ee_vals[k] = 0.0;
+					for (int i = 0; i < 24; ++i) ue[i][k] = 0.0;
+				}
+
+				// 2. Matrix-Vector Product: fe = Ke * ue
+				#pragma GCC unroll 24
+				for (int i = 0; i < 24; ++i) {
+					#pragma omp simd
+					for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
+
+					#pragma GCC unroll 24
+					for (int j = 0; j < 24; ++j) {
+						double Kij = K2D[i][j];
+						#pragma omp simd
+						for (int k = 0; k < BS; ++k) {
+							fe[i][k] += Kij * ue[j][k];
+						}
+					}
+				}
+
+				// 3. Scatter to thread-local buffer (no atomics, no false sharing!)
+				for (int k = 0; k < count; ++k) {
+					double Eval = Ee_vals[k];
+					if (Eval <= 1.0e-16) continue;
+
+					int e = eIndices[k];
+					const int32_t* __restrict__ ed = eDofFree + 24 * e;
+
+					#pragma GCC unroll 24
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						if (idx >= 0) {
+							yL[idx] += fe[a][k] * Eval;
+						}
+					}
+				}
+			}
+		}
+
+		// Serial reduction: combine thread-local results into global output
+		// Vectorized for efficiency
+		for (const auto& threadBuf : threadBuffers) {
+			#pragma omp simd
+			for (size_t i = 0; i < nFreeDofs; ++i) {
+				yF[i] += threadBuf[i];
+			}
+		}
 	} else {
-		// Fallback: plain contiguous loop
+		// Serial fallback
         const double (* __restrict__ K2D)[24] =
 			reinterpret_cast<const double (* __restrict__)[24]>(Kptr);
-        constexpr int BS = 8;
+        constexpr int BS = 16;  // Use same block size as parallel version
         int eIdx[BS];
         int e=0;
         for (; e <= numElements - BS; e += BS) {
