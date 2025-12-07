@@ -820,85 +820,156 @@ void K_times_u_finest(const Problem& pb,
 	}
 
 #if defined(_OPENMP)
-	for (int c = 0; c < mesh.coloring.numColors; ++c) {
-		const auto& bucket = mesh.coloring.colorBuckets[c];
-		#pragma omp parallel for schedule(static)
-		for (size_t i = 0; i < bucket.size(); ++i) {
-			const int e = bucket[i];
-			const double Eval = eleModulus[e];
-			if (Eval <= 1.0e-16) continue;
+	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
+	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
 
-			double ue[24], fe[24];
-			const int32_t* __restrict__ ed = eDofFree + e * 24;
-
-			// Gather
+	// Single parallel region for all three steps to reduce barrier overhead
+	#pragma omp parallel
+	{
+		// ============ STEP 1: Parallel Gather ============
+		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* __restrict__ ed = eDofFree + 24 * e;
+			double* __restrict__ uRow = uMat + e * 24;
 			for (int a = 0; a < 24; ++a) {
 				int idx = ed[a];
-				ue[a] = (idx >= 0) ? uF[idx] : 0.0;
+				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
 			}
+		}
 
-			// Matvec
+		// ============ STEP 2: Batched Matrix Multiply ============
+		// fMat = uMat * Ke^T (then scale rows by Ee)
+		// Need barrier here because matvec reads uMat written by gather
+		#pragma omp barrier
+
+		// Use single thread for BLAS call (BLAS may use internal threading)
+		const int chunk_size = 32;
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; e += chunk_size) {
+			int current_chunk_size = std::min(chunk_size, numElements - e);
 #ifdef HAVE_CBLAS
-			cblas_dgemv(CblasRowMajor, CblasNoTrans, 24, 24, 1.0, Kptr, 24, ue, 1, 0.0, fe, 1);
+			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+						current_chunk_size, 24, 24,
+						1.0,
+						uMat + e * 24, 24,
+						Kptr, 24,
+						0.0,
+						fMat + e * 24, 24);
 #else
-			for (int ii = 0; ii < 24; ++ii) {
-				double sum = 0.0;
-				for (int j = 0; j < 24; ++j) {
-					sum += Kptr[ii * 24 + j] * ue[j];
+			for (int ee = e; ee < e + current_chunk_size; ++ee) {
+				const double* uRow = uMat + ee * 24;
+				double* fRow = fMat + ee * 24;
+				for (int i = 0; i < 24; ++i) {
+					double sum = 0.0;
+					for (int j = 0; j < 24; ++j) {
+						sum += uRow[j] * Kptr[j * 24 + i];
+					}
+					fRow[i] = sum;
 				}
-				fe[ii] = sum;
 			}
 #endif
+		}
+		// Implicit barrier after omp single
 
-			// Scale and Scatter
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) {
-					yF_out[idx] += fe[a] * Eval;
-				}
+		// Scale rows by element modulus (parallel)
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const double Eval = eleModulus[e];
+			double* __restrict__ fRow = fMat + e * 24;
+			if (Eval <= 1.0e-16) {
+				for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+			} else {
+				for (int i = 0; i < 24; ++i) fRow[i] *= Eval;
 			}
+		}
+
+		// ============ STEP 3: Parallel Scatter (no atomics) ============
+		// Need barrier here because scatter reads fMat written by matvec
+		#pragma omp barrier
+
+		#pragma omp for schedule(static)
+		for (size_t d = 0; d < numFreeDofs; ++d) {
+			double sum = 0.0;
+			int start = dofBnd[d];
+			int end = dofBnd[d + 1];
+			for (int k = start; k < end; ++k) {
+				sum += fMat[scatIdx[k]];
+			}
+			yF_out[d] = sum;
+		}
+	}
+
+#else
+	// Serial fallback
+	// Step 1: Gather
+	for (int e = 0; e < numElements; ++e) {
+		const int32_t* ed = eDofFree + 24 * e;
+		double* uRow = uMat + e * 24;
+		for (int a = 0; a < 24; ++a) {
+			int idx = ed[a];
+			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+		}
+	}
+
+	// Step 2: Matvec using CBLAS if available
+#ifdef HAVE_CBLAS
+	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+	            numElements, 24, 24,
+	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
+	// Scale by element modulus
+	for (int e = 0; e < numElements; ++e) {
+		const double Eval = eleModulus[e];
+		double* fRow = fMat + e * 24;
+		if (Eval <= 1.0e-16) {
+			for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+		} else {
+			for (int i = 0; i < 24; ++i) fRow[i] *= Eval;
 		}
 	}
 #else
-	// Serial fallback
 	for (int e = 0; e < numElements; ++e) {
 		const double Eval = eleModulus[e];
-		if (Eval <= 1.0e-16) continue;
-
-		double ue[24], fe[24];
-		const int32_t* ed = eDofFree + e * 24;
-
-		// Gather
-		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
-			ue[a] = (idx >= 0) ? uF[idx] : 0.0;
-		}
-
-		// Matvec
-#ifdef HAVE_CBLAS
-		cblas_dgemv(CblasRowMajor, CblasNoTrans, 24, 24, 1.0, Kptr, 24, ue, 1, 0.0, fe, 1);
-#else
-		for (int i = 0; i < 24; ++i) {
-			double sum = 0.0;
-			for (int j = 0; j < 24; ++j) {
-				sum += Kptr[i * 24 + j] * ue[j];
+		const double* uRow = uMat + e * 24;
+		double* fRow = fMat + e * 24;
+		if (Eval <= 1.0e-16) {
+			for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+		} else {
+			for (int i = 0; i < 24; ++i) {
+				double sum = 0.0;
+				for (int j = 0; j < 24; ++j) {
+					sum += uRow[j] * Kptr[j * 24 + i];
+				}
+				fRow[i] = sum * Eval;
 			}
-			fe[i] = sum;
 		}
+	}
 #endif
 
-		// Scale and Scatter
-		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
-			if (idx >= 0) {
-				yF_out[idx] += fe[a] * Eval;
-			}
+	// Step 3: Scatter
+	for (size_t d = 0; d < numFreeDofs; ++d) {
+		double sum = 0.0;
+		int start = ws.dofBoundaries[d];
+		int end = ws.dofBoundaries[d + 1];
+		for (int k = start; k < end; ++k) {
+			sum += fMat[ws.scatterIdx[k]];
 		}
+		yF_out[d] = sum;
 	}
 #endif
 }
 
-
+// Backward-compatible wrapper (allocates workspace internally)
+void K_times_u_finest(const Problem& pb,
+                      const std::vector<double>& eleModulus,
+                      const std::vector<double>& uFree,
+                      std::vector<double>& yFree)
+{
+	// For backward compatibility, use a static thread-local workspace
+	// This avoids allocation on every call but isn't ideal for memory reuse
+	static thread_local KTimesUWorkspace ws;
+	K_times_u_finest(pb, eleModulus, uFree, yFree, ws);
+}
 
 double ComputeCompliance(const Problem& pb,
 						   const std::vector<double>& eleModulus,
