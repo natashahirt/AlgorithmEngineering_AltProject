@@ -777,80 +777,51 @@ void K_times_u_finest(const Problem& pb,
 
 	if (useParallel) {
 #if defined(_OPENMP)
-		#if defined(__GNUC__) || defined(__clang__)
-		const double* __restrict__ KptrAligned =
-			static_cast<const double*>(__builtin_assume_aligned(Kptr, 64));
-		#else
-		const double* __restrict__ KptrAligned = Kptr;
-		#endif
-		const double (* __restrict__ K2D)[24] =
-			reinterpret_cast<const double (* __restrict__)[24]>(KptrAligned);
-
 		double* __restrict__ yF_out = yFree.data();
 
-		// Block-based approach with atomics (faster than coloring due to fewer barriers)
+		// Element-by-element with atomics
+		// Column-major matvec: fe[i] = sum_j K[i][j] * ue[j]
+		// Rewritten as: fe = sum_j K[:,j] * ue[j] for better vectorization
 		#pragma omp parallel
 		{
-			// Block size 16 for better AVX-512 utilization
-			constexpr int BS = 16;
-			alignas(64) double ue[24][BS];
-			alignas(64) double fe[24][BS];
-			int activeElems[BS];
+			alignas(64) double ue[24];
+			alignas(64) double fe[24];
 
 			#pragma omp for schedule(static)
-			for (int baseE = 0; baseE < numElements; baseE += BS) {
-				const int blockEnd = std::min(baseE + BS, numElements);
+			for (int e = 0; e < numElements; ++e) {
+				const double Eval = eleModulus[e];
+				if (Eval <= 1.0e-16) continue;
 
-				// 1. Early filter: only gather active elements (modulus > threshold)
-				int activeCount = 0;
-				for (int e = baseE; e < blockEnd; ++e) {
-					if (eleModulus[e] > 1.0e-16) {
-						activeElems[activeCount++] = e;
+				const int32_t* __restrict__ ed = eDofFree + 24 * e;
+
+				// Gather
+				for (int a = 0; a < 24; ++a) {
+					int idx = ed[a];
+					ue[a] = (idx >= 0) ? uF[idx] : 0.0;
+				}
+
+				// Local matvec: fe = Ke * ue
+				// Column-major approach: fe = sum_j K[:,j] * ue[j]
+				// This allows vectorizing over the 24 rows
+				for (int i = 0; i < 24; ++i) fe[i] = 0.0;
+
+				for (int j = 0; j < 24; ++j) {
+					double uj = ue[j] * Eval;
+					// K is row-major: K[i][j] = Kptr[i*24 + j]
+					// For column j, elements are at Kptr[0*24+j], Kptr[1*24+j], ...
+					// Stride of 24 - not ideal for vectorization but
+					// let's let the compiler try
+					for (int i = 0; i < 24; ++i) {
+						fe[i] += Kptr[i * 24 + j] * uj;
 					}
 				}
 
-				// Skip entire block if no active elements
-				if (activeCount == 0) continue;
-
-				// 2. Gather only active elements
-				for (int k = 0; k < activeCount; ++k) {
-					int e = activeElems[k];
-					const int32_t* __restrict__ ed = eDofFree + 24 * e;
-					for (int a = 0; a < 24; ++a) {
-						int idx = ed[a];
-						ue[a][k] = (idx >= 0) ? uF[idx] : 0.0;
-					}
-				}
-				// Zero padding for SIMD
-				for (int k = activeCount; k < BS; ++k) {
-					for (int a = 0; a < 24; ++a) ue[a][k] = 0.0;
-				}
-
-				// 3. Local matvec (always process full BS for SIMD efficiency)
-				for (int i = 0; i < 24; ++i) {
-					#pragma omp simd
-					for (int k = 0; k < BS; ++k) fe[i][k] = 0.0;
-					for (int j = 0; j < 24; ++j) {
-						double Kij = K2D[i][j];
-						#pragma omp simd
-						for (int k = 0; k < BS; ++k) {
-							fe[i][k] += Kij * ue[j][k];
-						}
-					}
-				}
-
-				// 4. Scatter only active elements with atomics
-				for (int k = 0; k < activeCount; ++k) {
-					int e = activeElems[k];
-					double Eval = eleModulus[e];
-					const int32_t* __restrict__ ed = eDofFree + 24 * e;
-					for (int a = 0; a < 24; ++a) {
-						int idx = ed[a];
-						if (idx >= 0) {
-							double val = fe[a][k] * Eval;
-							#pragma omp atomic
-							yF_out[idx] += val;
-						}
+				// Scatter with atomics
+				for (int a = 0; a < 24; ++a) {
+					int idx = ed[a];
+					if (idx >= 0) {
+						#pragma omp atomic
+						yF_out[idx] += fe[a];
 					}
 				}
 			}

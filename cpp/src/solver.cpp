@@ -188,7 +188,7 @@ int PCG_free(const Problem& pb,
         if (M) {
             M(r, z); // Writes to ws.z - has its own parallel region
 
-            // First pass: compute rz_new = dot(r, z)
+            // Compute rz_new = dot(r, z)
             #pragma omp parallel for reduction(+:rz_new)
             for (size_t i = 0; i < n; ++i) {
                 rz_new += r[i] * z[i];
@@ -197,7 +197,7 @@ int PCG_free(const Problem& pb,
             double beta = rz_new / std::max(1.0e-30, rz_old);
             rz_old = rz_new;
 
-            // Second pass: p = z + beta * p
+            // p = z + beta * p
             #pragma omp parallel for
             for (size_t i = 0; i < n; ++i) {
                 p[i] = z[i] + beta * p[i];
