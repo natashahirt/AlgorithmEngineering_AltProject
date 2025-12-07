@@ -785,90 +785,119 @@ void K_times_u_finest(const Problem& pb,
 	double* __restrict__ fMat = ws.fMat.data();
 	double* __restrict__ yF_out = yFree.data();
 
-
-
-#if defined(_OPENMP)
-	int nthreads = 0;
-	#pragma omp parallel
-	{
-		#pragma omp master
-		nthreads = omp_get_num_threads();
-	}
-	ws.resize_thread_local(nthreads, numFreeDofs);
-
-	#pragma omp parallel
-	{
-		const int tid = omp_get_thread_num();
-		auto& y_local = ws.y_thread_local[tid];
-		std::fill(y_local.begin(), y_local.end(), 0.0);
-		
-		const int chunk_size = 64;
-
-		#pragma omp for schedule(static)
-		for (int e_start = 0; e_start < numElements; e_start += chunk_size) {
-			const int e_end = std::min(e_start + chunk_size, numElements);
-			const int num_in_chunk = e_end - e_start;
-
-			// Step 1: Gather for the chunk
-			double* u_thread = ws.uMat.data() + tid * chunk_size * 24;
-			for (int i = 0; i < num_in_chunk; ++i) {
-				const int e = e_start + i;
-				const int32_t* __restrict__ ed = eDofFree + e * 24;
-				double* __restrict__ uRow = u_thread + i * 24;
-				for (int a = 0; a < 24; ++a) {
-					int idx = ed[a];
-					uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
+	if (!ws.scatterIndexBuilt) {
+		// Count contributions per DOF
+		std::vector<int> dofCount(numFreeDofs + 1, 0);
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* ed = eDofFree + 24 * e;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				if (idx >= 0) dofCount[idx + 1]++;
+			}
+		}
+		// Prefix sum to get boundaries
+		ws.dofBoundaries.resize(numFreeDofs + 1);
+		ws.dofBoundaries[0] = 0;
+		for (size_t i = 1; i <= numFreeDofs; ++i) {
+			ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
+		}
+		// Fill scatter indices (just the fMat index, grouped by output DOF)
+		size_t totalPairs = ws.dofBoundaries[numFreeDofs];
+		ws.scatterIdx.resize(totalPairs);
+		std::vector<int> dofPos(numFreeDofs, 0);
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* ed = eDofFree + 24 * e;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				if (idx >= 0) {
+					int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
+					ws.scatterIdx[pos] = e * 24 + a;
 				}
 			}
+		}
+		ws.scatterIndexBuilt = true;
+	}
 
-			// Step 2: Batched Matrix Multiply for the chunk
-			double* f_thread = ws.fMat.data() + tid * chunk_size * 24;
+#if defined(_OPENMP)
+	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
+	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
+
+	// Single parallel region for all three steps to reduce barrier overhead
+	#pragma omp parallel
+	{
+		// ============ STEP 1: Parallel Gather ============
+		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const int32_t* __restrict__ ed = eDofFree + 24 * e;
+			double* __restrict__ uRow = uMat + e * 24;
+			for (int a = 0; a < 24; ++a) {
+				int idx = ed[a];
+				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+			}
+		}
+
+		// ============ STEP 2: Batched Matrix Multiply ============
+		// fMat = uMat * Ke^T (then scale rows by Ee)
+		// Need barrier here because matvec reads uMat written by gather
+		#pragma omp barrier
+
+		// Use single thread for BLAS call (BLAS may use internal threading)
+		const int chunk_size = 32;
+		#pragma omp for schedule(static)
+		for (int e = 0; e < numElements; e += chunk_size) {
+			int current_chunk_size = std::min(chunk_size, numElements - e);
 #ifdef HAVE_CBLAS
 			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-			            num_in_chunk, 24, 24,
-			            1.0, u_thread, 24,
-			            Kptr, 24,
-			            0.0, f_thread, 24);
+						current_chunk_size, 24, 24,
+						1.0,
+						uMat + e * 24, 24,
+						Kptr, 24,
+						0.0,
+						fMat + e * 24, 24);
 #else
-			for (int i = 0; i < num_in_chunk; ++i) {
-				const double* uRow = u_thread + i * 24;
-				double* fRow = f_thread + i * 24;
-				for (int ii = 0; ii < 24; ++ii) {
+			for (int ee = e; ee < e + current_chunk_size; ++ee) {
+				const double* uRow = uMat + ee * 24;
+				double* fRow = fMat + ee * 24;
+				for (int i = 0; i < 24; ++i) {
 					double sum = 0.0;
 					for (int j = 0; j < 24; ++j) {
-						sum += uRow[j] * Kptr[j * 24 + ii];
+						sum += uRow[j] * Kptr[j * 24 + i];
 					}
-					fRow[ii] = sum;
+					fRow[i] = sum;
 				}
 			}
 #endif
+		}
+		// Implicit barrier after omp single
 
-			// Step 3: Scale and Scatter to thread-local storage
-			for (int i = 0; i < num_in_chunk; ++i) {
-				const int e = e_start + i;
-				const double Eval = eleModulus[e];
-				if (Eval <= 1.0e-16) continue;
-
-				const double* __restrict__ fRow = f_thread + i * 24;
-				const int32_t* __restrict__ ed = eDofFree + e * 24;
-				for (int a = 0; a < 24; ++a) {
-					int idx = ed[a];
-					if (idx >= 0) {
-						y_local[idx] += fRow[a] * Eval;
-					}
-				}
+		// Scale rows by element modulus (parallel)
+		#pragma omp for schedule(static) nowait
+		for (int e = 0; e < numElements; ++e) {
+			const double Eval = eleModulus[e];
+			double* __restrict__ fRow = fMat + e * 24;
+			if (Eval <= 1.0e-16) {
+				for (int i = 0; i < 24; ++i) fRow[i] = 0.0;
+			} else {
+				for (int i = 0; i < 24; ++i) fRow[i] *= Eval;
 			}
 		}
-	}
 
-	// Final reduction
-	#pragma omp parallel for schedule(static)
-	for (size_t d = 0; d < numFreeDofs; ++d) {
-		double sum = 0.0;
-		for (int tid = 0; tid < nthreads; ++tid) {
-			sum += ws.y_thread_local[tid][d];
+		// ============ STEP 3: Parallel Scatter (no atomics) ============
+		// Need barrier here because scatter reads fMat written by matvec
+		#pragma omp barrier
+
+		#pragma omp for schedule(static)
+		for (size_t d = 0; d < numFreeDofs; ++d) {
+			double sum = 0.0;
+			int start = dofBnd[d];
+			int end = dofBnd[d + 1];
+			for (int k = start; k < end; ++k) {
+				sum += fMat[scatIdx[k]];
+			}
+			yF_out[d] = sum;
 		}
-		yF_out[d] = sum;
 	}
 
 #else
