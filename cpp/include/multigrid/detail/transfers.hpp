@@ -30,4 +30,15 @@ void MG_Prolongate_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
 void MG_Restrict_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
                             const std::vector<double>& rf, std::vector<double>& rc);
 
+// "Inner" versions: called from within an existing parallel region (no barrier at end)
+// These use #pragma omp for instead of #pragma omp parallel for
+// W is a thread-local weight buffer that must be pre-allocated by the caller
+void MG_Prolongate_nodes_Vec3_Inner(const MGLevel& Lc, const MGLevel& Lf,
+                                    const std::vector<double>& xc, std::vector<double>& xf,
+                                    std::vector<double>& W);
+
+void MG_Restrict_nodes_Vec3_Inner(const MGLevel& Lc, const MGLevel& Lf,
+                                  const std::vector<double>& rf, std::vector<double>& rc,
+                                  std::vector<double>& W);
+
 } } // namespace top3d::mg
