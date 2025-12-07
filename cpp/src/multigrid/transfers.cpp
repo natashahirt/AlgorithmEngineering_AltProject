@@ -17,76 +17,105 @@ namespace top3d { namespace mg {
 void MG_Prolongate_nodes_Strided(const MGLevel& Lc, const MGLevel& Lf,
                                  const std::vector<double>& xc, std::vector<double>& xf,
                                  int component, int stride) {
-    const int fnnx = Lf.resX + 1;
-    const int fnny = Lf.resY + 1;
-    const int fnnz = Lf.resZ + 1;
-    
-    const int cnnx = Lc.resX + 1;
-    const int cnny = Lc.resY + 1;
-    
-    const int span = Lc.spanWidth;
-    // Inverse span for weight calculation
-    const double invSpan = 1.0 / span;
+    const int cResX = Lc.resX;
+    const int cResY = Lc.resY;
+    const int cResZ = Lc.resZ;
+    const int span  = Lc.spanWidth;
 
-    if (xf.size() < (size_t)(fnnx * fnny * fnnz * stride)) 
-        xf.resize(fnnx * fnny * fnnz * stride);
+    const int fNnx = Lf.resX + 1;
+    const int fNny = Lf.resY + 1;
+    const int fNnz = Lf.resZ + 1;
 
-    #pragma omp parallel for collapse(3)
-    for (int fz = 0; fz < fnnz; ++fz) {
-        for (int fy = 0; fy < fnny; ++fy) {
-            for (int fx = 0; fx < fnnx; ++fx) {
-                // Coarse cell index (top-left-front)
-                int cx = fx / span;
-                int cy = fy / span;
-                int cz = fz / span;
+    // Safety resize
+    size_t required = (size_t)fNnx * fNny * fNnz * stride;
+    if (xf.size() < required) xf.resize(required);
 
-                // Local offset in coarse cell [0, span]
-                int rx = fx % span;
-                int ry = fy % span;
-                int rz = fz % span;
+    const int cNnx = cResX + 1;
+    const int cNny = cResY + 1;
 
-                // If on boundary, clamp to valid cell
-                if (cx >= Lc.resX) { cx = Lc.resX - 1; rx = span; }
-                if (cy >= Lc.resY) { cy = Lc.resY - 1; ry = span; }
-                if (cz >= Lc.resZ) { cz = Lc.resZ - 1; rz = span; }
+    // 1. Precompute weights for the span (Small LUT)
+    // We only need weights for offsets 0..span-1.
+    // At offset=span, it belongs to the next cell.
+    std::vector<double> W(span);
+    double invSpan = 1.0 / span;
+    for(int i=0; i<span; ++i) W[i] = (double)i * invSpan;
 
-                // Trilinear weights for the 8 corners of the coarse cell
-                // w = (1 - |dist|/S)
-                // For local offset r in [0, S]: 
-                //   Left/Top/Front weight = (S - r)/S
-                //   Right/Bot/Back weight = r/S
-                double wx1 = (double)rx * invSpan; double wx0 = 1.0 - wx1;
-                double wy1 = (double)ry * invSpan; double wy0 = 1.0 - wy1;
-                double wz1 = (double)rz * invSpan; double wz0 = 1.0 - wz1;
+    // 2. Iterate over COARSE elements (Tiling the fine grid)
+#pragma omp parallel for collapse(2)
+    for (int cz = 0; cz < cResZ; ++cz) {
+        for (int cy = 0; cy < cResY; ++cy) {
+            // Inner loop logic is now invariant for the whole row
+            for (int cx = 0; cx < cResX; ++cx) {
 
-                // Coarse Node Indices
-                // Ordering: z * (NX*NY) + y * NX + x
-                int cbase00 = cnnx * cnny * cz + cnnx * cy + cx;
-                int cbase01 = cbase00 + 1;       // +x
-                int cbase10 = cbase00 + cnnx;    // +y
-                int cbase11 = cbase10 + 1;       // +x+y
-                
-                int cnext00 = cbase00 + cnnx * cnny; // +z
-                int cnext01 = cnext00 + 1;
-                int cnext10 = cnext00 + cnnx;
-                int cnext11 = cnext10 + 1;
+                // Base indices for the 8 corners of this coarse cell
+                // cIdx = (cz * cNny + cy) * cNnx + cx;
+                int cIdx000 = (cz * cNny + cy) * cNnx + cx;
+                int cIdx100 = cIdx000 + 1;
+                int cIdx010 = cIdx000 + cNnx;
+                int cIdx110 = cIdx010 + 1;
 
-                double val = 
-                    xc[cbase00 * stride + component] * wx0 * wy0 * wz0 +
-                    xc[cbase01 * stride + component] * wx1 * wy0 * wz0 +
-                    xc[cbase10 * stride + component] * wx0 * wy1 * wz0 +
-                    xc[cbase11 * stride + component] * wx1 * wy1 * wz0 +
-                    xc[cnext00 * stride + component] * wx0 * wy0 * wz1 +
-                    xc[cnext01 * stride + component] * wx1 * wy0 * wz1 +
-                    xc[cnext10 * stride + component] * wx0 * wy1 * wz1 +
-                    xc[cnext11 * stride + component] * wx1 * wy1 * wz1;
+                int cIdx001 = cIdx000 + cNnx * cNny;
+                int cIdx101 = cIdx001 + 1;
+                int cIdx011 = cIdx001 + cNnx;
+                int cIdx111 = cIdx011 + 1;
 
-                // Write to fine grid
-                int fidx = fnnx * fnny * fz + fnnx * fy + fx;
-                xf[fidx * stride + component] = val;
+                // Load coarse values into registers
+                double v000 = xc[cIdx000 * stride + component];
+                double v100 = xc[cIdx100 * stride + component];
+                double v010 = xc[cIdx010 * stride + component];
+                double v110 = xc[cIdx110 * stride + component];
+                double v001 = xc[cIdx001 * stride + component];
+                double v101 = xc[cIdx101 * stride + component];
+                double v011 = xc[cIdx011 * stride + component];
+                double v111 = xc[cIdx111 * stride + component];
+
+                // 3. Fill the fine nodes inside this coarse cell
+                int fStartZ = cz * span;
+                int fStartY = cy * span;
+                int fStartX = cx * span;
+
+                for (int rz = 0; rz < span; ++rz) {
+                    double wz = W[rz];
+                    double wz0 = 1.0 - wz;
+
+                    int fz = fStartZ + rz;
+                    // Precompute Z-row offset
+                    int fRowZ = fz * fNny * fNnx;
+
+                    for (int ry = 0; ry < span; ++ry) {
+                        double wy = W[ry];
+                        double wy0 = 1.0 - wy;
+
+                        // Interpolate along Z-Y planes
+                        double val00 = v000 * wz0 + v001 * wz;
+                        double val10 = v100 * wz0 + v101 * wz;
+                        double val01 = v010 * wz0 + v011 * wz;
+                        double val11 = v110 * wz0 + v111 * wz;
+
+                        double val0 = val00 * wy0 + val01 * wy; // x=0 side
+                        double val1 = val10 * wy0 + val11 * wy; // x=1 side
+
+                        int fy = fStartY + ry;
+                        int fRowY = fy * fNnx;
+
+                        // Vectorizable inner loop
+#pragma omp simd
+                        for (int rx = 0; rx < span; ++rx) {
+                            double wx = W[rx];
+                            double val = val0 * (1.0 - wx) + val1 * wx;
+
+                            int fx = fStartX + rx;
+                            xf[(fRowZ + fRowY + fx) * stride + component] = val;
+                        }
+                    }
+                }
             }
         }
     }
+
+    // Note: This leaves the last boundary layer (fx=Max, fy=Max, etc) untouched.
+    // In MG, boundaries are usually fixed (Dirichlet = 0) or handled separately.
+    // If you need exact boundary values, you can run a simple loop for the edges.
 }
 
 // Optimized Strided Restriction
