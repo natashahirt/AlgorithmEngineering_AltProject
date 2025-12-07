@@ -828,7 +828,7 @@ void K_times_u_finest(const Problem& pb,
 	{
 		// ============ STEP 1: Parallel Gather ============
 		// uMat[e*24 + a] = uFree[eDofFree[e*24 + a]] or 0 if fixed
-		#pragma omp for schedule(static) nowait
+		#pragma omp for schedule(static)
 		for (int e = 0; e < numElements; ++e) {
 			const int32_t* __restrict__ ed = eDofFree + 24 * e;
 			double* __restrict__ uRow = uMat + e * 24;
@@ -873,7 +873,7 @@ void K_times_u_finest(const Problem& pb,
 		// Implicit barrier after omp single
 
 		// Scale rows by element modulus (parallel)
-		#pragma omp for schedule(static) nowait
+		#pragma omp for schedule(static)
 		for (int e = 0; e < numElements; ++e) {
 			const double Eval = eleModulus[e];
 			double* __restrict__ fRow = fMat + e * 24;
