@@ -161,23 +161,34 @@ int PCG_free(const Problem& pb,
         // 1. Matrix-Vector Multiplication
         K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-        // 2. Compute denom = dot(p, Ap)
+        // 2-3. Combined: dot(p,Ap) -> alpha -> update x,r -> rnorm2
+        // Single parallel region reduces fork/join overhead on high-core systems
         double denom = 0.0;
-        #pragma omp parallel for reduction(+:denom) schedule(static)
-        for (size_t i = 0; i < n; ++i) {
-            denom += p_ptr[i] * Ap_ptr[i];
-        }
-
-        double alpha = rz_old / std::max(1.0e-30, denom);
-
-        // 3. Update x, r and compute rnorm2
         double rnorm2 = 0.0;
-        #pragma omp parallel for reduction(+:rnorm2) schedule(static)
-        for (size_t i = 0; i < n; ++i) {
-            x_ptr[i] += alpha * p_ptr[i];
-            double val_r = r_ptr[i] - alpha * Ap_ptr[i];
-            r_ptr[i] = val_r;
-            rnorm2 += val_r * val_r;
+        #pragma omp parallel
+        {
+            double local_denom = 0.0;
+            #pragma omp for schedule(static)
+            for (size_t i = 0; i < n; ++i) {
+                local_denom += p_ptr[i] * Ap_ptr[i];
+            }
+            #pragma omp atomic
+            denom += local_denom;
+
+            #pragma omp barrier
+
+            double alpha = rz_old / std::max(1.0e-30, denom);
+
+            double local_rnorm2 = 0.0;
+            #pragma omp for schedule(static)
+            for (size_t i = 0; i < n; ++i) {
+                x_ptr[i] += alpha * p_ptr[i];
+                double val_r = r_ptr[i] - alpha * Ap_ptr[i];
+                r_ptr[i] = val_r;
+                local_rnorm2 += val_r * val_r;
+            }
+            #pragma omp atomic
+            rnorm2 += local_rnorm2;
         }
 
         // Convergence Check
@@ -187,21 +198,28 @@ int PCG_free(const Problem& pb,
         if (M) {
             M(r, z);
 
-            // 5. Compute rz_new = dot(r, z)
+            // 5-6. Combined: dot(r,z) -> beta -> p = z + beta*p
             double rz_new = 0.0;
-            #pragma omp parallel for reduction(+:rz_new) schedule(static)
-            for (size_t i = 0; i < n; ++i) {
-                rz_new += r_ptr[i] * z_ptr_w[i];
-            }
+            #pragma omp parallel
+            {
+                double local_rz = 0.0;
+                #pragma omp for schedule(static)
+                for (size_t i = 0; i < n; ++i) {
+                    local_rz += r_ptr[i] * z_ptr_w[i];
+                }
+                #pragma omp atomic
+                rz_new += local_rz;
 
-            double beta = rz_new / std::max(1.0e-30, rz_old);
+                #pragma omp barrier
+
+                double beta = rz_new / std::max(1.0e-30, rz_old);
+
+                #pragma omp for schedule(static)
+                for (size_t i = 0; i < n; ++i) {
+                    p_ptr[i] = z_ptr_w[i] + beta * p_ptr[i];
+                }
+            }
             rz_old = rz_new;
-
-            // 6. p = z + beta * p
-            #pragma omp parallel for schedule(static)
-            for (size_t i = 0; i < n; ++i) {
-                p_ptr[i] = z_ptr_w[i] + beta * p_ptr[i];
-            }
         } else {
             double beta = rnorm2 / std::max(1.0e-30, rz_old);
             rz_old = rnorm2;

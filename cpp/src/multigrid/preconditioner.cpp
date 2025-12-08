@@ -13,6 +13,10 @@
 #include <memory>
 #include <algorithm>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace top3d { namespace mg {
 
 // Build H and fixed masks once, reuse later
@@ -108,9 +112,8 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 		double* __restrict__ zFree_ptr = zFree.data();
 		double* __restrict__ tmp_xf_ptr = ws->tmp_xf.data();
 
-		// ============ SINGLE PARALLEL REGION FOR ENTIRE V-CYCLE ============
-		#pragma omp parallel
-		{
+		// Inner V-cycle implementation - uses #pragma omp for (requires being in parallel region)
+		auto vcycle_impl = [&]() {
 			// Thread-local weight buffer for transfer operations
 			std::vector<double> W_local(16);
 
@@ -261,7 +264,21 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 				int nLex  = nodMapBack[nMort];
 				zFree_ptr[i] = xLv0[3*nLex + comp];
 			}
-		} // end parallel region
+		}; // end vcycle_impl lambda
+
+		// Check if already in a parallel region - if so, use inner impl directly
+#ifdef _OPENMP
+		if (omp_in_parallel()) {
+			vcycle_impl();
+		} else {
+			#pragma omp parallel
+			{
+				vcycle_impl();
+			}
+		}
+#else
+		vcycle_impl();
+#endif
 	};
 }
 

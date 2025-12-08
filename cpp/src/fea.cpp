@@ -756,6 +756,78 @@ static inline void ProcessBlock_8_Free(
 	}
 }
 
+// Inner implementation of K*u - called from within an existing parallel region
+// Uses #pragma omp for instead of #pragma omp parallel
+static void K_times_u_finest_impl(
+	int numElements,
+	size_t numFreeDofs,
+	const int32_t* __restrict__ eDofFree,
+	const double* __restrict__ Kptr,
+	const double* __restrict__ uF,
+	double* __restrict__ uMat,
+	double* __restrict__ fMat,
+	double* __restrict__ yF_out,
+	const double* __restrict__ Ee,
+	const int32_t* __restrict__ scatIdx,
+	const int32_t* __restrict__ dofBnd)
+{
+	// ============ STEP 1: Parallel Gather ============
+	#pragma omp for schedule(static)
+	for (int e = 0; e < numElements; ++e) {
+		const int32_t* __restrict__ ed = eDofFree + 24 * e;
+		double* __restrict__ uRow = uMat + e * 24;
+		for (int a = 0; a < 24; ++a) {
+			const int idx = ed[a];
+			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+		}
+	}
+	// Implicit barrier after omp for
+
+	// ============ STEP 2: Chunked BLAS Matrix Multiply ============
+	// fMat = uMat * Ke^T
+	constexpr int chunk_size = 64;
+	#pragma omp for schedule(static)
+	for (int e = 0; e < numElements; e += chunk_size) {
+		int actual_chunk = std::min(chunk_size, numElements - e);
+#ifdef HAVE_CBLAS
+		cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+		            actual_chunk, 24, 24,
+		            1.0, uMat + e * 24, 24,
+		            Kptr, 24,
+		            0.0, fMat + e * 24, 24);
+#else
+		// Manual fallback
+		for (int ee = e; ee < e + actual_chunk; ++ee) {
+			const double* __restrict__ uRow = uMat + ee * 24;
+			double* __restrict__ fRow = fMat + ee * 24;
+			for (int i = 0; i < 24; ++i) {
+				const double* __restrict__ KeRow = Kptr + i * 24;
+				double sum = 0.0;
+				for (int j = 0; j < 24; ++j) {
+					sum += uRow[j] * KeRow[j];
+				}
+				fRow[i] = sum;
+			}
+		}
+#endif
+	}
+	// Implicit barrier after omp for
+
+	// ============ STEP 3: Parallel Scale and Scatter ============
+	#pragma omp for schedule(static)
+	for (size_t d = 0; d < numFreeDofs; ++d) {
+		double sum = 0.0;
+		const int start = dofBnd[d];
+		const int end = dofBnd[d + 1];
+		for (int k = start; k < end; ++k) {
+			const int fMatIdx = scatIdx[k];
+			const int elemIdx = fMatIdx / 24;
+			sum += fMat[fMatIdx] * Ee[elemIdx];
+		}
+		yF_out[d] = sum;
+	}
+}
+
 // MATLAB-style batched K*u implementation
 // Step 1: Gather all element displacements into uMat (numElements x 24)
 // Step 2: Batch matrix multiply: fMat = uMat * Ke^T, then scale by Ee
@@ -819,69 +891,20 @@ void K_times_u_finest(const Problem& pb,
 		ws.scatterIndexBuilt = true;
 	}
 
-	// Single parallel region with chunked BLAS (use MKL_NUM_THREADS=1 to avoid threading conflict)
 	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
 	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
 
 #if defined(_OPENMP)
-	#pragma omp parallel
-	{
-		// ============ STEP 1: Parallel Gather ============
-		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* __restrict__ ed = eDofFree + 24 * e;
-			double* __restrict__ uRow = uMat + e * 24;
-			for (int a = 0; a < 24; ++a) {
-				const int idx = ed[a];
-				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
-			}
-		}
-		// Implicit barrier after omp for
-
-		// ============ STEP 2: Chunked BLAS Matrix Multiply ============
-		// Each thread processes chunks independently. Use MKL_NUM_THREADS=1 to avoid nested threading.
-		// fMat = uMat * Ke^T
-		constexpr int chunk_size = 64;
-		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; e += chunk_size) {
-			int actual_chunk = std::min(chunk_size, numElements - e);
-#ifdef HAVE_CBLAS
-			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-			            actual_chunk, 24, 24,
-			            1.0, uMat + e * 24, 24,
-			            Kptr, 24,
-			            0.0, fMat + e * 24, 24);
-#else
-			// Manual fallback
-			for (int ee = e; ee < e + actual_chunk; ++ee) {
-				const double* __restrict__ uRow = uMat + ee * 24;
-				double* __restrict__ fRow = fMat + ee * 24;
-				for (int i = 0; i < 24; ++i) {
-					const double* __restrict__ KeRow = Kptr + i * 24;
-					double sum = 0.0;
-					for (int j = 0; j < 24; ++j) {
-						sum += uRow[j] * KeRow[j];
-					}
-					fRow[i] = sum;
-				}
-			}
-#endif
-		}
-		// Implicit barrier after omp for
-
-		// ============ STEP 3: Parallel Scale and Scatter ============
-		#pragma omp for schedule(static)
-		for (size_t d = 0; d < numFreeDofs; ++d) {
-			double sum = 0.0;
-			const int start = dofBnd[d];
-			const int end = dofBnd[d + 1];
-			for (int k = start; k < end; ++k) {
-				const int fMatIdx = scatIdx[k];
-				const int elemIdx = fMatIdx / 24;
-				sum += fMat[fMatIdx] * Ee[elemIdx];
-			}
-			yF_out[d] = sum;
+	// Check if already in a parallel region - if so, use inner impl directly
+	if (omp_in_parallel()) {
+		K_times_u_finest_impl(numElements, numFreeDofs, eDofFree, Kptr, uF,
+		                      uMat, fMat, yF_out, Ee, scatIdx, dofBnd);
+	} else {
+		#pragma omp parallel
+		{
+			K_times_u_finest_impl(numElements, numFreeDofs, eDofFree, Kptr, uF,
+			                      uMat, fMat, yF_out, Ee, scatIdx, dofBnd);
 		}
 	}
 #else
