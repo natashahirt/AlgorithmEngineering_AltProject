@@ -15,3 +15,12 @@ Simulation: 0
 Building Multigrid Hierarchy...
 [MG] levels=5 coarsest=16x8x8 dofs=4131
 Preparing Voxel-based FEA Model Costs        7.2s
+Compliance of Fully Solid Domain:     1.533438e-01
+ It.:    0 Solver Time:  565s.
+
+ It.:   1 Obj.:  8.86896640e+01 Vol.:1.2000e-01 Sharp.:4.0644e-01 Cons.:5.22e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 5.54e+02s; CG: 5.51e+02s; Opti.: 3.28e+00s; Filtering: 2.10e+00s.
+ It.:   2 Obj.:  1.71570487e+02 Vol.:1.2000e-01 Sharp.:4.0091e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 5.50e+02s; CG: 5.47e+02s; Opti.: 2.82e+00s; Filtering: 1.71e+00s.
+ It.:   3 Obj.:  2.61436523e+02 Vol.:1.2000e-01 Sharp.:3.8010e-01 Cons.:8.20e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 5.48e+02s; CG: 5.45e+02s; Opti.: 3.02e+00s; Filtering: 1.90e+00s.

@@ -15,3 +15,40 @@ Simulation: 0
 Building Multigrid Hierarchy...
 [MG] levels=3 coarsest=38x19x19 dofs=46800
 Preparing Voxel-based FEA Model Costs        1.2s
+Compliance of Fully Solid Domain:     2.603844e-01
+ It.:    0 Solver Time:  154s.
+
+ It.:   1 Obj.:  1.50597931e+02 Vol.:1.2000e-01 Sharp.:4.0539e-01 Cons.:-5.22e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 1.49e+02s; CG: 1.49e+02s; Opti.: 5.40e-01s; Filtering: 3.74e-01s.
+ It.:   2 Obj.:  2.69767159e+02 Vol.:1.2000e-01 Sharp.:4.0375e-01 Cons.:5.96e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 1.45e+02s; CG: 1.44e+02s; Opti.: 5.56e-01s; Filtering: 3.94e-01s.
+ It.:   3 Obj.:  4.05795809e+02 Vol.:1.2000e-01 Sharp.:3.8612e-01 Cons.:-6.71e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 1.40e+02s; CG: 1.39e+02s; Opti.: 5.74e-01s; Filtering: 4.03e-01s.
+ It.:   4 Obj.:  5.74084379e+02 Vol.:1.2000e-01 Sharp.:3.6127e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    4 (Time)... Total per-It.: 1.35e+02s; CG: 1.34e+02s; Opti.: 6.19e-01s; Filtering: 4.60e-01s.
+ It.:   5 Obj.:  8.00385801e+01 Vol.:1.2000e-01 Sharp.:3.6295e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    5 (Time)... Total per-It.: 1.35e+02s; CG: 1.35e+02s; Opti.: 6.40e-01s; Filtering: 4.68e-01s.
+ It.:   6 Obj.:  2.70214675e+02 Vol.:1.2000e-01 Sharp.:3.5185e-01 Cons.:5.96e-08 Ch.:2.00e-01
+ It.:    6 (Time)... Total per-It.: 1.35e+02s; CG: 1.35e+02s; Opti.: 6.21e-01s; Filtering: 4.61e-01s.
+ It.:   7 Obj.:  1.00130053e+03 Vol.:1.2000e-01 Sharp.:3.2304e-01 Cons.:2.98e-08 Ch.:2.00e-01
+ It.:    7 (Time)... Total per-It.: 1.35e+02s; CG: 1.34e+02s; Opti.: 6.88e-01s; Filtering: 5.21e-01s.
+ It.:   8 Obj.:  2.01494639e+03 Vol.:1.2000e-01 Sharp.:2.7335e-01 Cons.:4.47e-08 Ch.:2.00e-01
+ It.:    8 (Time)... Total per-It.: 1.32e+02s; CG: 1.31e+02s; Opti.: 6.84e-01s; Filtering: 5.24e-01s.
+ It.:   9 Obj.:  3.78234288e+03 Vol.:1.2000e-01 Sharp.:2.1605e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    9 (Time)... Total per-It.: 1.32e+02s; CG: 1.31e+02s; Opti.: 6.80e-01s; Filtering: 5.18e-01s.
+ It.:  10 Obj.:  5.84131125e+03 Vol.:1.2000e-01 Sharp.:1.6311e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   10 (Time)... Total per-It.: 1.36e+02s; CG: 1.35e+02s; Opti.: 7.90e-01s; Filtering: 6.37e-01s.
+ It.:  11 Obj.:  1.21535268e+04 Vol.:1.2000e-01 Sharp.:1.1242e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   11 (Time)... Total per-It.: 1.35e+02s; CG: 1.34e+02s; Opti.: 7.95e-01s; Filtering: 6.42e-01s.
+ It.:  12 Obj.:  2.83784331e+04 Vol.:1.2000e-01 Sharp.:7.7668e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   12 (Time)... Total per-It.: 1.34e+02s; CG: 1.33e+02s; Opti.: 8.68e-01s; Filtering: 7.18e-01s.
+ It.:  13 Obj.:  7.87834251e+04 Vol.:1.2000e-01 Sharp.:6.3000e-02 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   13 (Time)... Total per-It.: 1.34e+02s; CG: 1.33e+02s; Opti.: 9.07e-01s; Filtering: 7.56e-01s.
+ It.:  14 Obj.:  1.62129627e+05 Vol.:1.2000e-01 Sharp.:5.8164e-02 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:   14 (Time)... Total per-It.: 1.32e+02s; CG: 1.31e+02s; Opti.: 9.60e-01s; Filtering: 8.15e-01s.
+ It.:  15 Obj.:  8.21706063e+03 Vol.:1.2000e-01 Sharp.:7.0540e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   15 (Time)... Total per-It.: 1.34e+02s; CG: 1.33e+02s; Opti.: 9.76e-01s; Filtering: 8.11e-01s.
+ It.:  16 Obj.:  7.14847464e+03 Vol.:1.2000e-01 Sharp.:7.3641e-02 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:   16 (Time)... Total per-It.: 1.34e+02s; CG: 1.33e+02s; Opti.: 8.02e-01s; Filtering: 6.34e-01s.
+ It.:  17 Obj.:  1.12686611e+04 Vol.:1.2000e-01 Sharp.:7.1277e-02 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   17 (Time)... Total per-It.: 1.31e+02s; CG: 1.30e+02s; Opti.: 7.34e-01s; Filtering: 5.74e-01s.

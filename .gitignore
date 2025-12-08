@@ -2,6 +2,7 @@
 *.TopVoxel
 *.dat
 *.nii
+*.stl
 
 # perf recordings
 out/perf/**/perf.data
