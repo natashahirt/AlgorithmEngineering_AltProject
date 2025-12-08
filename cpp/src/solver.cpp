@@ -173,10 +173,12 @@ int PCG_free(const Problem& pb,
         for (size_t i = 0; i < n; ++i) p_ptr[i] = z_ptr[i];
 
         // --- MAIN ITERATION LOOP ---
-        for (int it = 0; it < maxIt && !done; ++it) {
+        for (int it = 0; it < maxIt; ++it) {
+            if (done) break;
+
             K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-            double denom = 0.0;
+            denom = 0.0;
             #pragma omp for schedule(static) reduction(+:denom)
             for (size_t i = 0; i < n; ++i) {
                 denom += p_ptr[i] * Ap_ptr[i];
@@ -187,7 +189,7 @@ int PCG_free(const Problem& pb,
                 alpha = rz_old / std::max(1.0e-30, denom);
             }
 
-            double rnorm2 = 0.0;
+            rnorm2 = 0.0;
             #pragma omp for schedule(static) reduction(+:rnorm2)
             for (size_t i = 0; i < n; ++i) {
                 x_ptr[i] += alpha * p_ptr[i];
@@ -203,7 +205,7 @@ int PCG_free(const Problem& pb,
                     done = true;
                 }
             }
-            if (done) continue;
+            if (done) break;
 
             if (M) {
                 M(r, z);
@@ -212,7 +214,7 @@ int PCG_free(const Problem& pb,
                 for (size_t i = 0; i < n; ++i) z_ptr[i] = r_ptr[i];
             }
 
-            double rz_new = 0.0;
+            rz_new = 0.0;
             if (M) {
                 #pragma omp for schedule(static) reduction(+:rz_new)
                 for (size_t i = 0; i < n; ++i) rz_new += r_ptr[i] * z_ptr[i];
