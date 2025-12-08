@@ -769,9 +769,30 @@ void K_times_u_finest(const Problem& pb,
 	const auto& mesh = pb.mesh;
 	const size_t numFreeDofs = uFree.size();
 
-	// Zero output
-	if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
-	else std::fill(yFree.begin(), yFree.end(), 0.0);
+    // Resize output if necessary (serial)
+	if (yFree.size() != numFreeDofs) {
+        yFree.assign(numFreeDofs, 0.0);
+    }
+    // Note: if we just resized, it is zeroed. If not, we need to zero it.
+    // We can do this efficiently in the parallel region.
+    bool needZero = (yFree.size() == numFreeDofs); // If we didn't assign (resize), we must zero.
+    // Wait, assign sets it to 0.0. So if resized, no need to zero. 
+    // If size matched, we didn't call assign, so it has old data.
+    // Logic:
+    // if (size != num) { assign(num, 0); needZero = false; }
+    // else { needZero = true; }
+    // Actually, assign is O(N). If we resize, we pay O(N).
+    // Can we avoid assign? resize() keeps content? No, we want to clear.
+    // If size != num: yFree.resize(num); needZero = true; (resize fills with default? No, resize to smaller keeps. Resize to larger fills.)
+    // Better:
+    if (yFree.size() != numFreeDofs) {
+        yFree.resize(numFreeDofs); // Size change
+        needZero = true; // Just to be safe, or we can rely on new elements being 0? 
+        // std::vector resize initializes new elements. Old ones are kept.
+        // We need ALL zero.
+    } else {
+        needZero = true;
+    }
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	// Use pointer to Ke array
@@ -795,10 +816,17 @@ void K_times_u_finest(const Problem& pb,
 	const int numColors = mesh.coloring.numColors;
 	const auto& buckets = mesh.coloring.colorBuckets;
 
-#if defined(_OPENMP)
-	bool already_parallel = omp_in_parallel();
-	if (already_parallel) {
-		// Already inside a parallel region: simply share work
+	#if defined(_OPENMP)
+	#pragma omp parallel
+	{
+        // 1. Zero output in parallel
+        if (needZero) {
+            #pragma omp for schedule(static) nowait
+            for (size_t i = 0; i < numFreeDofs; ++i) yF[i] = 0.0;
+            #pragma omp barrier
+        }
+
+        // 2. Accumulate K*u
 		for (int c = 0; c < numColors; ++c) {
 			const auto& bucket = buckets[c];
 			const int n = static_cast<int>(bucket.size());
@@ -808,26 +836,13 @@ void K_times_u_finest(const Problem& pb,
 				int count = std::min(8, n - i);
 				ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 			}
-			// Implicit barrier at end of 'omp for' ensures color dependency safety
-		}
-	} else {
-		// Not in parallel region: spawn threads
-		#pragma omp parallel
-		{
-			for (int c = 0; c < numColors; ++c) {
-				const auto& bucket = buckets[c];
-				const int n = static_cast<int>(bucket.size());
-				
-				#pragma omp for schedule(static)
-				for (int i = 0; i < n; i += 8) {
-					int count = std::min(8, n - i);
-					ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
-				}
-			}
+			// Implicit barrier here ensures all threads finish color 'c' before starting 'c+1'
 		}
 	}
-#else
+	#else
 	// Serial fallback
+    if (needZero) std::fill(yFree.begin(), yFree.end(), 0.0);
+    
 	for (int c = 0; c < numColors; ++c) {
 		const auto& bucket = buckets[c];
 		const int n = static_cast<int>(bucket.size());
@@ -836,7 +851,7 @@ void K_times_u_finest(const Problem& pb,
 			ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 		}
 	}
-#endif
+	#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)
