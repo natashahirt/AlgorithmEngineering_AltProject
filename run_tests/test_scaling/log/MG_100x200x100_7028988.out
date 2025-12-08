@@ -1,0 +1,29 @@
+Running Multigrid for 100 200 100 with OMP_NUM_THREADS=32
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling (cwd=/home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling)
+Running GLOBAL topo-opt on cuboid: 100x200x100, V0=0.12, iters=50
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=3 coarsest=25x13x13 dofs=15288
+Preparing Voxel-based FEA Model Costs        0.4s
+Compliance of Fully Solid Domain:     3.716364e-01
+ It.:    0 Solver Time:   38s.
+
+ It.:   1 Obj.:  2.14940968e+02 Vol.:1.2000e-01 Sharp.:4.0549e-01 Cons.:6.71e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 3.60e+01s; CG: 3.58e+01s; Opti.: 1.36e-01s; Filtering: 9.72e-02s.
+ It.:   2 Obj.:  3.60292267e+02 Vol.:1.2000e-01 Sharp.:4.0500e-01 Cons.:-5.96e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 3.62e+01s; CG: 3.61e+01s; Opti.: 1.30e-01s; Filtering: 9.09e-02s.
+ It.:   3 Obj.:  5.06957175e+02 Vol.:1.2000e-01 Sharp.:3.7812e-01 Cons.:5.22e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 3.67e+01s; CG: 3.66e+01s; Opti.: 1.41e-01s; Filtering: 1.01e-01s.
+ It.:   4 Obj.:  5.21543136e+02 Vol.:1.2000e-01 Sharp.:3.8261e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:    4 (Time)... Total per-It.: 3.73e+01s; CG: 3.71e+01s; Opti.: 1.39e-01s; Filtering: 1.01e-01s.
+ It.:   5 Obj.:  1.20462651e+02 Vol.:1.2000e-01 Sharp.:3.6976e-01 Cons.:-5.96e-08 Ch.:2.00e-01
+ It.:    5 (Time)... Total per-It.: 3.65e+01s; CG: 3.64e+01s; Opti.: 1.33e-01s; Filtering: 9.58e-02s.
