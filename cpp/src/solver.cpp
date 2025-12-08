@@ -172,67 +172,56 @@ int PCG_free(const Problem& pb,
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) p_ptr[i] = z_ptr[i];
 
-        // --- MAIN ITERATION LOOP ---
-        for (int it = 0; it < maxIt; ++it) {
-            if (done) break;
+    // --- MAIN ITERATION LOOP ---
+    for (int it = 0; it < maxIt; ++it) {
+        // Ap = K * p
+        K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-            K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
-
-            denom = 0.0;
-            #pragma omp for schedule(static) reduction(+:denom)
-            for (size_t i = 0; i < n; ++i) {
-                denom += p_ptr[i] * Ap_ptr[i];
-            }
-
-            #pragma omp single
-            {
-                alpha = rz_old / std::max(1.0e-30, denom);
-            }
-
-            rnorm2 = 0.0;
-            #pragma omp for schedule(static) reduction(+:rnorm2)
-            for (size_t i = 0; i < n; ++i) {
-                x_ptr[i] += alpha * p_ptr[i];
-                const double ri = r_ptr[i] - alpha * Ap_ptr[i];
-                r_ptr[i] = ri;
-                rnorm2 += ri * ri;
-            }
-
-            #pragma omp single
-            {
-                if (std::sqrt(rnorm2) < stop_tol) {
-                    result = it + 1;
-                    done = true;
-                }
-            }
-            if (done) break;
-
-            if (M) {
-                M(r, z);
-            } else {
-                #pragma omp for schedule(static)
-                for (size_t i = 0; i < n; ++i) z_ptr[i] = r_ptr[i];
-            }
-
-            rz_new = 0.0;
-            if (M) {
-                #pragma omp for schedule(static) reduction(+:rz_new)
-                for (size_t i = 0; i < n; ++i) rz_new += r_ptr[i] * z_ptr[i];
-            } else {
-                rz_new = rnorm2;
-            }
-            
-            #pragma omp single
-            {
-                beta = rz_new / std::max(1.0e-30, rz_old);
-                rz_old = rz_new;
-            }
-
-            #pragma omp for schedule(static)
-            for (size_t i = 0; i < n; ++i) {
-                p_ptr[i] = z_ptr[i] + beta * p_ptr[i];
-            }
+        denom = 0.0;
+        #pragma omp for schedule(static) reduction(+:denom)
+        for (size_t i = 0; i < n; ++i) {
+            denom += p_ptr[i] * Ap_ptr[i];
         }
+
+        alpha = rz_old / std::max(1.0e-30, denom);
+
+        rnorm2 = 0.0;
+        #pragma omp for schedule(static) reduction(+:rnorm2)
+        for (size_t i = 0; i < n; ++i) {
+            x_ptr[i] += alpha * p_ptr[i];
+            const double ri = r_ptr[i] - alpha * Ap_ptr[i];
+            r_ptr[i] = ri;
+            rnorm2 += ri * ri;
+        }
+
+        if (std::sqrt(rnorm2) < stop_tol) {
+            result = it + 1;
+            break;
+        }
+
+        if (M) {
+            M(r, z);
+        } else {
+            #pragma omp for schedule(static)
+            for (size_t i = 0; i < n; ++i) z_ptr[i] = r_ptr[i];
+        }
+
+        rz_new = 0.0;
+        if (M) {
+            #pragma omp for schedule(static) reduction(+:rz_new)
+            for (size_t i = 0; i < n; ++i) rz_new += r_ptr[i] * z_ptr[i];
+        } else {
+            rz_new = rnorm2;
+        }
+        
+        beta = rz_new / std::max(1.0e-30, rz_old);
+        rz_old = rz_new;
+
+        #pragma omp for schedule(static)
+        for (size_t i = 0; i < n; ++i) {
+            p_ptr[i] = z_ptr[i] + beta * p_ptr[i];
+        }
+    }
     } // end parallel region
 
     return result;
