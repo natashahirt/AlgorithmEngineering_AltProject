@@ -767,163 +767,60 @@ void K_times_u_finest(const Problem& pb,
                       KTimesUWorkspace& ws)
 {
 	const auto& mesh = pb.mesh;
-	const auto& Ke   = mesh.Ke;
-	const int numElements = mesh.numElements;
 	const size_t numFreeDofs = uFree.size();
 
 	// Zero output
 	if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
 	else std::fill(yFree.begin(), yFree.end(), 0.0);
 
-	// Resize workspace
-	ws.resize(numElements, numFreeDofs);
-
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
-	const double* __restrict__ Kptr = Ke.data();
-	const double* __restrict__ uF = uFree.data();
-	double* __restrict__ uMat = ws.uMat.data();
-	double* __restrict__ fMat = ws.fMat.data();
-	double* __restrict__ yF_out = yFree.data();
+	// Use pointer to Ke array
+	const double* __restrict__ Kptr_raw = mesh.Ke.data();
 
-	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
-	if (!ws.scatterIndexBuilt) {
-		// Count contributions per DOF
-		std::vector<int> dofCount(numFreeDofs + 1, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) dofCount[idx + 1]++;
-			}
-		}
-		// Prefix sum to get boundaries
-		ws.dofBoundaries.resize(numFreeDofs + 1);
-		ws.dofBoundaries[0] = 0;
-		for (size_t i = 1; i <= numFreeDofs; ++i) {
-			ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
-		}
-		// Fill scatter indices (just the fMat index, grouped by output DOF)
-		size_t totalPairs = ws.dofBoundaries[numFreeDofs];
-		ws.scatterIdx.resize(totalPairs);
-		std::vector<int> dofPos(numFreeDofs, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) {
-					int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
-					ws.scatterIdx[pos] = e * 24 + a;
-				}
-			}
-		}
-		ws.scatterIndexBuilt = true;
-	}
+	// Assuming Ke is aligned
+	#if defined(__GNUC__) || defined(__clang__)
+	const double* __restrict__ Kptr =
+		static_cast<const double*>(__builtin_assume_aligned(Kptr_raw, 64));
+	#else
+	const double* __restrict__ Kptr = Kptr_raw;
+	#endif
 
-	// Single parallel region with chunked BLAS (use MKL_NUM_THREADS=1 to avoid threading conflict)
+	const double (* __restrict__ K2D)[24] = reinterpret_cast<const double (*)[24]>(Kptr);
+	
 	const double* __restrict__ Ee = eleModulus.data();
-	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
-	const int32_t* __restrict__ dofBnd = ws.dofBoundaries.data();
+	const double* __restrict__ uF = uFree.data();
+	double* __restrict__ yF = yFree.data();
 
-#if defined(_OPENMP)
+	// Use coloring for race-free parallel update
+	const int numColors = mesh.coloring.numColors;
+	const auto& buckets = mesh.coloring.colorBuckets;
+
+	#if defined(_OPENMP)
 	#pragma omp parallel
 	{
-		// ============ STEP 1: Parallel Gather ============
-		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* __restrict__ ed = eDofFree + 24 * e;
-			double* __restrict__ uRow = uMat + e * 24;
-			for (int a = 0; a < 24; ++a) {
-				const int idx = ed[a];
-				uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+		for (int c = 0; c < numColors; ++c) {
+			const auto& bucket = buckets[c];
+			const int n = static_cast<int>(bucket.size());
+			
+			#pragma omp for schedule(static)
+			for (int i = 0; i < n; i += 8) {
+				int count = std::min(8, n - i);
+				ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 			}
-		}
-		// Implicit barrier after omp for
-
-		// ============ STEP 2: Chunked BLAS Matrix Multiply ============
-		// Each thread processes chunks independently. Use MKL_NUM_THREADS=1 to avoid nested threading.
-		// fMat = uMat * Ke^T
-		constexpr int chunk_size = 64;
-		#pragma omp for schedule(static)
-		for (int e = 0; e < numElements; e += chunk_size) {
-			int actual_chunk = std::min(chunk_size, numElements - e);
-#ifdef HAVE_CBLAS
-			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-			            actual_chunk, 24, 24,
-			            1.0, uMat + e * 24, 24,
-			            Kptr, 24,
-			            0.0, fMat + e * 24, 24);
-#else
-			// Manual fallback
-			for (int ee = e; ee < e + actual_chunk; ++ee) {
-				const double* __restrict__ uRow = uMat + ee * 24;
-				double* __restrict__ fRow = fMat + ee * 24;
-				for (int i = 0; i < 24; ++i) {
-					const double* __restrict__ KeRow = Kptr + i * 24;
-					double sum = 0.0;
-					for (int j = 0; j < 24; ++j) {
-						sum += uRow[j] * KeRow[j];
-					}
-					fRow[i] = sum;
-				}
-			}
-#endif
-		}
-		// Implicit barrier after omp for
-
-		// ============ STEP 3: Parallel Scale and Scatter ============
-		#pragma omp for schedule(static)
-		for (size_t d = 0; d < numFreeDofs; ++d) {
-			double sum = 0.0;
-			const int start = dofBnd[d];
-			const int end = dofBnd[d + 1];
-			for (int k = start; k < end; ++k) {
-				const int fMatIdx = scatIdx[k];
-				const int elemIdx = fMatIdx / 24;
-				sum += fMat[fMatIdx] * Ee[elemIdx];
-			}
-			yF_out[d] = sum;
+			// Implicit barrier here ensures all threads finish color 'c' before starting 'c+1'
 		}
 	}
-#else
-	// Serial fallback with single BLAS call
-	for (int e = 0; e < numElements; ++e) {
-		const int32_t* ed = eDofFree + 24 * e;
-		double* uRow = uMat + e * 24;
-		for (int a = 0; a < 24; ++a) {
-			int idx = ed[a];
-			uRow[a] = (idx >= 0) ? uF[idx] : 0.0;
+	#else
+	// Serial fallback
+	for (int c = 0; c < numColors; ++c) {
+		const auto& bucket = buckets[c];
+		const int n = static_cast<int>(bucket.size());
+		for (int i = 0; i < n; i += 8) {
+			int count = std::min(8, n - i);
+			ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 		}
 	}
-#ifdef HAVE_CBLAS
-	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
-	            numElements, 24, 24,
-	            1.0, uMat, 24, Kptr, 24, 0.0, fMat, 24);
-#else
-	for (int e = 0; e < numElements; ++e) {
-		const double* uRow = uMat + e * 24;
-		double* fRow = fMat + e * 24;
-		for (int i = 0; i < 24; ++i) {
-			const double* KeRow = Kptr + i * 24;
-			double sum = 0.0;
-			for (int j = 0; j < 24; ++j) {
-				sum += uRow[j] * KeRow[j];
-			}
-			fRow[i] = sum;
-		}
-	}
-#endif
-	for (size_t d = 0; d < numFreeDofs; ++d) {
-		double sum = 0.0;
-		const int start = dofBnd[d];
-		const int end = dofBnd[d + 1];
-		for (int k = start; k < end; ++k) {
-			const int fMatIdx = scatIdx[k];
-			const int elemIdx = fMatIdx / 24;
-			sum += fMat[fMatIdx] * Ee[elemIdx];
-		}
-		yF_out[d] = sum;
-	}
-#endif
+	#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)
