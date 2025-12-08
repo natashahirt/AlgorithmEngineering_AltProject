@@ -188,24 +188,24 @@ function TOP3D_XL_TO(inputModel, V0, nLoop, rMin)
 	
 	%%Output
 	densityLayout_ = xPhys(:);
-	fileName = strcat(outPath, 'DesignVolume.nii');
-	IO_ExportDesignInVolume_nii(fileName);
+	% fileName = strcat(outPath, 'DesignVolume.nii');
+	% IO_ExportDesignInVolume_nii(fileName);
 	disp(['..........Solving FEA Costs: ', sprintf('%10.4e', sum(sum(tHist(:,1:2)))), 's.']);
 	disp(['..........Optimization (inc. sentivity analysis, update) Costs: ', sprintf('%10.4e', sum(tHist(:,3))), 's.']);
 	disp(['..........Performing PDE Filtering Costs: ', sprintf('%10.4e', sum(tHist(:,4))), 's.']);
 	disp(['..........Performing Topology Optimization Costs (in total): ', sprintf('%10.4e', toc(tStartTotal)), 's.']);
-	fid = fopen(strcat(outPath, 'iters_Target.dat'), 'w');
-	fprintf(fid, '%d\n', lssIts);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'c_Target.dat'), 'w');
-	fprintf(fid, '%30.16e\n', cHist);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'sharp_Target.dat'), 'w');
-	fprintf(fid, '%30.16e\n', sharpHist);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'timing_Target.dat'), 'w');
-	fprintf(fid, '%16.6e\n', tHist(:,end));
-	fclose(fid);
+	% fid = fopen(strcat(outPath, 'iters_Target.dat'), 'w');
+	% fprintf(fid, '%d\n', lssIts);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'c_Target.dat'), 'w');
+	% fprintf(fid, '%30.16e\n', cHist);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'sharp_Target.dat'), 'w');
+	% fprintf(fid, '%30.16e\n', sharpHist);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'timing_Target.dat'), 'w');
+	% fprintf(fid, '%16.6e\n', tHist(:,end));
+	% fclose(fid);
 	
 	%%Vis.
     allVoxels = zeros(size(meshHierarchy_(1).eleMapForward));
@@ -222,8 +222,8 @@ function TOP3D_XL_TO(inputModel, V0, nLoop, rMin)
     lighting('gouraud');
     material('dull'); 
     camlight('headlight','infinite');
-	fileName = strcat(outPath, 'DesignVolume.stl');
-	IO_ExportDesignInTriSurface_stl(fileName, facesIsosurface, facesIsocap);	
+	% fileName = strcat(outPath, 'DesignVolume.stl');
+	% IO_ExportDesignInTriSurface_stl(fileName, facesIsosurface, facesIsocap);	
 end
 
 function TOP3D_XL_PIO(inputModel, Ve0, nLoop, rMin, rHat)
@@ -416,25 +416,25 @@ function TOP3D_XL_PIO(inputModel, Ve0, nLoop, rMin, rHat)
 				
 	end
 	densityLayout_ = xPhys(:);
-	fileName = strcat(outPath, 'DesignVolume.nii');
-	IO_ExportDesignInVolume_nii(fileName);
+	% fileName = strcat(outPath, 'DesignVolume.nii');
+	% IO_ExportDesignInVolume_nii(fileName);
 	disp(['..........Solving FEA costs: ', sprintf('%10.4e', sum(sum(tHist(:,1:2)))), 's.']);
 	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%10.4e', sum(tHist(:,3))), 's.']);
 	disp(['..........Performing PDE Filtering costs: ', sprintf('%10.4e', sum(tHist(:,4))), 's.']);
 	disp(['..........Applying for Local Volume Constraint costs: ', sprintf('%10.4e', sum(tHist(:,5))), 's.']);
 	disp(['..........Performing Topology Optimization Costs (in total): ', sprintf('%10.4e', toc(tStartTotal)), 's.']);
-	fid = fopen(strcat(outPath, 'iters_Target.dat'), 'w');
-	fprintf(fid, '%d\n', lssIts);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'c_Target.dat'), 'w');
-	fprintf(fid, '%30.16e\n', cHist);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'sharp_Target.dat'), 'w');
-	fprintf(fid, '%30.16e\n', sharpHist);
-	fclose(fid);
-	fid = fopen(strcat(outPath, 'timing_Target.dat'), 'w');
-	fprintf(fid, '%16.6e\n', tHist(:,end));
-	fclose(fid);
+	% fid = fopen(strcat(outPath, 'iters_Target.dat'), 'w');
+	% fprintf(fid, '%d\n', lssIts);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'c_Target.dat'), 'w');
+	% fprintf(fid, '%30.16e\n', cHist);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'sharp_Target.dat'), 'w');
+	% fprintf(fid, '%30.16e\n', sharpHist);
+	% fclose(fid);
+	% fid = fopen(strcat(outPath, 'timing_Target.dat'), 'w');
+	% fprintf(fid, '%16.6e\n', tHist(:,end));
+	% fclose(fid);
 	
 	%%Vis.	
     allVoxels = zeros(size(meshHierarchy_(1).eleMapForward));
@@ -451,8 +451,8 @@ function TOP3D_XL_PIO(inputModel, Ve0, nLoop, rMin, rHat)
     lighting('gouraud');
     material('dull'); 
     camlight('headlight','infinite');
-	fileName = strcat(outPath, 'DesignVolume.stl');
-	IO_ExportDesignInTriSurface_stl(fileName, facesIsosurface, facesIsocap);	
+	% fileName = strcat(outPath, 'DesignVolume.stl');
+	% IO_ExportDesignInTriSurface_stl(fileName, facesIsosurface, facesIsocap);	
 end
 
 function CreateVoxelFEAmodel(inputModel)

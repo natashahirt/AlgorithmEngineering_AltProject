@@ -32,3 +32,11 @@ Compliance of Fully Solid Domain:     2.010358e-01
  It.:    6 (Time)... Total per-It.: 3.08e+02s; CG: 3.07e+02s; Opti.: 1.48e+00s; Filtering: 9.89e-01s.
  It.:   7 Obj.:  1.14992489e+03 Vol.:1.2000e-01 Sharp.:3.1540e-01 Cons.:6.71e-08 Ch.:2.00e-01
  It.:    7 (Time)... Total per-It.: 2.93e+02s; CG: 2.92e+02s; Opti.: 1.76e+00s; Filtering: 1.28e+00s.
+ It.:   8 Obj.:  2.14147503e+03 Vol.:1.2000e-01 Sharp.:2.7636e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:    8 (Time)... Total per-It.: 2.96e+02s; CG: 2.94e+02s; Opti.: 1.75e+00s; Filtering: 1.27e+00s.
+ It.:   9 Obj.:  3.71947425e+03 Vol.:1.2000e-01 Sharp.:2.1724e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:    9 (Time)... Total per-It.: 2.97e+02s; CG: 2.96e+02s; Opti.: 1.73e+00s; Filtering: 1.26e+00s.
+ It.:  10 Obj.:  6.76545958e+03 Vol.:1.2000e-01 Sharp.:1.4164e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   10 (Time)... Total per-It.: 3.05e+02s; CG: 3.03e+02s; Opti.: 1.89e+00s; Filtering: 1.41e+00s.
+ It.:  11 Obj.:            -nan Vol.:7.5027e-02 Sharp.:1.1191e-01 Cons.:-4.50e-02 Ch.:2.00e-01
+ It.:   11 (Time)... Total per-It.: 3.10e+02s; CG: 2.97e+02s; Opti.: 1.30e+01s; Filtering: 1.19e+01s.
