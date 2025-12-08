@@ -20,7 +20,7 @@
 
 namespace top3d {
 
-void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rMin, int simulation_count) {
+void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rMin, int simulation_count, bool use_mg = true) {
 	auto tSimulationsStart = std::chrono::steady_clock::now();
 	for (int i = 0; i < simulation_count; i++) {
 		auto tStartTotal = std::chrono::steady_clock::now();
@@ -49,10 +49,19 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 		ApplyBoundaryConditions(pb);
 		PDEFilter pfFilter = SetupPDEFilter(pb, rMin);
 		PDEFilterWorkspace filter_ws;
+		
 		// Build MG hierarchy and fixed masks once; reuse across solves
-		std::cout << "Building Multigrid Hierarchy..." << std::endl;
-		mg::MGPrecondConfig mgcfgStatic_tv; mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
-		mg::MGHierarchy H; std::vector<std::vector<uint8_t>> fixedMasks; mg::build_static_once(pb, mgcfgStatic_tv, H, fixedMasks);
+		mg::MGPrecondConfig mgcfgStatic_tv; 
+		mg::MGHierarchy H; 
+		std::vector<std::vector<uint8_t>> fixedMasks;
+
+		if (use_mg) {
+			std::cout << "Building Multigrid Hierarchy..." << std::endl;
+			mgcfgStatic_tv.nonDyadic = true; mgcfgStatic_tv.maxLevels = 5; mgcfgStatic_tv.weight = 0.6;
+			mg::build_static_once(pb, mgcfgStatic_tv, H, fixedMasks);
+		} else {
+			std::cout << "Multigrid disabled. Using Jacobi preconditioner." << std::endl;
+		}
 		
 		auto tModelTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - tStart).count();
 		std::cout << "Preparing Voxel-based FEA Model Costs " << std::setw(10) << std::setprecision(1) << tModelTime << "s\n";
@@ -87,7 +96,13 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			std::vector<double> uFree; uFree.assign(bFree.size(), 0.0);
 			// Preconditioner: reuse static MG context, per-iter diagonals and SIMP-modulated coarsest
 			// Local M for this specific solve state
-			auto M_solid = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			Preconditioner M_solid;
+			if (use_mg) {
+				M_solid = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			} else {
+				M_solid = make_jacobi_preconditioner(pb, eleMod);
+			}
+
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFree, pb.params.cgTol, pb.params.cgMaxIt, M_solid, pcg_ws);
 			scatter_from_free(pb, uFree, U);
 			double Csolid = ComputeCompliance(pb, eleMod, U, ce);
@@ -129,8 +144,13 @@ void TOP3D_XL_GLOBAL(int nely, int nelx, int nelz, float V0, int nLoop, float rM
 			
 			// Reuse static MG context for current SIMP-modified modulus
 			// OPTIMIZATION: Lazy preconditioner rebuild (every 5 iters)
-			if (loop == 1 || (loop % 5 == 0)) {
-				M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+			if (use_mg) {
+				if (loop == 1 || (loop % 5 == 0)) {
+					M = mg::make_diagonal_preconditioner_from_static(pb, H, fixedMasks, eleMod, mgcfgStatic_tv);
+				}
+			} else {
+				// Jacobi is cheap, update every iteration to track modulus changes accurately
+				M = make_jacobi_preconditioner(pb, eleMod);
 			}
 			
 			int pcgIters = PCG_free(pb, eleMod, bFree, uFreeWarm, pb.params.cgTol, pb.params.cgMaxIt, M, pcg_ws);

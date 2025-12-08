@@ -1,35 +1,43 @@
-Job started at Sat Dec  6 17:20:52 EST 2025
+Job started at Sun Dec  7 21:17:37 EST 2025
 Mode: GLOBAL
 Parameters: 50 100 50 0.12 30
 Simulation count: 1
-Output file: out/log/GLOBAL_20251206_172052_6982882.out
-Error file: out/log/GLOBAL_20251206_172052_6982882.err
+Output file: out/log/GLOBAL_20251207_211737_7002183.out
+Error file: out/log/GLOBAL_20251207_211737_7002183.err
 Latest log: out/log/GLOBAL_latest.log
 STL dir: out/stl/
-NODELIST: node1604
+NODELIST: node1606
 -- The CXX compiler identification is GNU 12.2.0
 -- Detecting CXX compiler ABI info
 -- Detecting CXX compiler ABI info - done
 -- Check for working CXX compiler: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/bin/g++ - skipped
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
+-- Searching for Intel MKL (BLA_VENDOR=Intel10_64lp)...
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Looking for sgemm_
+-- Looking for sgemm_ - found
+-- Found BLAS: /orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_intel_lp64.so;/orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_intel_thread.so;/orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_core.so;/orcd/software/community/001/rocky8/intel/2024.2.1/compiler/2024.2/lib/libiomp5.so;-lm;-ldl  
+-- BLAS found: /orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_intel_lp64.so;/orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_intel_thread.so;/orcd/software/community/001/rocky8/intel/2024.2.1/mkl/2024.2/lib/libmkl_core.so;/orcd/software/community/001/rocky8/intel/2024.2.1/compiler/2024.2/lib/libiomp5.so;-lm;-ldl
 -- Found OpenMP_CXX: -fopenmp (found version "4.5") 
 -- Found OpenMP: TRUE (found version "4.5")  
--- Configuring done (0.7s)
+-- Configuring done (1.4s)
 -- Generating done (0.1s)
 -- Build files have been written to: /home/nhirt/AlgorithmEngineering_AltProject/build
-[ 13%] Building CXX object CMakeFiles/top3d_xl.dir/src/fea.cpp.o
-[ 13%] Building CXX object CMakeFiles/top3d_xl.dir/src/core.cpp.o
-[ 20%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/solver.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/filter.cpp.o
+[  6%] Building CXX object CMakeFiles/top3d_xl.dir/src/core.cpp.o
+[ 20%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/coarsest.cpp.o
+[ 20%] Building CXX object CMakeFiles/top3d_xl.dir/src/driver.cpp.o
+[ 66%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/masks.cpp.o
+[ 66%] Building CXX object CMakeFiles/top3d_xl.dir/src/fea.cpp.o
+[ 66%] Building CXX object CMakeFiles/top3d_xl.dir/src/filter.cpp.o
+[ 66%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/diagonal.cpp.o
+[ 66%] Building CXX object CMakeFiles/top3d_xl.dir/src/solver.cpp.o
 [ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/preconditioner.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/io.cpp.o
-[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/driver.cpp.o
+[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/transfers.cpp.o
 [ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/multigrid/hierarchy.cpp.o
+[ 80%] Building CXX object CMakeFiles/top3d_xl.dir/src/io.cpp.o
 [ 86%] Linking CXX static library libtop3d_xl.a
 [ 86%] Built target top3d_xl
 [ 93%] Building CXX object CMakeFiles/top3d_xl_cli.dir/apps/top3d_cli.cpp.o
@@ -49,102 +57,11 @@ Simulation: 0
 ...........................................Poissons Ratio: 3.0000e-01
 Building Multigrid Hierarchy...
 [MG] levels=3 coarsest=13x7x7 dofs=2688
-Preparing Voxel-based FEA Model Costs        0.0s
-Compliance of Fully Solid Domain:     6.365655e-01
- It.:    0 Solver Time:    6s.
+Preparing Voxel-based FEA Model Costs        0.3s
+Compliance of Fully Solid Domain:     6.370327e-01
+ It.:    0 Solver Time:   33s.
 
- It.:   1 Obj.:  3.68170629e+02 Vol.:1.2000e-01 Sharp.:4.0574e-01 Cons.:5.22e-08 Ch.:2.00e-01
- It.:    1 (Time)... Total per-It.: 5.76e+00s; CG: 5.70e+00s; Opti.: 5.54e-02s; Filtering: 1.20e-02s.
- It.:   2 Obj.:  4.02123271e+02 Vol.:1.2000e-01 Sharp.:4.0073e-01 Cons.:-5.22e-08 Ch.:2.00e-01
- It.:    2 (Time)... Total per-It.: 9.33e+00s; CG: 9.28e+00s; Opti.: 5.44e-02s; Filtering: 1.03e-02s.
- It.:   3 Obj.:  1.73447288e+02 Vol.:1.2000e-01 Sharp.:3.9191e-01 Cons.:1.49e-08 Ch.:2.00e-01
- It.:    3 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 5.49e-02s; Filtering: 9.60e-03s.
- It.:   4 Obj.:  3.00644478e+02 Vol.:1.2000e-01 Sharp.:3.8685e-01 Cons.:0.00e+00 Ch.:2.00e-01
- It.:    4 (Time)... Total per-It.: 9.33e+00s; CG: 9.28e+00s; Opti.: 5.45e-02s; Filtering: 9.72e-03s.
- It.:   5 Obj.:  1.55772804e+02 Vol.:1.2000e-01 Sharp.:3.7327e-01 Cons.:-7.45e-09 Ch.:2.00e-01
- It.:    5 (Time)... Total per-It.: 7.76e+00s; CG: 7.70e+00s; Opti.: 5.70e-02s; Filtering: 1.07e-02s.
- It.:   6 Obj.:  7.17693532e+01 Vol.:1.2000e-01 Sharp.:3.6049e-01 Cons.:-3.73e-08 Ch.:2.00e-01
- It.:    6 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 5.75e-02s; Filtering: 1.03e-02s.
- It.:   7 Obj.:  6.74656233e+01 Vol.:1.2000e-01 Sharp.:3.2946e-01 Cons.:1.49e-08 Ch.:2.00e-01
- It.:    7 (Time)... Total per-It.: 9.33e+00s; CG: 9.27e+00s; Opti.: 5.67e-02s; Filtering: 8.86e-03s.
- It.:   8 Obj.:  5.57230926e+01 Vol.:1.2000e-01 Sharp.:3.0294e-01 Cons.:-2.24e-08 Ch.:2.00e-01
- It.:    8 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 5.79e-02s; Filtering: 9.67e-03s.
- It.:   9 Obj.:  3.83967475e+01 Vol.:1.2000e-01 Sharp.:2.6545e-01 Cons.:-5.22e-08 Ch.:2.00e-01
- It.:    9 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 5.90e-02s; Filtering: 9.22e-03s.
- It.:  10 Obj.:  1.88304285e+01 Vol.:1.2000e-01 Sharp.:2.1151e-01 Cons.:1.49e-08 Ch.:2.00e-01
- It.:   10 (Time)... Total per-It.: 9.37e+00s; CG: 9.31e+00s; Opti.: 5.97e-02s; Filtering: 8.20e-03s.
- It.:  11 Obj.:  1.54073527e+01 Vol.:1.2000e-01 Sharp.:1.6870e-01 Cons.:-4.47e-08 Ch.:2.00e-01
- It.:   11 (Time)... Total per-It.: 9.36e+00s; CG: 9.30e+00s; Opti.: 6.08e-02s; Filtering: 7.97e-03s.
- It.:  12 Obj.:  1.77941829e+01 Vol.:1.2000e-01 Sharp.:1.3948e-01 Cons.:4.47e-08 Ch.:2.00e-01
- It.:   12 (Time)... Total per-It.: 9.36e+00s; CG: 9.30e+00s; Opti.: 6.21e-02s; Filtering: 9.50e-03s.
- It.:  13 Obj.:  1.71804391e+01 Vol.:1.2000e-01 Sharp.:1.2369e-01 Cons.:-3.73e-08 Ch.:2.00e-01
- It.:   13 (Time)... Total per-It.: 9.37e+00s; CG: 9.30e+00s; Opti.: 6.02e-02s; Filtering: 7.46e-03s.
- It.:  14 Obj.:  1.88952164e+01 Vol.:1.2000e-01 Sharp.:1.1370e-01 Cons.:-2.24e-08 Ch.:2.00e-01
- It.:   14 (Time)... Total per-It.: 9.36e+00s; CG: 9.29e+00s; Opti.: 6.06e-02s; Filtering: 7.91e-03s.
- It.:  15 Obj.:  7.11449468e+00 Vol.:1.2000e-01 Sharp.:1.0231e-01 Cons.:-7.45e-09 Ch.:2.00e-01
- It.:   15 (Time)... Total per-It.: 9.37e+00s; CG: 9.31e+00s; Opti.: 6.60e-02s; Filtering: 9.62e-03s.
- It.:  16 Obj.:  6.32907393e+00 Vol.:1.2000e-01 Sharp.:9.6724e-02 Cons.:2.98e-08 Ch.:2.00e-01
- It.:   16 (Time)... Total per-It.: 9.34e+00s; CG: 9.27e+00s; Opti.: 6.31e-02s; Filtering: 7.05e-03s.
- It.:  17 Obj.:  6.29048236e+00 Vol.:1.2000e-01 Sharp.:9.4174e-02 Cons.:-2.24e-08 Ch.:2.00e-01
- It.:   17 (Time)... Total per-It.: 9.36e+00s; CG: 9.29e+00s; Opti.: 6.29e-02s; Filtering: 6.74e-03s.
- It.:  18 Obj.:  6.31669763e+00 Vol.:1.2000e-01 Sharp.:9.2504e-02 Cons.:-2.24e-08 Ch.:2.00e-01
- It.:   18 (Time)... Total per-It.: 9.35e+00s; CG: 9.28e+00s; Opti.: 6.24e-02s; Filtering: 6.35e-03s.
- It.:  19 Obj.:  6.34425701e+00 Vol.:1.2000e-01 Sharp.:9.1496e-02 Cons.:2.98e-08 Ch.:1.78e-01
- It.:   19 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 6.20e-02s; Filtering: 6.45e-03s.
- It.:  20 Obj.:  5.95335425e+00 Vol.:1.2000e-01 Sharp.:9.0690e-02 Cons.:-2.24e-08 Ch.:1.89e-01
- It.:   20 (Time)... Total per-It.: 9.38e+00s; CG: 9.31e+00s; Opti.: 6.38e-02s; Filtering: 7.60e-03s.
- It.:  21 Obj.:  5.99659154e+00 Vol.:1.2000e-01 Sharp.:8.9806e-02 Cons.:-1.49e-08 Ch.:1.81e-01
- It.:   21 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 6.21e-02s; Filtering: 6.52e-03s.
- It.:  22 Obj.:  5.96081715e+00 Vol.:1.2000e-01 Sharp.:8.9332e-02 Cons.:0.00e+00 Ch.:1.06e-01
- It.:   22 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 5.97e-02s; Filtering: 3.60e-03s.
- It.:  23 Obj.:  5.91073400e+00 Vol.:1.2000e-01 Sharp.:8.8901e-02 Cons.:-2.24e-08 Ch.:1.80e-01
- It.:   23 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 6.40e-02s; Filtering: 8.26e-03s.
- It.:  24 Obj.:  5.90152232e+00 Vol.:1.2000e-01 Sharp.:8.8630e-02 Cons.:7.45e-09 Ch.:1.01e-01
- It.:   24 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 5.90e-02s; Filtering: 3.57e-03s.
- It.:  25 Obj.:  5.86188828e+00 Vol.:1.2000e-01 Sharp.:8.8361e-02 Cons.:3.73e-08 Ch.:2.00e-01
- It.:   25 (Time)... Total per-It.: 9.36e+00s; CG: 9.30e+00s; Opti.: 6.05e-02s; Filtering: 6.42e-03s.
- It.:  26 Obj.:  5.86258059e+00 Vol.:1.2000e-01 Sharp.:8.8170e-02 Cons.:0.00e+00 Ch.:1.81e-01
- It.:   26 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 5.79e-02s; Filtering: 3.63e-03s.
- It.:  27 Obj.:  5.86445036e+00 Vol.:1.2000e-01 Sharp.:8.8086e-02 Cons.:-1.49e-08 Ch.:2.00e-01
- It.:   27 (Time)... Total per-It.: 9.35e+00s; CG: 9.29e+00s; Opti.: 6.03e-02s; Filtering: 6.23e-03s.
- It.:  28 Obj.:  5.85538760e+00 Vol.:1.2000e-01 Sharp.:8.7940e-02 Cons.:1.49e-08 Ch.:2.00e-01
- It.:   28 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 5.76e-02s; Filtering: 3.53e-03s.
- It.:  29 Obj.:  5.84791518e+00 Vol.:1.2000e-01 Sharp.:8.7881e-02 Cons.:-7.45e-09 Ch.:2.00e-01
- It.:   29 (Time)... Total per-It.: 9.34e+00s; CG: 9.28e+00s; Opti.: 6.09e-02s; Filtering: 6.18e-03s.
- It.:  30 Obj.:  5.77603435e+00 Vol.:1.2000e-01 Sharp.:8.7814e-02 Cons.:1.49e-08 Ch.:1.97e-01
- It.:   30 (Time)... Total per-It.: 9.36e+00s; CG: 9.30e+00s; Opti.: 6.30e-02s; Filtering: 7.72e-03s.
-
-..........Performing Topology Optimization Costs (in total): 2.8114e+02s.
-
-PARAMETERS
-original dims: x=100, y=50, z=50
-padded dims: x=104, y=56, z=56
-v0: 0.12
-
-SOLVING
-iterations: 30
-cg iterations: 800
-
-RESULTS
-compliance solid: 6.365655e-01
-objective first: 3.681706e+02
-objective last: 5.776034e+00
-
-TIME
-total solver time: 2.734913e+02
-time per iter: 9.1784
-percentage time spent on cg: 99.32%
-percentage time spent on optim: 0.65%
-percentage time spent on filtering: 0.08%
-
-THREADS
-32
-
-NOTES
-
-STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/out/stl/GLOBAL_20251206_172544_6982882.stl
-
-Done.
-
-............Total runtime time for 1 simulations2.8116e+02s.
-Job completed at Sat Dec  6 17:25:44 EST 2025
+ It.:   1 Obj.:  3.68440349e+02 Vol.:1.2000e-01 Sharp.:4.0574e-01 Cons.:-5.96e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 3.24e+01s; CG: 3.22e+01s; Opti.: 1.83e-01s; Filtering: 1.19e-01s.
+ It.:   2 Obj.:  4.05512225e+02 Vol.:1.2000e-01 Sharp.:4.0069e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 3.74e+01s; CG: 3.72e+01s; Opti.: 1.58e-01s; Filtering: 9.61e-02s.

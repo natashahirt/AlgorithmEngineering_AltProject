@@ -26,10 +26,18 @@ int main(int argc, char** argv) {
     float V0  = std::atof(argv[5]);
     int nLoop  = std::atoi(argv[6]);
     int simulation_count = std::atoi(argv[7]);
+    
+    // Optional argument for preconditioner: 1=MG (default), 0=Jacobi
+    bool use_mg = true;
+    if (argc > 8) {
+        use_mg = (std::atoi(argv[8]) != 0);
+    }
 
     std::cout << "Running GLOBAL topo-opt on cuboid: "
               << nely << "x" << nelx << "x" << nelz
               << ", V0=" << V0 << ", iters=" << nLoop << "\n";
-    top3d::TOP3D_XL_GLOBAL(nely, nelx, nelz, V0, nLoop, std::sqrt(3.0f), simulation_count);
+    std::cout << "Preconditioner: " << (use_mg ? "Multigrid" : "Jacobi") << "\n";
+
+    top3d::TOP3D_XL_GLOBAL(nely, nelx, nelz, V0, nLoop, std::sqrt(3.0f), simulation_count, use_mg);
     return 0;
 }
