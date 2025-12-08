@@ -1,13 +1,17 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 
 def main():
+    base_dir = Path(__file__).resolve().parent
+    csv_path = base_dir / "benchmark_results.csv"
+
     # 1. Load Data
     try:
-        df = pd.read_csv("benchmark_results.csv")
+        df = pd.read_csv(csv_path)
     except FileNotFoundError:
-        print("Error: 'benchmark_results.csv' not found. Run parse_logs.py first.")
+        print(f"Error: '{csv_path}' not found. Run parse_logs.py first.")
         return
 
     # 2. Filter for Problem Size Scaling
@@ -59,8 +63,8 @@ def main():
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()
-    plt.savefig('plot_time_vs_size.png')
-    print("Plot saved to 'plot_time_vs_size.png'")
+    plt.savefig(base_dir / 'plot_time_vs_size.png')
+    print(f"Plot saved to '{base_dir / 'plot_time_vs_size.png'}'")
     
     # --- Plot 2: Total Time vs Elements (Linear Scale) ---
     plt.figure(figsize=(10, 6))
@@ -85,8 +89,8 @@ def main():
     plt.ylabel('Total Time (s)', fontsize=12)
     plt.grid(True, which="both", ls="-", alpha=0.5)
     plt.tight_layout()
-    plt.savefig('plot_time_vs_size_linear.png')
-    print("Plot saved to 'plot_time_vs_size_linear.png'")
+    plt.savefig(base_dir / 'plot_time_vs_size_linear.png')
+    print(f"Plot saved to '{base_dir / 'plot_time_vs_size_linear.png'}'")
 
     # --- Plot 3: Final Objective vs Elements ---
     # Filter out invalid/zero objectives (failed runs) for this plot to avoid skewing
@@ -118,8 +122,8 @@ def main():
     plt.xscale('log')
     plt.yscale('log') # Compliance usually scales with volume/size, log-log helps visualize
     plt.tight_layout()
-    plt.savefig('plot_obj_vs_size.png')
-    print("Plot saved to 'plot_obj_vs_size.png'")
+    plt.savefig(base_dir / 'plot_obj_vs_size.png')
+    print(f"Plot saved to '{base_dir / 'plot_obj_vs_size.png'}'")
 
     # --- Plot 4: Avg Time per Iteration vs Elements ---
     avg_time_df = domain_df.loc[domain_df['avg_time_per_iter'] > 0]
@@ -150,8 +154,8 @@ def main():
         plt.xscale('log')
         plt.yscale('log')
         plt.tight_layout()
-        plt.savefig('plot_avg_time_per_iter.png')
-        print("Plot saved to 'plot_avg_time_per_iter.png'")
+        plt.savefig(base_dir / 'plot_avg_time_per_iter.png')
+        print(f"Plot saved to '{base_dir / 'plot_avg_time_per_iter.png'}'")
 
     # --- Plot 5: Scaling Runs (time + speedup vs CPU count) ---
     scaling_df = df[
@@ -203,8 +207,8 @@ def main():
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()
-    plt.savefig('plot_scaling_time.png')
-    print("Plot saved to 'plot_scaling_time.png'")
+    plt.savefig(base_dir / 'plot_scaling_time.png')
+    print(f"Plot saved to '{base_dir / 'plot_scaling_time.png'}'")
 
     # Speedup vs CPUs (with ideal linear reference)
     min_core = scaling_df['core_count'].min()
@@ -233,8 +237,8 @@ def main():
     plt.grid(True, which="both", ls="-", alpha=0.5)
     plt.tight_layout()
     plt.legend()
-    plt.savefig('plot_scaling_speedup.png')
-    print("Plot saved to 'plot_scaling_speedup.png'")
+    plt.savefig(base_dir / 'plot_scaling_speedup.png')
+    print(f"Plot saved to '{base_dir / 'plot_scaling_speedup.png'}'")
 
 if __name__ == "__main__":
     main()

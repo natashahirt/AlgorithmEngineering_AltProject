@@ -3,6 +3,7 @@ import re
 import json
 import csv
 import glob
+from pathlib import Path
 import pandas as pd
 
 def parse_log_file(filepath):
@@ -111,23 +112,27 @@ def parse_log_file(filepath):
     return data
 
 def main():
-    # Only parsing test/log per your change
-    log_dirs = ["test_master/log"]
+    base_dir = Path(__file__).resolve().parent
+    # Only parsing logs under the relocated test tree
+    log_dirs = [base_dir / "test_master" / "log"]
     all_results = []
     
     print("Parsing logs...")
     for d in log_dirs:
-        if not os.path.exists(d):
+        if not d.exists():
             print(f"Directory not found: {d}")
             continue
             
-        files = glob.glob(os.path.join(d, "*.out"))
+        files = glob.glob(str(d / "*.out"))
         for f in files:
             result = parse_log_file(f)
             if result["num_iterations"] > 0:
                 all_results.append(result)
     
-    with open("benchmark_results.json", "w") as f:
+    json_path = base_dir / "benchmark_results.json"
+    csv_path = base_dir / "benchmark_results.csv"
+
+    with open(json_path, "w") as f:
         json.dump(all_results, f, indent=2)
     
     flat_data = []
@@ -157,10 +162,10 @@ def main():
 
     df = pd.DataFrame(flat_data)
     df.sort_values(by=["solver", "elements", "cpus"], inplace=True)
-    df.to_csv("benchmark_results.csv", index=False)
+    df.to_csv(csv_path, index=False)
     
     print(f"Successfully parsed {len(all_results)} logs.")
-    print("Saved to 'benchmark_results.json' and 'benchmark_results.csv'")
+    print(f"Saved to '{json_path}' and '{csv_path}'")
 
 if __name__ == "__main__":
     main()
