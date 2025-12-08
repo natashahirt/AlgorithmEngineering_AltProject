@@ -1,0 +1,17 @@
+Running Multigrid for 150 300 150 with OMP_NUM_THREADS=32
+Output directed to: test_scaling (cwd=test_scaling)
+Running GLOBAL topo-opt on cuboid: 150x300x150, V0=0.12, iters=50
+Preconditioner: Multigrid
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=3 coarsest=38x19x19 dofs=46800
+Preparing Voxel-based FEA Model Costs        1.2s

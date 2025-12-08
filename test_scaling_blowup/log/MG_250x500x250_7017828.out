@@ -1,0 +1,26 @@
+Running Multigrid for 250 500 250 with OMP_NUM_THREADS=32
+Output directed to: test_scaling (via scratch_mg_7017828/out)
+Running GLOBAL topo-opt on cuboid: 250x500x250, V0=0.12, iters=50
+Preconditioner: Multigrid
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=5 coarsest=16x8x8 dofs=4131
+Preparing Voxel-based FEA Model Costs        4.9s
+Compliance of Fully Solid Domain:     1.533438e-01
+ It.:    0 Solver Time:  527s.
+
+ It.:   1 Obj.:  8.86896580e+01 Vol.:1.2000e-01 Sharp.:4.0643e-01 Cons.:8.20e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 5.19e+02s; CG: 5.17e+02s; Opti.: 2.05e+00s; Filtering: 1.15e+00s.
+ It.:   2 Obj.:  1.71507176e+02 Vol.:1.2000e-01 Sharp.:4.0096e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 5.19e+02s; CG: 5.17e+02s; Opti.: 1.92e+00s; Filtering: 1.03e+00s.
+ It.:   3 Obj.:  2.61574030e+02 Vol.:1.2000e-01 Sharp.:3.8005e-01 Cons.:-6.71e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 5.18e+02s; CG: 5.16e+02s; Opti.: 2.05e+00s; Filtering: 1.16e+00s.

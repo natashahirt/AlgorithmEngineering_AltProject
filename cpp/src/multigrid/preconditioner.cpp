@@ -8,6 +8,7 @@
 #include "multigrid/detail/coarsest.hpp"
 #include "multigrid/detail/hierarchy.hpp"
 #include <cstdlib>
+#include <cctype>
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -15,13 +16,28 @@
 
 namespace top3d { namespace mg {
 
+// Allow overriding the coarse-grid DOF limit via environment for experiments.
+// If TOP3D_JACOBI_COARSEST is truthy, force NlimitDofs = 0 (always Jacobi on coarsest).
+// Alternatively, TOP3D_NLIMITDOFS can specify an explicit non-negative limit.
+static inline int GetNlimitDofs(int defaultVal) {
+	if (const char* envJac = std::getenv("TOP3D_JACOBI_COARSEST")) {
+		char c = static_cast<char>(std::tolower(static_cast<unsigned char>(envJac[0])));
+		if (c == '1' || c == 't' || c == 'y') return 0;
+	}
+	if (const char* envLim = std::getenv("TOP3D_NLIMITDOFS")) {
+		int v = std::atoi(envLim);
+		if (v >= 0) return v;
+	}
+	return defaultVal;
+}
+
 // Build H and fixed masks once, reuse later
 void build_static_once(const Problem& pb, const MGPrecondConfig& cfg,
 								  MGHierarchy& H, std::vector<std::vector<uint8_t>>& fixedMasks) {
 	H.levels.clear();
 	// Reduced limit to ensure dense solver is fast (< 1s). 
     // 2000 DOFs -> Matrix 2000x2000 -> 16MB -> Cholesky ~ 2.6 GFLOPs.
-	const int NlimitDofs = 1000;
+	const int NlimitDofs = GetNlimitDofs(6000);
 	int adaptiveMax = ComputeAdaptiveMaxLevels(pb, cfg.nonDyadic, cfg.maxLevels, NlimitDofs);
 	BuildMGHierarchy(pb, cfg.nonDyadic, H, adaptiveMax);
 	
@@ -49,7 +65,7 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 	{
 		const auto& Lc = H.levels.back();
 		Ncoarse = 3*Lc.numNodes;
-		const int NlimitDofs = 1000; // Match build limit
+		const int NlimitDofs = GetNlimitDofs(6000); // Match build limit / overrides
 		if (H.levels.size() == 1 || Ncoarse > NlimitDofs) {
 			Ncoarse = 0; // diagonal fallback
 		} else {

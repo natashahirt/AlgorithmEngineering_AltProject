@@ -1,0 +1,2 @@
+Running Multigrid for 100 200 100 with OMP_NUM_THREADS=32
+Output directed to: test_scaling (cwd=test_scaling)
