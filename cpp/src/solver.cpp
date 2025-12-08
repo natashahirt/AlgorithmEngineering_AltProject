@@ -174,51 +174,37 @@ int PCG_free(const Problem& pb,
 
         // --- MAIN ITERATION LOOP ---
         for (int it = 0; it < maxIt && !done; ++it) {
-
-            // Ap = K * p
             K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
-            // denom = dot(p, Ap)
-            #pragma omp single
-            { denom = 0.0; }
-            local_sum = 0.0;
-            #pragma omp for schedule(static)
-            for (size_t i = 0; i < n; ++i) local_sum += p_ptr[i] * Ap_ptr[i];
-            #pragma omp atomic
-            denom += local_sum;
-            #pragma omp barrier
+            double denom = 0.0;
+            #pragma omp for schedule(static) reduction(+:denom)
+            for (size_t i = 0; i < n; ++i) {
+                denom += p_ptr[i] * Ap_ptr[i];
+            }
 
-            // alpha = rz_old / denom (computed by all threads identically)
-            alpha = rz_old / std::max(1.0e-30, denom);
-
-            // x += alpha*p, r -= alpha*Ap, rnorm2 = ||r||^2
             #pragma omp single
-            { rnorm2 = 0.0; }
-            local_sum = 0.0;
-            #pragma omp for schedule(static)
+            {
+                alpha = rz_old / std::max(1.0e-30, denom);
+            }
+
+            double rnorm2 = 0.0;
+            #pragma omp for schedule(static) reduction(+:rnorm2)
             for (size_t i = 0; i < n; ++i) {
                 x_ptr[i] += alpha * p_ptr[i];
-                double ri = r_ptr[i] - alpha * Ap_ptr[i];
+                const double ri = r_ptr[i] - alpha * Ap_ptr[i];
                 r_ptr[i] = ri;
-                local_sum += ri * ri;
+                rnorm2 += ri * ri;
             }
-            #pragma omp atomic
-            rnorm2 += local_sum;
-            #pragma omp barrier
 
-            // Convergence check
             #pragma omp single
             {
                 if (std::sqrt(rnorm2) < stop_tol) {
-                    done = true;
                     result = it + 1;
+                    done = true;
                 }
             }
-            // implicit barrier after single
+            if (done) continue;
 
-            if (done) break;
-
-            // z = M^-1 * r
             if (M) {
                 M(r, z);
             } else {
@@ -226,27 +212,24 @@ int PCG_free(const Problem& pb,
                 for (size_t i = 0; i < n; ++i) z_ptr[i] = r_ptr[i];
             }
 
-            // rz_new = dot(r, z)
+            double rz_new = 0.0;
+            if (M) {
+                #pragma omp for schedule(static) reduction(+:rz_new)
+                for (size_t i = 0; i < n; ++i) rz_new += r_ptr[i] * z_ptr[i];
+            } else {
+                rz_new = rnorm2;
+            }
+            
             #pragma omp single
-            { rz_new = 0.0; }
-            local_sum = 0.0;
-            #pragma omp for schedule(static)
-            for (size_t i = 0; i < n; ++i) local_sum += r_ptr[i] * z_ptr[i];
-            #pragma omp atomic
-            rz_new += local_sum;
-            #pragma omp barrier
+            {
+                beta = rz_new / std::max(1.0e-30, rz_old);
+                rz_old = rz_new;
+            }
 
-            // beta = rz_new / rz_old
-            beta = rz_new / std::max(1.0e-30, rz_old);
-
-            // p = z + beta * p
             #pragma omp for schedule(static)
             for (size_t i = 0; i < n; ++i) {
                 p_ptr[i] = z_ptr[i] + beta * p_ptr[i];
             }
-
-            #pragma omp single
-            { rz_old = rz_new; }
         }
     } // end parallel region
 
