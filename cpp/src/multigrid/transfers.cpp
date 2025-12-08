@@ -202,102 +202,73 @@ void MG_Restrict_nodes(const MGLevel& Lc, const MGLevel& Lf,
 }
 
 // Fused 3-component prolongation: processes all xyz in one parallel region
+// Iterates over ALL fine nodes (matching MG_Prolongate_nodes_Strided)
 void MG_Prolongate_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
                               const std::vector<double>& xc, std::vector<double>& xf) {
-    const int cResX = Lc.resX;
-    const int cResY = Lc.resY;
-    const int cResZ = Lc.resZ;
-    const int span  = Lc.spanWidth;
-
     const int fNnx = Lf.resX + 1;
     const int fNny = Lf.resY + 1;
     const int fNnz = Lf.resZ + 1;
 
-    const int cNnx = cResX + 1;
-    const int cNny = cResY + 1;
-    const int cNnz = cResZ + 1;
+    const int cNnx = Lc.resX + 1;
+    const int cNny = Lc.resY + 1;
+
+    const int span = Lc.spanWidth;
+    const double invSpan = 1.0 / span;
 
     // Ensure output size (3 components per node)
     size_t required = (size_t)fNnx * fNny * fNnz * 3;
     if (xf.size() < required) xf.resize(required);
 
-    // Precompute weights
-    const double invSpan = 1.0 / span;
+    #pragma omp parallel for collapse(3) schedule(static)
+    for (int fz = 0; fz < fNnz; ++fz) {
+        for (int fy = 0; fy < fNny; ++fy) {
+            for (int fx = 0; fx < fNnx; ++fx) {
+                // Coarse cell index (top-left-front)
+                int cx = fx / span;
+                int cy = fy / span;
+                int cz = fz / span;
 
-#pragma omp parallel
-    {
-        // Thread-local weight array
-        std::vector<double> W(span);
-        for (int i = 0; i < span; ++i) W[i] = (double)i * invSpan;
+                // Local offset in coarse cell [0, span]
+                int rx = fx % span;
+                int ry = fy % span;
+                int rz = fz % span;
 
-        #pragma omp for collapse(2) schedule(static)
-        for (int cz = 0; cz < cResZ; ++cz) {
-            for (int cy = 0; cy < cResY; ++cy) {
-                for (int cx = 0; cx < cResX; ++cx) {
-                    // Base indices for the 8 corners of this coarse cell
-                    int cIdx000 = (cz * cNny + cy) * cNnx + cx;
-                    int cIdx100 = cIdx000 + 1;
-                    int cIdx010 = cIdx000 + cNnx;
-                    int cIdx110 = cIdx010 + 1;
-                    int cIdx001 = cIdx000 + cNnx * cNny;
-                    int cIdx101 = cIdx001 + 1;
-                    int cIdx011 = cIdx001 + cNnx;
-                    int cIdx111 = cIdx011 + 1;
+                // If on boundary, clamp to valid cell
+                if (cx >= Lc.resX) { cx = Lc.resX - 1; rx = span; }
+                if (cy >= Lc.resY) { cy = Lc.resY - 1; ry = span; }
+                if (cz >= Lc.resZ) { cz = Lc.resZ - 1; rz = span; }
 
-                    // Load all 3 components of 8 corners (24 values total)
-                    double v000[3], v100[3], v010[3], v110[3];
-                    double v001[3], v101[3], v011[3], v111[3];
-                    for (int c = 0; c < 3; ++c) {
-                        v000[c] = xc[cIdx000 * 3 + c];
-                        v100[c] = xc[cIdx100 * 3 + c];
-                        v010[c] = xc[cIdx010 * 3 + c];
-                        v110[c] = xc[cIdx110 * 3 + c];
-                        v001[c] = xc[cIdx001 * 3 + c];
-                        v101[c] = xc[cIdx101 * 3 + c];
-                        v011[c] = xc[cIdx011 * 3 + c];
-                        v111[c] = xc[cIdx111 * 3 + c];
-                    }
+                // Trilinear weights
+                double wx1 = (double)rx * invSpan; double wx0 = 1.0 - wx1;
+                double wy1 = (double)ry * invSpan; double wy0 = 1.0 - wy1;
+                double wz1 = (double)rz * invSpan; double wz0 = 1.0 - wz1;
 
-                    int fStartZ = cz * span;
-                    int fStartY = cy * span;
-                    int fStartX = cx * span;
+                // Coarse Node Indices
+                int cbase00 = cNnx * cNny * cz + cNnx * cy + cx;
+                int cbase01 = cbase00 + 1;       // +x
+                int cbase10 = cbase00 + cNnx;    // +y
+                int cbase11 = cbase10 + 1;       // +x+y
 
-                    for (int rz = 0; rz < span; ++rz) {
-                        double wz = W[rz];
-                        double wz0 = 1.0 - wz;
-                        int fz = fStartZ + rz;
-                        size_t fRowZ = (size_t)fz * fNny * fNnx;
+                int cnext00 = cbase00 + cNnx * cNny; // +z
+                int cnext01 = cnext00 + 1;
+                int cnext10 = cnext00 + cNnx;
+                int cnext11 = cnext10 + 1;
 
-                        for (int ry = 0; ry < span; ++ry) {
-                            double wy = W[ry];
-                            double wy0 = 1.0 - wy;
-                            int fy = fStartY + ry;
-                            size_t fRowY = (size_t)fy * fNnx;
+                // Write to fine grid
+                size_t fIdx = ((size_t)fNnx * fNny * fz + fNnx * fy + fx) * 3;
 
-                            // Interpolate Z-Y for all 3 components
-                            double val00[3], val10[3], val01[3], val11[3];
-                            double val0[3], val1[3];
-                            for (int c = 0; c < 3; ++c) {
-                                val00[c] = v000[c] * wz0 + v001[c] * wz;
-                                val10[c] = v100[c] * wz0 + v101[c] * wz;
-                                val01[c] = v010[c] * wz0 + v011[c] * wz;
-                                val11[c] = v110[c] * wz0 + v111[c] * wz;
-                                val0[c] = val00[c] * wy0 + val01[c] * wy;
-                                val1[c] = val10[c] * wy0 + val11[c] * wy;
-                            }
+                for (int c = 0; c < 3; ++c) {
+                    double val =
+                        xc[cbase00 * 3 + c] * wx0 * wy0 * wz0 +
+                        xc[cbase01 * 3 + c] * wx1 * wy0 * wz0 +
+                        xc[cbase10 * 3 + c] * wx0 * wy1 * wz0 +
+                        xc[cbase11 * 3 + c] * wx1 * wy1 * wz0 +
+                        xc[cnext00 * 3 + c] * wx0 * wy0 * wz1 +
+                        xc[cnext01 * 3 + c] * wx1 * wy0 * wz1 +
+                        xc[cnext10 * 3 + c] * wx0 * wy1 * wz1 +
+                        xc[cnext11 * 3 + c] * wx1 * wy1 * wz1;
 
-                            for (int rx = 0; rx < span; ++rx) {
-                                double wx = W[rx];
-                                double wx0 = 1.0 - wx;
-                                int fx = fStartX + rx;
-                                size_t fIdx = (fRowZ + fRowY + fx) * 3;
-
-                                xf[fIdx + 0] = val0[0] * wx0 + val1[0] * wx;
-                                xf[fIdx + 1] = val0[1] * wx0 + val1[1] * wx;
-                                xf[fIdx + 2] = val0[2] * wx0 + val1[2] * wx;
-                            }
-                        }
-                    }
+                    xf[fIdx + c] = val;
                 }
             }
         }
@@ -402,91 +373,71 @@ void MG_Restrict_nodes_Vec3(const MGLevel& Lc, const MGLevel& Lf,
 }
 
 // Inner version of prolongation - called from within existing parallel region
-// W must be pre-allocated by caller with size >= span
+// Iterates over ALL fine nodes (matching MG_Prolongate_nodes_Strided)
+// W parameter kept for API compatibility but no longer used
 void MG_Prolongate_nodes_Vec3_Inner(const MGLevel& Lc, const MGLevel& Lf,
                                     const std::vector<double>& xc, std::vector<double>& xf,
-                                    std::vector<double>& W) {
-    const int cResX = Lc.resX;
-    const int cResY = Lc.resY;
-    const int cResZ = Lc.resZ;
-    const int span  = Lc.spanWidth;
-
+                                    std::vector<double>& /*W*/) {
     const int fNnx = Lf.resX + 1;
     const int fNny = Lf.resY + 1;
+    const int fNnz = Lf.resZ + 1;
 
-    const int cNnx = cResX + 1;
-    const int cNny = cResY + 1;
+    const int cNnx = Lc.resX + 1;
+    const int cNny = Lc.resY + 1;
 
+    const int span = Lc.spanWidth;
     const double invSpan = 1.0 / span;
 
-    // Initialize weights - W is thread-local so no barrier needed
-    if ((int)W.size() < span) W.resize(span);
-    for (int i = 0; i < span; ++i) W[i] = (double)i * invSpan;
+    #pragma omp for collapse(3) schedule(static)
+    for (int fz = 0; fz < fNnz; ++fz) {
+        for (int fy = 0; fy < fNny; ++fy) {
+            for (int fx = 0; fx < fNnx; ++fx) {
+                // Coarse cell index (top-left-front)
+                int cx = fx / span;
+                int cy = fy / span;
+                int cz = fz / span;
 
-    #pragma omp for collapse(2) schedule(static)
-    for (int cz = 0; cz < cResZ; ++cz) {
-        for (int cy = 0; cy < cResY; ++cy) {
-            for (int cx = 0; cx < cResX; ++cx) {
-                int cIdx000 = (cz * cNny + cy) * cNnx + cx;
-                int cIdx100 = cIdx000 + 1;
-                int cIdx010 = cIdx000 + cNnx;
-                int cIdx110 = cIdx010 + 1;
-                int cIdx001 = cIdx000 + cNnx * cNny;
-                int cIdx101 = cIdx001 + 1;
-                int cIdx011 = cIdx001 + cNnx;
-                int cIdx111 = cIdx011 + 1;
+                // Local offset in coarse cell [0, span]
+                int rx = fx % span;
+                int ry = fy % span;
+                int rz = fz % span;
 
-                double v000[3], v100[3], v010[3], v110[3];
-                double v001[3], v101[3], v011[3], v111[3];
+                // If on boundary, clamp to valid cell
+                if (cx >= Lc.resX) { cx = Lc.resX - 1; rx = span; }
+                if (cy >= Lc.resY) { cy = Lc.resY - 1; ry = span; }
+                if (cz >= Lc.resZ) { cz = Lc.resZ - 1; rz = span; }
+
+                // Trilinear weights
+                double wx1 = (double)rx * invSpan; double wx0 = 1.0 - wx1;
+                double wy1 = (double)ry * invSpan; double wy0 = 1.0 - wy1;
+                double wz1 = (double)rz * invSpan; double wz0 = 1.0 - wz1;
+
+                // Coarse Node Indices
+                int cbase00 = cNnx * cNny * cz + cNnx * cy + cx;
+                int cbase01 = cbase00 + 1;       // +x
+                int cbase10 = cbase00 + cNnx;    // +y
+                int cbase11 = cbase10 + 1;       // +x+y
+
+                int cnext00 = cbase00 + cNnx * cNny; // +z
+                int cnext01 = cnext00 + 1;
+                int cnext10 = cnext00 + cNnx;
+                int cnext11 = cnext10 + 1;
+
+                // Write to fine grid
+                size_t fIdx = ((size_t)fNnx * fNny * fz + fNnx * fy + fx) * 3;
+
                 for (int c = 0; c < 3; ++c) {
-                    v000[c] = xc[cIdx000 * 3 + c];
-                    v100[c] = xc[cIdx100 * 3 + c];
-                    v010[c] = xc[cIdx010 * 3 + c];
-                    v110[c] = xc[cIdx110 * 3 + c];
-                    v001[c] = xc[cIdx001 * 3 + c];
-                    v101[c] = xc[cIdx101 * 3 + c];
-                    v011[c] = xc[cIdx011 * 3 + c];
-                    v111[c] = xc[cIdx111 * 3 + c];
-                }
+                    double val =
+                        xc[cbase00 * 3 + c] * wx0 * wy0 * wz0 +
+                        xc[cbase01 * 3 + c] * wx1 * wy0 * wz0 +
+                        xc[cbase10 * 3 + c] * wx0 * wy1 * wz0 +
+                        xc[cbase11 * 3 + c] * wx1 * wy1 * wz0 +
+                        xc[cnext00 * 3 + c] * wx0 * wy0 * wz1 +
+                        xc[cnext01 * 3 + c] * wx1 * wy0 * wz1 +
+                        xc[cnext10 * 3 + c] * wx0 * wy1 * wz1 +
+                        xc[cnext11 * 3 + c] * wx1 * wy1 * wz1;
 
-                int fStartZ = cz * span;
-                int fStartY = cy * span;
-                int fStartX = cx * span;
-
-                for (int rz = 0; rz < span; ++rz) {
-                    double wz = W[rz];
-                    double wz0 = 1.0 - wz;
-                    int fz = fStartZ + rz;
-                    size_t fRowZ = (size_t)fz * fNny * fNnx;
-
-                    for (int ry = 0; ry < span; ++ry) {
-                        double wy = W[ry];
-                        double wy0 = 1.0 - wy;
-                        int fy = fStartY + ry;
-                        size_t fRowY = (size_t)fy * fNnx;
-
-                        double val00[3], val10[3], val01[3], val11[3];
-                        double val0[3], val1[3];
-                        for (int c = 0; c < 3; ++c) {
-                            val00[c] = v000[c] * wz0 + v001[c] * wz;
-                            val10[c] = v100[c] * wz0 + v101[c] * wz;
-                            val01[c] = v010[c] * wz0 + v011[c] * wz;
-                            val11[c] = v110[c] * wz0 + v111[c] * wz;
-                            val0[c] = val00[c] * wy0 + val01[c] * wy;
-                            val1[c] = val10[c] * wy0 + val11[c] * wy;
-                        }
-
-                        for (int rx = 0; rx < span; ++rx) {
-                            double wx = W[rx];
-                            double wx0 = 1.0 - wx;
-                            int fx = fStartX + rx;
-                            size_t fIdx = (fRowZ + fRowY + fx) * 3;
-
-                            xf[fIdx + 0] = val0[0] * wx0 + val1[0] * wx;
-                            xf[fIdx + 1] = val0[1] * wx0 + val1[1] * wx;
-                            xf[fIdx + 2] = val0[2] * wx0 + val1[2] * wx;
-                        }
-                    }
+                    xf[fIdx + c] = val;
                 }
             }
         }
