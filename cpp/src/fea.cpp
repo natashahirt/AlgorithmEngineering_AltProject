@@ -843,12 +843,102 @@ void K_times_u_finest(const Problem& pb,
 	const int numElements = mesh.numElements;
 	const size_t numFreeDofs = uFree.size();
 
+#if defined(_OPENMP)
+	// If already in parallel region, only one thread does setup
+	if (omp_in_parallel()) {
+		#pragma omp single
+		{
+			if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
+			else std::fill(yFree.begin(), yFree.end(), 0.0);
+			ws.resize(numElements, numFreeDofs);
+		}
+		// implicit barrier after single
+	} else {
+		if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
+		else std::fill(yFree.begin(), yFree.end(), 0.0);
+		ws.resize(numElements, numFreeDofs);
+	}
+#else
 	// Zero output
 	if (yFree.size() != numFreeDofs) yFree.assign(numFreeDofs, 0.0);
 	else std::fill(yFree.begin(), yFree.end(), 0.0);
 
 	// Resize workspace
 	ws.resize(numElements, numFreeDofs);
+#endif
+
+	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
+	// This must be done by a single thread if we're already in a parallel region
+#if defined(_OPENMP)
+	if (omp_in_parallel()) {
+		#pragma omp single
+		{
+			if (!ws.scatterIndexBuilt) {
+				const int32_t* ed_tmp = pb.eDofFreeMat.data();
+				std::vector<int> dofCount(numFreeDofs + 1, 0);
+				for (int e = 0; e < numElements; ++e) {
+					const int32_t* ed = ed_tmp + 24 * e;
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						if (idx >= 0) dofCount[idx + 1]++;
+					}
+				}
+				ws.dofBoundaries.resize(numFreeDofs + 1);
+				ws.dofBoundaries[0] = 0;
+				for (size_t i = 1; i <= numFreeDofs; ++i) {
+					ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
+				}
+				size_t totalPairs = ws.dofBoundaries[numFreeDofs];
+				ws.scatterIdx.resize(totalPairs);
+				std::vector<int> dofPos(numFreeDofs, 0);
+				for (int e = 0; e < numElements; ++e) {
+					const int32_t* ed = ed_tmp + 24 * e;
+					for (int a = 0; a < 24; ++a) {
+						int idx = ed[a];
+						if (idx >= 0) {
+							int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
+							ws.scatterIdx[pos] = e * 24 + a;
+						}
+					}
+				}
+				ws.scatterIndexBuilt = true;
+			}
+		}
+		// implicit barrier
+	} else
+#endif
+	{
+		if (!ws.scatterIndexBuilt) {
+			const int32_t* ed_tmp = pb.eDofFreeMat.data();
+			std::vector<int> dofCount(numFreeDofs + 1, 0);
+			for (int e = 0; e < numElements; ++e) {
+				const int32_t* ed = ed_tmp + 24 * e;
+				for (int a = 0; a < 24; ++a) {
+					int idx = ed[a];
+					if (idx >= 0) dofCount[idx + 1]++;
+				}
+			}
+			ws.dofBoundaries.resize(numFreeDofs + 1);
+			ws.dofBoundaries[0] = 0;
+			for (size_t i = 1; i <= numFreeDofs; ++i) {
+				ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
+			}
+			size_t totalPairs = ws.dofBoundaries[numFreeDofs];
+			ws.scatterIdx.resize(totalPairs);
+			std::vector<int> dofPos(numFreeDofs, 0);
+			for (int e = 0; e < numElements; ++e) {
+				const int32_t* ed = ed_tmp + 24 * e;
+				for (int a = 0; a < 24; ++a) {
+					int idx = ed[a];
+					if (idx >= 0) {
+						int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
+						ws.scatterIdx[pos] = e * 24 + a;
+					}
+				}
+			}
+			ws.scatterIndexBuilt = true;
+		}
+	}
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
 	const double* __restrict__ Kptr = Ke.data();
@@ -856,40 +946,6 @@ void K_times_u_finest(const Problem& pb,
 	double* __restrict__ uMat = ws.uMat.data();
 	double* __restrict__ fMat = ws.fMat.data();
 	double* __restrict__ yF_out = yFree.data();
-
-	// Build scatter indices once (grouped by global DOF for cache-friendly accumulation)
-	if (!ws.scatterIndexBuilt) {
-		// Count contributions per DOF
-		std::vector<int> dofCount(numFreeDofs + 1, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) dofCount[idx + 1]++;
-			}
-		}
-		// Prefix sum to get boundaries
-		ws.dofBoundaries.resize(numFreeDofs + 1);
-		ws.dofBoundaries[0] = 0;
-		for (size_t i = 1; i <= numFreeDofs; ++i) {
-			ws.dofBoundaries[i] = ws.dofBoundaries[i-1] + dofCount[i];
-		}
-		// Fill scatter indices (just the fMat index, grouped by output DOF)
-		size_t totalPairs = ws.dofBoundaries[numFreeDofs];
-		ws.scatterIdx.resize(totalPairs);
-		std::vector<int> dofPos(numFreeDofs, 0);
-		for (int e = 0; e < numElements; ++e) {
-			const int32_t* ed = eDofFree + 24 * e;
-			for (int a = 0; a < 24; ++a) {
-				int idx = ed[a];
-				if (idx >= 0) {
-					int pos = ws.dofBoundaries[idx] + dofPos[idx]++;
-					ws.scatterIdx[pos] = e * 24 + a;
-				}
-			}
-		}
-		ws.scatterIndexBuilt = true;
-	}
 
 	const double* __restrict__ Ee = eleModulus.data();
 	const int32_t* __restrict__ scatIdx = ws.scatterIdx.data();
