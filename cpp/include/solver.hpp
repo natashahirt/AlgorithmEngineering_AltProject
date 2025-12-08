@@ -13,9 +13,6 @@ struct PCGFreeWorkspace {
 	std::vector<double> z;
 	std::vector<double> p;
 	std::vector<double> Ap;
-
-	// Workspace for K*u operations (thread-local accumulators)
-	KTimesUWorkspace kTimesU_ws;
 };
 
 // Simple Jacobi (diagonal) preconditioner built from element Ke and eleE
