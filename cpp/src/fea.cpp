@@ -795,9 +795,10 @@ void K_times_u_finest(const Problem& pb,
 	const int numColors = mesh.coloring.numColors;
 	const auto& buckets = mesh.coloring.colorBuckets;
 
-	#if defined(_OPENMP)
-	#pragma omp parallel
-	{
+#if defined(_OPENMP)
+	bool already_parallel = omp_in_parallel();
+	if (already_parallel) {
+		// Already inside a parallel region: simply share work
 		for (int c = 0; c < numColors; ++c) {
 			const auto& bucket = buckets[c];
 			const int n = static_cast<int>(bucket.size());
@@ -807,10 +808,25 @@ void K_times_u_finest(const Problem& pb,
 				int count = std::min(8, n - i);
 				ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 			}
-			// Implicit barrier here ensures all threads finish color 'c' before starting 'c+1'
+			// Implicit barrier at end of 'omp for' ensures color dependency safety
+		}
+	} else {
+		// Not in parallel region: spawn threads
+		#pragma omp parallel
+		{
+			for (int c = 0; c < numColors; ++c) {
+				const auto& bucket = buckets[c];
+				const int n = static_cast<int>(bucket.size());
+				
+				#pragma omp for schedule(static)
+				for (int i = 0; i < n; i += 8) {
+					int count = std::min(8, n - i);
+					ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
+				}
+			}
 		}
 	}
-	#else
+#else
 	// Serial fallback
 	for (int c = 0; c < numColors; ++c) {
 		const auto& bucket = buckets[c];
@@ -820,7 +836,7 @@ void K_times_u_finest(const Problem& pb,
 			ProcessBlock_8_Free<8>(bucket.data() + i, count, eDofFree, K2D, Ee, uF, yF);
 		}
 	}
-	#endif
+#endif
 }
 
 // Backward-compatible wrapper (allocates workspace internally)

@@ -6,6 +6,9 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 namespace top3d {
 
@@ -69,20 +72,25 @@ Preconditioner make_jacobi_preconditioner(const Problem& pb, const std::vector<d
 	}
 	// Return functor that applies z = inv(D) * r
 	return [diag = std::move(diagFree)](const std::vector<double>& r, std::vector<double>& z) {
-		if (z.size() != r.size()) z.resize(r.size());
+		if (z.size() != r.size()) {
+            // Unsafe to resize inside parallel region if multiple threads call this
+            // But we assume z is pre-allocated by caller in parallel context
+             z.resize(r.size());
+        }
+        
+#if defined(_OPENMP)
+        if (omp_in_parallel()) {
+            #pragma omp for schedule(static)
+            for (size_t i=0;i<r.size();++i) z[i] = r[i] / diag[i];
+        } else {
+            #pragma omp parallel for schedule(static)
+            for (size_t i=0;i<r.size();++i) z[i] = r[i] / diag[i];
+        }
+#else
 		for (size_t i=0;i<r.size();++i) z[i] = r[i] / diag[i];
+#endif
 	};
 }
-
-double parallel_dot(const std::vector<double>& a, const std::vector<double>& b) {
-    double sum = 0.0;
-#pragma omp parallel for reduction(+:sum)
-    for (size_t i = 0; i < a.size(); ++i) {
-        sum += a[i] * b[i];
-    }
-    return sum;
-}
-
 
 int PCG_free(const Problem& pb,
                const std::vector<double>& eleModulus,
@@ -96,7 +104,7 @@ int PCG_free(const Problem& pb,
     size_t n = bFree.size();
     if (ws.r.size() != n) {
         ws.r.resize(n);
-        ws.z.resize(n); // Only needed if M is present, but keep for safety
+        ws.z.resize(n);
         ws.p.resize(n);
         ws.Ap.resize(n);
     }
@@ -106,73 +114,97 @@ int PCG_free(const Problem& pb,
     std::vector<double>& z = ws.z;
     std::vector<double>& p = ws.p;
     std::vector<double>& Ap = ws.Ap;
+    
+    // Ensure xFree is sized
+    if (xFree.size() != n) xFree.assign(n, 0.0);
 
-    // 2. Initialization
-    // r = b
-#pragma omp parallel for
-    for (size_t i = 0; i < n; ++i) r[i] = bFree[i];
-
-    // r = b - A*x
-    if (!xFree.empty()) {
-        K_times_u_finest(pb, eleModulus, xFree, Ap, ws.kTimesU_ws);
-#pragma omp parallel for
-        for (size_t i = 0; i < n; ++i) r[i] -= Ap[i];
-    } else {
-        xFree.assign(n, 0.0);
-    }
-
-    // 3. Preconditioning Setup (Zero-Copy Logic)
-    // If M exists, we write to z. If not, we point to r.
-    const double* z_ptr = r.data();
-    if (M) {
-        M(r, z);
-        z_ptr = z.data(); // Point to z data
-    }
-    // Note: If !M, we skipped the std::copy entirely!
-
-    // Initial rz_old
+    // Shared scalars
     double rz_old = 0.0;
-    if (M) {
-        rz_old = parallel_dot(r, z);
-    } else {
-        // If z == r, dot(r, z) == dot(r, r)
-        rz_old = parallel_dot(r, r);
-    }
+    double rz_new = 0.0;
+    double normb2 = 0.0;
+    double stop_tol = 0.0;
+    double denom = 0.0;
+    double alpha = 0.0;
+    double beta = 0.0;
+    double rnorm2 = 0.0;
+    int iterations = 0;
 
-    // p = z (First iteration copy is unavoidable but fast)
-#pragma omp parallel for
-    for (size_t i = 0; i < n; ++i) p[i] = z_ptr[i];
-
-    // Calculate normb for convergence check
-    double normb2 = parallel_dot(bFree, bFree);
-    const double normb = std::sqrt(normb2);
-    const double stop_tol = std::max(1.0e-30, normb) * tol; // Pre-calc threshold
-
-    // --- MAIN LOOP ---
-    // Use raw pointers for better optimization
+    // Use raw pointers for better optimization inside parallel region
     double* __restrict__ r_ptr = r.data();
-    double* __restrict__ z_ptr_w = z.data();
+    double* __restrict__ z_ptr = z.data();
     double* __restrict__ p_ptr = p.data();
     double* __restrict__ Ap_ptr = Ap.data();
     double* __restrict__ x_ptr = xFree.data();
+    const double* __restrict__ b_ptr = bFree.data();
 
+#pragma omp parallel
+{
+    // 2. Initialization
+    // r = b
+    #pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) r_ptr[i] = b_ptr[i];
+
+    // r = b - A*x
+    // Compute A*x. Note: K_times_u_finest is parallel-aware.
+    K_times_u_finest(pb, eleModulus, xFree, Ap, ws.kTimesU_ws);
+    
+    #pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) r_ptr[i] -= Ap_ptr[i];
+
+    // 3. Preconditioning Setup
+    if (M) {
+        M(r, z); // Parallel-aware
+    } else {
+        // z = r
+        #pragma omp for schedule(static)
+        for (size_t i = 0; i < n; ++i) z_ptr[i] = r_ptr[i];
+    }
+
+    // rz_old = dot(r, z)
+    #pragma omp single
+    rz_old = 0.0;
+    
+    #pragma omp for reduction(+:rz_old) schedule(static)
+    for (size_t i = 0; i < n; ++i) rz_old += r_ptr[i] * z_ptr[i];
+
+    // p = z
+    #pragma omp for schedule(static)
+    for (size_t i = 0; i < n; ++i) p_ptr[i] = z_ptr[i];
+
+    // Calculate normb for convergence check
+    #pragma omp single
+    normb2 = 0.0;
+    
+    #pragma omp for reduction(+:normb2) schedule(static)
+    for (size_t i = 0; i < n; ++i) normb2 += b_ptr[i] * b_ptr[i];
+
+    #pragma omp single
+    {
+        stop_tol = std::max(1.0e-30, std::sqrt(normb2)) * tol;
+        iterations = maxIt; // Default return if loop completes
+    }
+
+    // --- MAIN LOOP ---
     for (int it = 0; it < maxIt; ++it) {
-
-        // 1. Matrix-Vector Multiplication
+        // 1. Matrix-Vector Multiplication: Ap = K * p
         K_times_u_finest(pb, eleModulus, p, Ap, ws.kTimesU_ws);
 
         // 2. Compute denom = dot(p, Ap)
-        double denom = 0.0;
-        #pragma omp parallel for reduction(+:denom) schedule(static)
-        for (size_t i = 0; i < n; ++i) {
-            denom += p_ptr[i] * Ap_ptr[i];
-        }
+        #pragma omp single
+        denom = 0.0;
+        
+        #pragma omp for reduction(+:denom) schedule(static)
+        for (size_t i = 0; i < n; ++i) denom += p_ptr[i] * Ap_ptr[i];
 
-        double alpha = rz_old / std::max(1.0e-30, denom);
+        #pragma omp single
+        alpha = rz_old / std::max(1.0e-30, denom);
+        // Implicit barrier
 
         // 3. Update x, r and compute rnorm2
-        double rnorm2 = 0.0;
-        #pragma omp parallel for reduction(+:rnorm2) schedule(static)
+        #pragma omp single
+        rnorm2 = 0.0;
+
+        #pragma omp for reduction(+:rnorm2) schedule(static)
         for (size_t i = 0; i < n; ++i) {
             x_ptr[i] += alpha * p_ptr[i];
             double val_r = r_ptr[i] - alpha * Ap_ptr[i];
@@ -180,40 +212,56 @@ int PCG_free(const Problem& pb,
             rnorm2 += val_r * val_r;
         }
 
-        // Convergence Check
-        if (std::sqrt(rnorm2) < stop_tol) return it + 1;
+        // Convergence Check (must be done by all threads or use single + broadcast)
+        // We can just break. omp for has barrier.
+        bool converged = false;
+        #pragma omp single
+        {
+            if (std::sqrt(rnorm2) < stop_tol) {
+                iterations = it + 1;
+                converged = true;
+            }
+        }
+        if (converged) break; // All threads break
 
         // 4. Preconditioner
         if (M) {
-            M(r, z);
+            M(r, z); // Parallel-aware
 
             // 5. Compute rz_new = dot(r, z)
-            double rz_new = 0.0;
-            #pragma omp parallel for reduction(+:rz_new) schedule(static)
-            for (size_t i = 0; i < n; ++i) {
-                rz_new += r_ptr[i] * z_ptr_w[i];
-            }
+            #pragma omp single
+            rz_new = 0.0;
+            
+            #pragma omp for reduction(+:rz_new) schedule(static)
+            for (size_t i = 0; i < n; ++i) rz_new += r_ptr[i] * z_ptr[i];
 
-            double beta = rz_new / std::max(1.0e-30, rz_old);
-            rz_old = rz_new;
+            #pragma omp single
+            {
+                beta = rz_new / std::max(1.0e-30, rz_old);
+                rz_old = rz_new;
+            }
 
             // 6. p = z + beta * p
-            #pragma omp parallel for schedule(static)
+            #pragma omp for schedule(static)
             for (size_t i = 0; i < n; ++i) {
-                p_ptr[i] = z_ptr_w[i] + beta * p_ptr[i];
+                p_ptr[i] = z_ptr[i] + beta * p_ptr[i];
             }
         } else {
-            double beta = rnorm2 / std::max(1.0e-30, rz_old);
-            rz_old = rnorm2;
+            #pragma omp single
+            {
+                beta = rnorm2 / std::max(1.0e-30, rz_old);
+                rz_old = rnorm2;
+            }
 
-            #pragma omp parallel for schedule(static)
+            #pragma omp for schedule(static)
             for (size_t i = 0; i < n; ++i) {
                 p_ptr[i] = r_ptr[i] + beta * p_ptr[i];
             }
         }
     }
+} // End of parallel region
 
-    return maxIt;
+    return iterations;
 }
 
 } // namespace top3d
