@@ -1,0 +1,153 @@
+Running Jacobi for 64 128 64 with OMP_NUM_THREADS=64
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_parallel (via /out)
+TOP3D_PRECOND=jacobi_finest
+Running GLOBAL topo-opt on cuboid: 64x128x64, V0=0.12, iters=50
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Skipping Multigrid (TOP3D_PRECOND=jacobi_finest)
+Preparing Voxel-based FEA Model Costs        0.1s
+Compliance of Fully Solid Domain:     6.264287e-01
+ It.:    0 Solver Time:    7s.
+
+ It.:   1 Obj.:  3.62307281e+02 Vol.:1.2000e-01 Sharp.:4.0555e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 7.01e+00s; CG: 6.94e+00s; Opti.: 5.48e-02s; Filtering: 4.07e-02s.
+ It.:   2 Obj.:  2.14181815e+02 Vol.:1.2000e-01 Sharp.:4.0259e-01 Cons.:-5.22e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 9.20e+00s; CG: 9.15e+00s; Opti.: 3.76e-02s; Filtering: 2.57e-02s.
+ It.:   3 Obj.:  1.32249355e+02 Vol.:1.2000e-01 Sharp.:3.8963e-01 Cons.:-6.71e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 9.30e+00s; CG: 9.27e+00s; Opti.: 2.75e-02s; Filtering: 1.48e-02s.
+ It.:   4 Obj.:  1.10865853e+02 Vol.:1.2000e-01 Sharp.:3.8279e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    4 (Time)... Total per-It.: 9.31e+00s; CG: 9.28e+00s; Opti.: 2.80e-02s; Filtering: 1.58e-02s.
+ It.:   5 Obj.:  8.34581708e+01 Vol.:1.2000e-01 Sharp.:3.6787e-01 Cons.:6.71e-08 Ch.:2.00e-01
+ It.:    5 (Time)... Total per-It.: 9.34e+00s; CG: 9.30e+00s; Opti.: 3.12e-02s; Filtering: 1.74e-02s.
+ It.:   6 Obj.:  7.50202677e+01 Vol.:1.2000e-01 Sharp.:3.5688e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:    6 (Time)... Total per-It.: 9.77e+00s; CG: 9.74e+00s; Opti.: 2.61e-02s; Filtering: 1.50e-02s.
+ It.:   7 Obj.:  5.96248534e+01 Vol.:1.2000e-01 Sharp.:3.3684e-01 Cons.:8.20e-08 Ch.:2.00e-01
+ It.:    7 (Time)... Total per-It.: 9.77e+00s; CG: 9.73e+00s; Opti.: 3.08e-02s; Filtering: 1.70e-02s.
+ It.:   8 Obj.:  4.39750793e+01 Vol.:1.2000e-01 Sharp.:3.0692e-01 Cons.:-5.22e-08 Ch.:2.00e-01
+ It.:    8 (Time)... Total per-It.: 9.76e+00s; CG: 9.72e+00s; Opti.: 2.57e-02s; Filtering: 1.44e-02s.
+ It.:   9 Obj.:  3.23568357e+01 Vol.:1.2000e-01 Sharp.:2.6030e-01 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:    9 (Time)... Total per-It.: 9.74e+00s; CG: 9.70e+00s; Opti.: 3.03e-02s; Filtering: 1.67e-02s.
+ It.:  10 Obj.:  2.14761546e+01 Vol.:1.2000e-01 Sharp.:2.1961e-01 Cons.:-4.47e-08 Ch.:2.00e-01
+ It.:   10 (Time)... Total per-It.: 9.29e+00s; CG: 9.26e+00s; Opti.: 2.49e-02s; Filtering: 1.41e-02s.
+ It.:  11 Obj.:  1.44880716e+01 Vol.:1.2000e-01 Sharp.:1.7081e-01 Cons.:-3.73e-08 Ch.:2.00e-01
+ It.:   11 (Time)... Total per-It.: 9.30e+00s; CG: 9.27e+00s; Opti.: 2.59e-02s; Filtering: 1.32e-02s.
+ It.:  12 Obj.:  1.03997218e+01 Vol.:1.2000e-01 Sharp.:1.4644e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:   12 (Time)... Total per-It.: 9.28e+00s; CG: 9.25e+00s; Opti.: 2.35e-02s; Filtering: 1.27e-02s.
+ It.:  13 Obj.:  8.32047853e+00 Vol.:1.2000e-01 Sharp.:1.2187e-01 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:   13 (Time)... Total per-It.: 9.32e+00s; CG: 9.28e+00s; Opti.: 2.91e-02s; Filtering: 1.51e-02s.
+ It.:  14 Obj.:  7.21097223e+00 Vol.:1.2000e-01 Sharp.:1.0871e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   14 (Time)... Total per-It.: 9.32e+00s; CG: 9.29e+00s; Opti.: 2.49e-02s; Filtering: 1.37e-02s.
+ It.:  15 Obj.:  6.47158409e+00 Vol.:1.2000e-01 Sharp.:9.6594e-02 Cons.:2.98e-08 Ch.:2.00e-01
+ It.:   15 (Time)... Total per-It.: 9.31e+00s; CG: 9.28e+00s; Opti.: 2.61e-02s; Filtering: 1.32e-02s.
+ It.:  16 Obj.:  6.10281267e+00 Vol.:1.2000e-01 Sharp.:8.9930e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   16 (Time)... Total per-It.: 9.31e+00s; CG: 9.28e+00s; Opti.: 2.47e-02s; Filtering: 1.16e-02s.
+ It.:  17 Obj.:  5.80619117e+00 Vol.:1.2000e-01 Sharp.:8.4698e-02 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   17 (Time)... Total per-It.: 9.32e+00s; CG: 9.28e+00s; Opti.: 2.46e-02s; Filtering: 1.17e-02s.
+ It.:  18 Obj.:  5.63694539e+00 Vol.:1.2000e-01 Sharp.:8.1423e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   18 (Time)... Total per-It.: 9.31e+00s; CG: 9.28e+00s; Opti.: 2.24e-02s; Filtering: 1.14e-02s.
+ It.:  19 Obj.:  5.50665854e+00 Vol.:1.2000e-01 Sharp.:8.0190e-02 Cons.:-2.24e-08 Ch.:1.51e-01
+ It.:   19 (Time)... Total per-It.: 9.32e+00s; CG: 9.29e+00s; Opti.: 2.08e-02s; Filtering: 8.11e-03s.
+ It.:  20 Obj.:  5.41993840e+00 Vol.:1.2000e-01 Sharp.:7.8960e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   20 (Time)... Total per-It.: 9.31e+00s; CG: 9.28e+00s; Opti.: 2.26e-02s; Filtering: 1.16e-02s.
+ It.:  21 Obj.:  5.38968856e+00 Vol.:1.2000e-01 Sharp.:7.8411e-02 Cons.:2.24e-08 Ch.:1.61e-01
+ It.:   21 (Time)... Total per-It.: 9.33e+00s; CG: 9.30e+00s; Opti.: 2.05e-02s; Filtering: 7.68e-03s.
+ It.:  22 Obj.:  5.36164629e+00 Vol.:1.2000e-01 Sharp.:7.8016e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   22 (Time)... Total per-It.: 9.41e+00s; CG: 9.37e+00s; Opti.: 2.71e-02s; Filtering: 1.47e-02s.
+ It.:  23 Obj.:  5.35094967e+00 Vol.:1.2000e-01 Sharp.:7.7792e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   23 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 2.17e-02s; Filtering: 8.54e-03s.
+ It.:  24 Obj.:  5.33399992e+00 Vol.:1.2000e-01 Sharp.:7.7744e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   24 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 2.30e-02s; Filtering: 1.19e-02s.
+ It.:  25 Obj.:  5.31226917e+00 Vol.:1.2000e-01 Sharp.:7.7596e-02 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   25 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 2.16e-02s; Filtering: 8.69e-03s.
+ It.:  26 Obj.:  5.29937917e+00 Vol.:1.2000e-01 Sharp.:7.7495e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   26 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 1.98e-02s; Filtering: 8.74e-03s.
+ It.:  27 Obj.:  5.29463304e+00 Vol.:1.2000e-01 Sharp.:7.7468e-02 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:   27 (Time)... Total per-It.: 9.42e+00s; CG: 9.39e+00s; Opti.: 2.38e-02s; Filtering: 1.09e-02s.
+ It.:  28 Obj.:  5.28701667e+00 Vol.:1.2000e-01 Sharp.:7.7331e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   28 (Time)... Total per-It.: 9.39e+00s; CG: 9.37e+00s; Opti.: 1.93e-02s; Filtering: 8.23e-03s.
+ It.:  29 Obj.:  5.27935412e+00 Vol.:1.2000e-01 Sharp.:7.7459e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   29 (Time)... Total per-It.: 9.41e+00s; CG: 9.37e+00s; Opti.: 2.57e-02s; Filtering: 1.27e-02s.
+ It.:  30 Obj.:  5.26322601e+00 Vol.:1.2000e-01 Sharp.:7.7337e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   30 (Time)... Total per-It.: 9.40e+00s; CG: 9.38e+00s; Opti.: 1.86e-02s; Filtering: 7.81e-03s.
+ It.:  31 Obj.:  5.25251164e+00 Vol.:1.2000e-01 Sharp.:7.7261e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   31 (Time)... Total per-It.: 9.43e+00s; CG: 9.40e+00s; Opti.: 2.04e-02s; Filtering: 7.58e-03s.
+ It.:  32 Obj.:  5.25096182e+00 Vol.:1.2000e-01 Sharp.:7.7259e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   32 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.21e-02s; Filtering: 1.11e-02s.
+ It.:  33 Obj.:  5.23932188e+00 Vol.:1.2000e-01 Sharp.:7.7111e-02 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   33 (Time)... Total per-It.: 9.26e+00s; CG: 9.21e+00s; Opti.: 3.34e-02s; Filtering: 1.33e-02s.
+ It.:  34 Obj.:  5.23534753e+00 Vol.:1.2000e-01 Sharp.:7.7318e-02 Cons.:2.98e-08 Ch.:2.00e-01
+ It.:   34 (Time)... Total per-It.: 9.36e+00s; CG: 9.32e+00s; Opti.: 2.31e-02s; Filtering: 1.20e-02s.
+ It.:  35 Obj.:  5.22282124e+00 Vol.:1.2000e-01 Sharp.:7.7179e-02 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:   35 (Time)... Total per-It.: 9.40e+00s; CG: 9.37e+00s; Opti.: 2.24e-02s; Filtering: 9.37e-03s.
+ It.:  36 Obj.:  5.21665488e+00 Vol.:1.2000e-01 Sharp.:7.7133e-02 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   36 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.34e-02s; Filtering: 1.23e-02s.
+ It.:  37 Obj.:  5.20252895e+00 Vol.:1.2000e-01 Sharp.:7.7012e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   37 (Time)... Total per-It.: 9.40e+00s; CG: 9.37e+00s; Opti.: 2.19e-02s; Filtering: 8.95e-03s.
+ It.:  38 Obj.:  5.20351580e+00 Vol.:1.2000e-01 Sharp.:7.7330e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   38 (Time)... Total per-It.: 9.39e+00s; CG: 9.35e+00s; Opti.: 2.22e-02s; Filtering: 1.13e-02s.
+ It.:  39 Obj.:  5.18813771e+00 Vol.:1.2000e-01 Sharp.:7.7167e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   39 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.12e-02s; Filtering: 8.30e-03s.
+ It.:  40 Obj.:  5.18967887e+00 Vol.:1.2000e-01 Sharp.:7.7224e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   40 (Time)... Total per-It.: 9.40e+00s; CG: 9.37e+00s; Opti.: 2.20e-02s; Filtering: 1.10e-02s.
+ It.:  41 Obj.:  5.18714468e+00 Vol.:1.2000e-01 Sharp.:7.7036e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   41 (Time)... Total per-It.: 9.40e+00s; CG: 9.37e+00s; Opti.: 2.11e-02s; Filtering: 8.31e-03s.
+ It.:  42 Obj.:  5.18305742e+00 Vol.:1.2000e-01 Sharp.:7.7260e-02 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:   42 (Time)... Total per-It.: 9.38e+00s; CG: 9.35e+00s; Opti.: 2.26e-02s; Filtering: 1.16e-02s.
+ It.:  43 Obj.:  5.16625343e+00 Vol.:1.2000e-01 Sharp.:7.7025e-02 Cons.:-3.73e-08 Ch.:2.00e-01
+ It.:   43 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 2.06e-02s; Filtering: 7.79e-03s.
+ It.:  44 Obj.:  5.15872279e+00 Vol.:1.2000e-01 Sharp.:7.7151e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   44 (Time)... Total per-It.: 9.40e+00s; CG: 9.36e+00s; Opti.: 2.32e-02s; Filtering: 1.22e-02s.
+ It.:  45 Obj.:  5.16851954e+00 Vol.:1.2000e-01 Sharp.:7.6901e-02 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   45 (Time)... Total per-It.: 9.41e+00s; CG: 9.38e+00s; Opti.: 2.26e-02s; Filtering: 9.58e-03s.
+ It.:  46 Obj.:  5.16136769e+00 Vol.:1.2000e-01 Sharp.:7.6910e-02 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:   46 (Time)... Total per-It.: 9.42e+00s; CG: 9.38e+00s; Opti.: 2.29e-02s; Filtering: 1.16e-02s.
+ It.:  47 Obj.:  5.14448653e+00 Vol.:1.2000e-01 Sharp.:7.6626e-02 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   47 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.21e-02s; Filtering: 8.70e-03s.
+ It.:  48 Obj.:  5.13013437e+00 Vol.:1.2000e-01 Sharp.:7.6714e-02 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   48 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.21e-02s; Filtering: 1.09e-02s.
+ It.:  49 Obj.:  5.13075493e+00 Vol.:1.2000e-01 Sharp.:7.6511e-02 Cons.:3.73e-08 Ch.:2.00e-01
+ It.:   49 (Time)... Total per-It.: 9.42e+00s; CG: 9.39e+00s; Opti.: 2.13e-02s; Filtering: 8.45e-03s.
+ It.:  50 Obj.:  5.12730425e+00 Vol.:1.2000e-01 Sharp.:7.6370e-02 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   50 (Time)... Total per-It.: 9.39e+00s; CG: 9.36e+00s; Opti.: 2.32e-02s; Filtering: 1.20e-02s.
+
+..........Performing Topology Optimization Costs (in total): 4.7477e+02s.
+
+PARAMETERS
+original dims: x=128, y=64, z=64
+padded dims: x=128, y=64, z=64
+v0: 0.12
+
+SOLVING
+iterations: 50
+cg iterations: 800
+
+RESULTS
+compliance solid: 6.264287e-01
+objective first: 3.623073e+02
+objective last: 5.127304e+00
+
+TIME
+total solver time: 4.657004e+02
+time per iter: 9.3485
+percentage time spent on cg: 99.63%
+percentage time spent on optim: 0.26%
+percentage time spent on filtering: 0.13%
+
+THREADS
+64
+
+NOTES
+
+STL file saved to: /orcd/home/002/nhirt/AlgorithmEngineering_AltProject/run_tests/test_parallel/out/stl/GLOBAL_20251209_042009_7043791.stl
+
+Done.
+
+............Total runtime time for 1 simulations4.7481e+02s.

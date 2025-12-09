@@ -1,3 +1,0 @@
-Running Multigrid for 100 200 100 with OMP_NUM_THREADS=32
-Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling (cwd=/home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling)
-TOP3D_PRECOND=mg

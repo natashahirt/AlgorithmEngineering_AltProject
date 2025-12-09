@@ -1,0 +1,61 @@
+
+------------------------------------------------------------------------
+       Segmentation violation detected at Tue Dec  9 03:08:49 2025
+------------------------------------------------------------------------
+Architecture     : glnxa64
+Processor ID     : AMD EPYC 9474F 48-Core Processor
+Host Name        : node1605
+Locale           : en_US
+
+
+Abnormal termination:
+Segmentation violation
+
+Current Thread: 'GTP_13' id 23113801750272
+
+Register State (from fault):
+  RAX = 0000000000000001  RBX = 0000150540ba8290
+  RCX = 0000000000003fff  RDX = 000000000000000e
+  RSP = 0000150599f14368  RBP = 0000150599f143b0
+  RSI = 0000150599f14420  RDI = 000015041066afa8
+
+   R8 = 0000000000000000   R9 = 0000150574035098
+  R10 = 0000000000bdf928  R11 = 0000000000000006
+  R12 = 000000000000000e  R13 = 0000150599f14420
+  R14 = 0000150599f14410  R15 = 0000150599f14410
+
+  RIP = 00001505a02566de  EFL = 0000000000010206
+
+   CS = 0033   FS = 0000   GS = 0000
+
+Stack Trace (from fault):
+[  0] 0x00001505a02566de                                   /lib64/libc.so.6+00755422
+[  1] 0x000015053988841d /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00123933
+[  2] 0x0000150539888f3a /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00126778
+[  3] 0x000015053989ea4f /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00215631
+[  4] 0x000015053989ef65 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00216933
+[  5] 0x000015053989f230 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00217648
+[  6] 0x000015053989f5a6 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00218534
+[  7] 0x00001505398a7671 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/spf/serviceproviders/mwactions/delegators/applicationdelegator/serviceprovider/libmwactionsapplicationdelegator.so+00251505 DeleteInstance_applicationdelegator+00000657
+[  8] 0x000015059ae5b2d0 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00541392
+[  9] 0x000015059ae7afcd /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00671693
+[ 10] 0x000015059ae8188d /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00698509
+[ 11] 0x000015059ae561d8 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00520664
+[ 12] 0x000015059ae887c8 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00726984
+[ 13] 0x000015059ae62e53 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00573011
+[ 14] 0x000015059ae66899 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00587929
+[ 15] 0x00001505a07c9e97                             /lib64/libpthread.so.0+00065175
+[ 16] 0x000015059ae60e8d /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00564877
+[ 17] 0x000015059ae63086 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00573574
+[ 18] 0x000015059ae66899 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00587929
+[ 19] 0x00001505a07c9e97                             /lib64/libpthread.so.0+00065175
+[ 20] 0x000015059ae61008 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libDeclarativeServices.so.1.5.6+00565256
+[ 21] 0x000015059f9fdc34 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libmwfoundation_threadpool.so+00146484
+[ 22] 0x000015059fa02928 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libmwfoundation_threadpool.so+00166184
+[ 23] 0x000015059fa02d54 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/libmwfoundation_threadpool.so+00167252
+[ 24] 0x00001505a06718c3 /orcd/home/002/nhirt/.MathWorks/ServiceHost/node1605/v2024.2.0.3/bin/glnxa64/../../sys/os/glnxa64/libstdc++.so.6+00903363
+[ 25] 0x00001505a07c21ca                             /lib64/libpthread.so.0+00033226
+[ 26] 0x00001505a01d78d3                                   /lib64/libc.so.6+00235731 clone+00000067
+
+
+** This crash report has been written to /home/nhirt/.MathWorks/ServiceHost/node1605/logs/MathWorksServiceHost_crash_2670855.log **

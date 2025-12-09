@@ -26,8 +26,10 @@ def parse_log_file(filepath):
     # 1. Parse Metadata from Filename
     if filename.startswith("MG"):
         data["solver"] = "Multigrid"
-    elif filename.startswith("JAC"):
-        data["solver"] = "Jacobi"
+    elif filename.startswith("JACCOARSE"):
+        data["solver"] = "Jacobi Coarsest"
+    elif filename.startswith("JAC_FINEST") or filename.startswith("JAC"):
+        data["solver"] = "Jacobi Finest"
     elif filename.startswith("MAT"):
         data["solver"] = "MATLAB"
         
@@ -114,7 +116,7 @@ def parse_log_file(filepath):
 def main():
     base_dir = Path(__file__).resolve().parent
     # Only parsing logs under the relocated test tree
-    log_dirs = [base_dir / "test_master" / "log"]
+    log_dirs = [base_dir / "test_scaling" / "log", base_dir / "test_parallel" / "log"]
     all_results = []
     
     print("Parsing logs...")
@@ -125,9 +127,16 @@ def main():
             
         files = glob.glob(str(d / "*.out"))
         for f in files:
+            # Skip runs that have a non-empty accompanying .err file
+            err_path = f.replace(".out", ".err")
+            if os.path.exists(err_path) and os.path.getsize(err_path) == 0:
+                print(f"Skipping {f} due to empty error file {err_path} (don't worry this is a debugging thing)")
+                continue
             result = parse_log_file(f)
-            if result["num_iterations"] > 0:
-                all_results.append(result)
+            if result["num_iterations"] <= 0.0 or result["total_time"] <= 0.0:
+                print(f"Skipping {f} because it has {result['num_iterations']} iterations and {result['total_time']} total time")
+                continue
+            all_results.append(result)
     
     json_path = base_dir / "benchmark_results.json"
     csv_path = base_dir / "benchmark_results.csv"

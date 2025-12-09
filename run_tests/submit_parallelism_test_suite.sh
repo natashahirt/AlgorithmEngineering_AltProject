@@ -40,30 +40,31 @@ NZ=64
 DIM_TAG="${NY}x${NX}x${NZ}"
 
 # Sweep CPU counts (1..32); default C++ behavior uses 2x threads per CPU when no override is set
-CPU_COUNTS=(1 2 4 8 16 32)
+# CPU_COUNTS=(1 2 4 8 16 32)
+CPU_COUNTS=(1)
 for CPU in "${CPU_COUNTS[@]}"; do
     TAG="${DIM_TAG}_${CPU}cpu"
     echo "Submitting parallelism tests for $DIM_TAG with ${CPU}cpu (default OMP threads) (Output: $OUT_DIR)..."
 
-    sbatch --job-name="MG_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
+#     sbatch --job-name="MG_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
 
-    TOP3D_PRECOND=jacobi_coarsest \
-    sbatch --job-name="JACCOARSE_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
+#     TOP3D_PRECOND=jacobi_coarsest \
+#     sbatch --job-name="JACCOARSE_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
 
-    TOP3D_PRECOND=jacobi_finest \
-    sbatch --job-name="JAC_FINEST_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
+#     TOP3D_PRECOND=jacobi_finest \
+#     sbatch --job-name="JAC_FINEST_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
 
     sbatch --job-name="MAT_${TAG}" \
            --cpus-per-task=$CPU \
@@ -73,28 +74,28 @@ for CPU in "${CPU_COUNTS[@]}"; do
 done
 
 # Additional single-core, single-thread runs for C++ variants (override OMP to 1)
-CPU=1
-TAG="${DIM_TAG}_${CPU}cpu_1thread"
-TOP3D_OMP_THREADS=1 \
-    sbatch --job-name="MG_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
+# CPU=1
+# TAG="${DIM_TAG}_${CPU}cpu_1thread"
+# TOP3D_OMP_THREADS=1 \
+#     sbatch --job-name="MG_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/MG_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
 
-TOP3D_PRECOND=jacobi_coarsest TOP3D_OMP_THREADS=1 \
-    sbatch --job-name="JACCOARSE_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
+# TOP3D_PRECOND=jacobi_coarsest TOP3D_OMP_THREADS=1 \
+#     sbatch --job-name="JACCOARSE_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/JACCOARSE_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
 
-TOP3D_PRECOND=jacobi_finest TOP3D_OMP_THREADS=1 \
-    sbatch --job-name="JAC_FINEST_${TAG}" \
-           --cpus-per-task=$CPU \
-           --output="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.out" \
-           --error="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
+# TOP3D_PRECOND=jacobi_finest TOP3D_OMP_THREADS=1 \
+#     sbatch --job-name="JAC_FINEST_${TAG}" \
+#            --cpus-per-task=$CPU \
+#            --output="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/JAC_FINEST_SCALING_${TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
 
 echo "All parallelism jobs submitted to ${OUT_DIR}."
 

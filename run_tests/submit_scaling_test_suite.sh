@@ -35,17 +35,17 @@ cmake --build "${ROOT_DIR}/build_jac" -j > /dev/null || { echo "Jacobi Build fai
 # --- 3. SUBMIT JOBS ---
 
 DOMAINS=(
-"16 32 16"
-"30 60 30"
-"32 64 32"
+# "16 32 16"
+# "30 60 30"
+# "32 64 32"
 "50 100 50"
-"64 128 64"
-"100 200 100"
-"128 256 128"
-"150 300 150"
-"256 512 256"
-"200 400 200"
-"250 500 250"
+# "64 128 64"
+# "100 200 100"
+# "128 256 128"
+# "150 300 150"
+# "256 512 256"
+# "200 400 200"
+# "250 500 250"
 )
 
 # Explicitly set standard CPU count for domain tests
@@ -72,19 +72,19 @@ for D in "${DOMAINS[@]}"; do
            --error="${OUT_DIR}/log/JACCOARSE_${DIM_TAG}_%j.err" \
            "${SCRIPT_DIR}/job_ours_multigrid.sbatch" $NY $NX $NZ $OUT_DIR
 
-    # 2. Jacobi-only on finest grid (no multigrid hierarchy)
-    TOP3D_PRECOND=jacobi_finest sbatch --job-name="JAC_FINEST_${DIM_TAG}" \
-           --cpus-per-task=$STD_CPU \
-           --output="${OUT_DIR}/log/JAC_FINEST_${DIM_TAG}_%j.out" \
-           --error="${OUT_DIR}/log/JAC_FINEST_${DIM_TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
+#     # 2. Jacobi-only on finest grid (no multigrid hierarchy)
+#     TOP3D_PRECOND=jacobi_finest sbatch --job-name="JAC_FINEST_${DIM_TAG}" \
+#            --cpus-per-task=$STD_CPU \
+#            --output="${OUT_DIR}/log/JAC_FINEST_${DIM_TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/JAC_FINEST_${DIM_TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_ours_jacobi.sbatch" $NY $NX $NZ $OUT_DIR
 
-    # 3. MATLAB
-    sbatch --job-name="MAT_${DIM_TAG}" \
-           --cpus-per-task=$STD_CPU \
-           --output="${OUT_DIR}/log/MAT_${DIM_TAG}_%j.out" \
-           --error="${OUT_DIR}/log/MAT_${DIM_TAG}_%j.err" \
-           "${SCRIPT_DIR}/job_matlab.sbatch" $NY $NX $NZ $OUT_DIR
+#     # 3. MATLAB
+#     sbatch --job-name="MAT_${DIM_TAG}" \
+#            --cpus-per-task=$STD_CPU \
+#            --output="${OUT_DIR}/log/MAT_${DIM_TAG}_%j.out" \
+#            --error="${OUT_DIR}/log/MAT_${DIM_TAG}_%j.err" \
+#            "${SCRIPT_DIR}/job_matlab.sbatch" $NY $NX $NZ $OUT_DIR
 done
 
 echo "All jobs submitted to ${OUT_DIR}."

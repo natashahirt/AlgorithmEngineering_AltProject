@@ -29,14 +29,15 @@ def main():
     domain_df.sort_values('elements', inplace=True)
 
     # Keep colors/styles consistent across all plots
-    solver_order = ["Multigrid", "Jacobi", "MATLAB"]
+    solver_order = ["Multigrid", "Jacobi Coarsest", "Jacobi Finest", "MATLAB"]
     solver_palette = {
-        "Multigrid": "#76b7eb",  # light blue
-        "Jacobi": "#1a237e",     # dark blue
-        "MATLAB": "#d81b60",     # magenta
+        "Multigrid": "#800080",  # purple
+        "Jacobi Coarsest": "#4fc3f7",   # light blue
+        "Jacobi Finest": "#1565c0",     # dark blue
+        "MATLAB": "#d81b60",            # magenta
     }
-    # Solid lines for Multigrid/Jacobi, dotted for MATLAB
-    solver_dashes = [(None, None), (None, None), (2, 2)]
+    # Solid lines for C++ variants, dotted for MATLAB
+    solver_dashes = [(None, None), (None, None), (None, None), (2, 2)]
 
     # --- Plot 1: Total Time vs Elements (Log Scale) ---
     plt.figure(figsize=(10, 6))
@@ -168,11 +169,15 @@ def main():
         print("No scaling data found.")
         return
 
-    # For non-MATLAB runs, each core uses 2 threads; normalize to core-count
-    scaling_df['core_count'] = scaling_df.apply(
-        lambda row: row['cpus'] if row['solver'] == "MATLAB" else row['cpus'] * 2,
-        axis=1
-    )
+    # For non-MATLAB runs, use reported threads if available; else assume 2x threads per CPU
+    def core_count_row(row):
+        if row['solver'] == "MATLAB":
+            return row['cpus']
+        if row['threads'] and row['threads'] > 0:
+            return row['threads']
+        return row['cpus'] * 2
+
+    scaling_df['core_count'] = scaling_df.apply(core_count_row, axis=1)
     scaling_df.sort_values(by=['elements', 'solver', 'core_count'], inplace=True)
 
     # Compute per-solver baseline time at the minimum core count to derive speedup
@@ -200,7 +205,7 @@ def main():
         estimator=None,
         sort=False,
     )
-    plt.title('Strong Scaling: Total Runtime vs CPU Count', fontsize=14)
+    plt.title('Total Runtime vs CPU Count', fontsize=14)
     plt.xlabel('CPU Cores', fontsize=12)
     plt.ylabel('Total Time (s)', fontsize=12)
     plt.grid(True, which="both", ls="-", alpha=0.5)
@@ -209,10 +214,6 @@ def main():
     plt.tight_layout()
     plt.savefig(base_dir / 'plot_scaling_time.png')
     print(f"Plot saved to '{base_dir / 'plot_scaling_time.png'}'")
-
-    # Speedup vs CPUs (with ideal linear reference)
-    min_core = scaling_df['core_count'].min()
-    cpu_vals = sorted(scaling_df['core_count'].unique())
 
     plt.figure(figsize=(10, 6))
     ax = sns.lineplot(
@@ -231,7 +232,7 @@ def main():
         estimator=None,
         sort=False,
     )
-    plt.title('Strong Scaling: Speedup vs CPU Count', fontsize=14)
+    plt.title('Speedup vs CPU Count', fontsize=14)
     plt.xlabel('CPU Cores', fontsize=12)
     plt.ylabel('Speedup (vs min-core run)', fontsize=12)
     plt.grid(True, which="both", ls="-", alpha=0.5)
