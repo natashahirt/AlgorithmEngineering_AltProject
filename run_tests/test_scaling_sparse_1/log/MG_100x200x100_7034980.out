@@ -1,0 +1,91 @@
+Running Multigrid for 100 200 100 with OMP_NUM_THREADS=32
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling_sparse (cwd=/home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling_sparse)
+Running GLOBAL topo-opt on cuboid: 100x200x100, V0=0.12, iters=50
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=3 coarsest=25x13x13 dofs=15288
+Preparing Voxel-based FEA Model Costs        0.5s
+MKL-DSS-DSS-Error, Invalid message level
+Compliance of Fully Solid Domain:     3.692659e-01
+ It.:    0 Solver Time:   39s.
+
+MKL-DSS-DSS-Error, Invalid message level
+ It.:   1 Obj.:  2.13572426e+02 Vol.:1.2000e-01 Sharp.:4.0548e-01 Cons.:5.22e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 3.83e+01s; CG: 3.81e+01s; Opti.: 1.75e-01s; Filtering: 1.31e-01s.
+ It.:   2 Obj.:  3.58608725e+02 Vol.:1.2000e-01 Sharp.:4.0496e-01 Cons.:3.73e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 3.86e+01s; CG: 3.84e+01s; Opti.: 1.61e-01s; Filtering: 1.14e-01s.
+ It.:   3 Obj.:  5.02863191e+02 Vol.:1.2000e-01 Sharp.:3.7810e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 3.85e+01s; CG: 3.83e+01s; Opti.: 1.58e-01s; Filtering: 1.16e-01s.
+ It.:   4 Obj.:  5.10195080e+02 Vol.:1.2000e-01 Sharp.:3.8292e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    4 (Time)... Total per-It.: 3.85e+01s; CG: 3.83e+01s; Opti.: 1.66e-01s; Filtering: 1.24e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:   5 Obj.:  1.15301915e+02 Vol.:1.2000e-01 Sharp.:3.6921e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:    5 (Time)... Total per-It.: 3.66e+01s; CG: 3.64e+01s; Opti.: 1.44e-01s; Filtering: 1.03e-01s.
+ It.:   6 Obj.:  5.42125651e+02 Vol.:1.2000e-01 Sharp.:3.5443e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:    6 (Time)... Total per-It.: 3.83e+01s; CG: 3.81e+01s; Opti.: 1.77e-01s; Filtering: 1.31e-01s.
+ It.:   7 Obj.:  1.53760374e+03 Vol.:1.2000e-01 Sharp.:3.2942e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:    7 (Time)... Total per-It.: 3.93e+01s; CG: 3.91e+01s; Opti.: 1.71e-01s; Filtering: 1.26e-01s.
+ It.:   8 Obj.:  2.36338190e+03 Vol.:1.2000e-01 Sharp.:2.8274e-01 Cons.:3.73e-08 Ch.:2.00e-01
+ It.:    8 (Time)... Total per-It.: 3.92e+01s; CG: 3.90e+01s; Opti.: 1.66e-01s; Filtering: 1.26e-01s.
+ It.:   9 Obj.:  3.38349465e+03 Vol.:1.2000e-01 Sharp.:2.5496e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:    9 (Time)... Total per-It.: 3.92e+01s; CG: 3.90e+01s; Opti.: 1.76e-01s; Filtering: 1.34e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:  10 Obj.:  5.52939364e+04 Vol.:1.2000e-01 Sharp.:2.9962e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   10 (Time)... Total per-It.: 3.84e+01s; CG: 3.82e+01s; Opti.: 1.98e-01s; Filtering: 1.49e-01s.
+ It.:  11 Obj.:  2.52214037e+05 Vol.:1.2000e-01 Sharp.:3.3559e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:   11 (Time)... Total per-It.: 3.92e+01s; CG: 3.90e+01s; Opti.: 2.07e-01s; Filtering: 1.65e-01s.
+ It.:  12 Obj.:  7.93087457e+07 Vol.:1.2000e-01 Sharp.:3.1347e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   12 (Time)... Total per-It.: 3.93e+01s; CG: 3.90e+01s; Opti.: 2.52e-01s; Filtering: 2.12e-01s.
+ It.:  13 Obj.:  3.68281703e+08 Vol.:1.2000e-01 Sharp.:2.7459e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   13 (Time)... Total per-It.: 3.93e+01s; CG: 3.90e+01s; Opti.: 2.37e-01s; Filtering: 2.03e-01s.
+ It.:  14 Obj.:  5.74479160e+08 Vol.:1.2000e-01 Sharp.:2.2405e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   14 (Time)... Total per-It.: 3.94e+01s; CG: 3.91e+01s; Opti.: 2.60e-01s; Filtering: 2.22e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:  15 Obj.:  1.00166991e+06 Vol.:1.2000e-01 Sharp.:2.5217e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:   15 (Time)... Total per-It.: 3.75e+01s; CG: 3.72e+01s; Opti.: 2.41e-01s; Filtering: 2.03e-01s.
+ It.:  16 Obj.:  4.25543184e+06 Vol.:1.2000e-01 Sharp.:2.6091e-01 Cons.:5.22e-08 Ch.:2.00e-01
+ It.:   16 (Time)... Total per-It.: 3.73e+01s; CG: 3.70e+01s; Opti.: 2.24e-01s; Filtering: 1.89e-01s.
+ It.:  17 Obj.:  1.76276236e+07 Vol.:1.2000e-01 Sharp.:2.2430e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   17 (Time)... Total per-It.: 3.79e+01s; CG: 3.77e+01s; Opti.: 2.27e-01s; Filtering: 1.95e-01s.
+ It.:  18 Obj.:  5.23698065e+07 Vol.:1.2000e-01 Sharp.:1.6126e-01 Cons.:4.47e-08 Ch.:2.00e-01
+ It.:   18 (Time)... Total per-It.: 3.92e+01s; CG: 3.89e+01s; Opti.: 2.26e-01s; Filtering: 1.91e-01s.
+ It.:  19 Obj.:  1.15436597e+08 Vol.:1.2000e-01 Sharp.:1.0229e-01 Cons.:7.45e-09 Ch.:2.00e-01
+ It.:   19 (Time)... Total per-It.: 3.93e+01s; CG: 3.91e+01s; Opti.: 2.48e-01s; Filtering: 2.11e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:  20 Obj.:  1.20784702e+04 Vol.:1.2000e-01 Sharp.:1.4399e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   20 (Time)... Total per-It.: 3.75e+01s; CG: 3.74e+01s; Opti.: 1.62e-01s; Filtering: 1.24e-01s.
+ It.:  21 Obj.:  7.14903268e+04 Vol.:1.2000e-01 Sharp.:1.9805e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   21 (Time)... Total per-It.: 3.70e+01s; CG: 3.68e+01s; Opti.: 2.08e-01s; Filtering: 1.65e-01s.
+ It.:  22 Obj.:  6.32556662e+05 Vol.:1.2000e-01 Sharp.:2.5587e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   22 (Time)... Total per-It.: 3.75e+01s; CG: 3.73e+01s; Opti.: 2.17e-01s; Filtering: 1.81e-01s.
+ It.:  23 Obj.:  7.91375342e+06 Vol.:1.2000e-01 Sharp.:2.6830e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   23 (Time)... Total per-It.: 3.90e+01s; CG: 3.88e+01s; Opti.: 2.28e-01s; Filtering: 1.88e-01s.
+ It.:  24 Obj.:  1.31574548e+08 Vol.:1.2000e-01 Sharp.:2.2474e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   24 (Time)... Total per-It.: 3.91e+01s; CG: 3.89e+01s; Opti.: 2.37e-01s; Filtering: 2.05e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:  25 Obj.:  1.59739193e+06 Vol.:1.2000e-01 Sharp.:2.1560e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   25 (Time)... Total per-It.: 3.73e+01s; CG: 3.70e+01s; Opti.: 2.25e-01s; Filtering: 1.91e-01s.
+ It.:  26 Obj.:  8.71955224e+06 Vol.:1.2000e-01 Sharp.:1.8624e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   26 (Time)... Total per-It.: 3.68e+01s; CG: 3.66e+01s; Opti.: 2.28e-01s; Filtering: 1.93e-01s.
+ It.:  27 Obj.:  2.85282590e+07 Vol.:1.2000e-01 Sharp.:1.4553e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   27 (Time)... Total per-It.: 3.68e+01s; CG: 3.66e+01s; Opti.: 2.36e-01s; Filtering: 2.01e-01s.
+ It.:  28 Obj.:  6.99174268e+07 Vol.:1.2000e-01 Sharp.:1.1612e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:   28 (Time)... Total per-It.: 3.69e+01s; CG: 3.67e+01s; Opti.: 2.31e-01s; Filtering: 1.99e-01s.
+ It.:  29 Obj.:  1.37464330e+08 Vol.:1.2000e-01 Sharp.:9.8797e-02 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   29 (Time)... Total per-It.: 3.69e+01s; CG: 3.67e+01s; Opti.: 2.40e-01s; Filtering: 2.07e-01s.
+MKL-DSS-DSS-Error, Invalid message level
+ It.:  30 Obj.:  2.29627116e+06 Vol.:1.2000e-01 Sharp.:1.1504e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   30 (Time)... Total per-It.: 3.88e+01s; CG: 3.85e+01s; Opti.: 2.40e-01s; Filtering: 2.05e-01s.
+ It.:  31 Obj.:  7.68738836e+06 Vol.:1.2000e-01 Sharp.:1.2212e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   31 (Time)... Total per-It.: 3.85e+01s; CG: 3.83e+01s; Opti.: 2.30e-01s; Filtering: 1.93e-01s.
+ It.:  32 Obj.:  2.40651169e+07 Vol.:1.2000e-01 Sharp.:1.2105e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   32 (Time)... Total per-It.: 3.86e+01s; CG: 3.83e+01s; Opti.: 2.48e-01s; Filtering: 2.09e-01s.

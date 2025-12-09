@@ -1,0 +1,27 @@
+Running Multigrid for 200 400 200 with OMP_NUM_THREADS=32
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling_sparse (cwd=/home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling_sparse)
+Running GLOBAL topo-opt on cuboid: 200x400x200, V0=0.12, iters=50
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=3 coarsest=50x25x25 dofs=103428
+Preparing Voxel-based FEA Model Costs        3.5s
+MKL-DSS-DSS-Error, Invalid message level
+Compliance of Fully Solid Domain:     1.995230e-01
+ It.:    0 Solver Time:  275s.
+
+MKL-DSS-DSS-Error, Invalid message level
+ It.:   1 Obj.:  1.15399576e+02 Vol.:1.2000e-01 Sharp.:4.0666e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 2.69e+02s; CG: 2.67e+02s; Opti.: 1.53e+00s; Filtering: 9.78e-01s.
+ It.:   2 Obj.:  2.23179201e+02 Vol.:1.2000e-01 Sharp.:4.0075e-01 Cons.:-3.73e-08 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 2.67e+02s; CG: 2.65e+02s; Opti.: 1.43e+00s; Filtering: 8.67e-01s.
+ It.:   3 Obj.:  3.41318913e+02 Vol.:1.2000e-01 Sharp.:3.7993e-01 Cons.:5.96e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 2.71e+02s; CG: 2.69e+02s; Opti.: 1.52e+00s; Filtering: 9.53e-01s.

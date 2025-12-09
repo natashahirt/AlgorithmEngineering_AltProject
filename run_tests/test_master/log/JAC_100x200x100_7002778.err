@@ -1,0 +1,1 @@
+/var/spool/slurmd/job7002778/slurm_script: line 36: 3198774 Bus error               (core dumped) ./build_jac/top3d_xl_cli GLOBAL $NELY $NELX $NELZ 0.12 50 1 0
