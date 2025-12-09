@@ -1,0 +1,181 @@
+Running MATLAB for 128 256 128
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling (via /out)
+==========================Displaying Inputs==========================
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+...............................................#MGCG Iterations:  800
+.....................................................V-cycle: Adapted
+...............................................Non-dyadic Strategy: 1
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Preparing Voxel-based FEA Model Costs        1.1s
+Mesh Hierarchy...
+             #Resolutions         #Elements   #DOFs
+...Level 1:  256 x  128 x  128     4194304    12830211
+...Level 2:   64 x   32 x   32       65536      212355
+...Level 3:   32 x   16 x   16        8192       28611
+Starting parallel pool (parpool) using the 'threads' profile ...
+Connected to parallel pool with 32 workers.
+CG solver converged at iteration   23 to a solution with relative residual    9.489473e-04
+Compliance of Fully Solid Domain:     3.127446e-01
+ It.:    0 Assembling Time: 1.865076e+01s; Solver Time: 3.763866e+01s.
+CG solver converged at iteration   24 to a solution with relative residual    7.434585e-04
+ It.:   1 Obj.:  1.80881990e+02 Vol.:1.2000e-01 Sharp.:4.0543e-01 Cons.:1.68e-15 Ch.:2.00e-01
+ It.: 1 (Time)... Total per-It.: 5.78e+01s; Assemb.: 1.20e+01s; CG: 4.13e+01s; Opti.: 2.03e+00s; Filtering: 2.46e+00s.
+CG solver converged at iteration   35 to a solution with relative residual    7.356228e-04
+ It.:   2 Obj.:  1.07040698e+02 Vol.:1.2000e-01 Sharp.:4.0197e-01 Cons.:-2.35e-08 Ch.:2.00e-01
+ It.: 2 (Time)... Total per-It.: 7.44e+01s; Assemb.: 1.20e+01s; CG: 5.92e+01s; Opti.: 1.59e+00s; Filtering: 1.66e+00s.
+CG solver converged at iteration   32 to a solution with relative residual    9.216228e-04
+ It.:   3 Obj.:  7.01838670e+01 Vol.:1.2000e-01 Sharp.:3.8985e-01 Cons.:2.25e-08 Ch.:2.00e-01
+ It.: 3 (Time)... Total per-It.: 7.15e+01s; Assemb.: 1.81e+01s; CG: 5.02e+01s; Opti.: 1.32e+00s; Filtering: 1.88e+00s.
+CG solver converged at iteration   36 to a solution with relative residual    7.525247e-04
+ It.:   4 Obj.:  5.40979023e+01 Vol.:1.2000e-01 Sharp.:3.8035e-01 Cons.:1.03e-07 Ch.:2.00e-01
+ It.: 4 (Time)... Total per-It.: 7.03e+01s; Assemb.: 1.55e+01s; CG: 5.19e+01s; Opti.: 1.24e+00s; Filtering: 1.58e+00s.
+CG solver converged at iteration   39 to a solution with relative residual    8.541711e-04
+ It.:   5 Obj.:  4.29104113e+01 Vol.:1.2000e-01 Sharp.:3.6694e-01 Cons.:2.41e-08 Ch.:2.00e-01
+ It.: 5 (Time)... Total per-It.: 9.02e+01s; Assemb.: 1.48e+01s; CG: 7.16e+01s; Opti.: 1.49e+00s; Filtering: 2.27e+00s.
+CG solver converged at iteration   45 to a solution with relative residual    8.922431e-04
+ It.:   6 Obj.:  3.20244381e+01 Vol.:1.2000e-01 Sharp.:3.5000e-01 Cons.:8.63e-08 Ch.:2.00e-01
+ It.: 6 (Time)... Total per-It.: 8.28e+01s; Assemb.: 1.67e+01s; CG: 6.29e+01s; Opti.: 1.31e+00s; Filtering: 1.77e+00s.
+CG solver converged at iteration   47 to a solution with relative residual    8.234520e-04
+ It.:   7 Obj.:  2.35917697e+01 Vol.:1.2000e-01 Sharp.:3.2828e-01 Cons.:1.08e-08 Ch.:2.00e-01
+ It.: 7 (Time)... Total per-It.: 9.73e+01s; Assemb.: 1.95e+01s; CG: 7.49e+01s; Opti.: 1.09e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   49 to a solution with relative residual    9.614674e-04
+ It.:   8 Obj.:  1.57577973e+01 Vol.:1.2000e-01 Sharp.:2.9176e-01 Cons.:-2.66e-08 Ch.:2.00e-01
+ It.: 8 (Time)... Total per-It.: 7.64e+01s; Assemb.: 1.37e+01s; CG: 5.96e+01s; Opti.: 1.23e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   50 to a solution with relative residual    8.914016e-04
+ It.:   9 Obj.:  1.00232130e+01 Vol.:1.2000e-01 Sharp.:2.4206e-01 Cons.:-9.13e-08 Ch.:2.00e-01
+ It.: 9 (Time)... Total per-It.: 8.22e+01s; Assemb.: 1.24e+01s; CG: 6.66e+01s; Opti.: 1.44e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   51 to a solution with relative residual    9.602117e-04
+ It.:  10 Obj.:  6.47875717e+00 Vol.:1.2000e-01 Sharp.:1.8702e-01 Cons.:-7.19e-08 Ch.:2.00e-01
+ It.: 10 (Time)... Total per-It.: 9.39e+01s; Assemb.: 1.19e+01s; CG: 7.88e+01s; Opti.: 1.34e+00s; Filtering: 1.76e+00s.
+CG solver converged at iteration   53 to a solution with relative residual    9.571006e-04
+ It.:  11 Obj.:  4.63788215e+00 Vol.:1.2000e-01 Sharp.:1.3446e-01 Cons.:-2.21e-08 Ch.:2.00e-01
+ It.: 11 (Time)... Total per-It.: 8.87e+01s; Assemb.: 1.83e+01s; CG: 6.72e+01s; Opti.: 1.29e+00s; Filtering: 1.85e+00s.
+CG solver converged at iteration   59 to a solution with relative residual    9.776611e-04
+ It.:  12 Obj.:  3.69769013e+00 Vol.:1.2000e-01 Sharp.:9.8234e-02 Cons.:5.73e-09 Ch.:2.00e-01
+ It.: 12 (Time)... Total per-It.: 1.03e+02s; Assemb.: 1.46e+01s; CG: 8.51e+01s; Opti.: 1.37e+00s; Filtering: 1.85e+00s.
+CG solver converged at iteration   57 to a solution with relative residual    9.615464e-04
+ It.:  13 Obj.:  3.18095070e+00 Vol.:1.2000e-01 Sharp.:7.6707e-02 Cons.:2.18e-08 Ch.:2.00e-01
+ It.: 13 (Time)... Total per-It.: 8.58e+01s; Assemb.: 1.27e+01s; CG: 7.00e+01s; Opti.: 1.33e+00s; Filtering: 1.79e+00s.
+CG solver converged at iteration   56 to a solution with relative residual    8.743767e-04
+ It.:  14 Obj.:  2.87739046e+00 Vol.:1.2000e-01 Sharp.:6.4998e-02 Cons.:2.73e-08 Ch.:2.00e-01
+ It.: 14 (Time)... Total per-It.: 8.54e+01s; Assemb.: 1.41e+01s; CG: 6.82e+01s; Opti.: 1.24e+00s; Filtering: 1.80e+00s.
+CG solver converged at iteration   58 to a solution with relative residual    9.170547e-04
+ It.:  15 Obj.:  2.69868051e+00 Vol.:1.2000e-01 Sharp.:5.8656e-02 Cons.:4.49e-08 Ch.:2.00e-01
+ It.: 15 (Time)... Total per-It.: 8.94e+01s; Assemb.: 1.38e+01s; CG: 7.23e+01s; Opti.: 1.29e+00s; Filtering: 1.91e+00s.
+CG solver converged at iteration   64 to a solution with relative residual    9.990793e-04
+ It.:  16 Obj.:  2.59201344e+00 Vol.:1.2000e-01 Sharp.:5.5337e-02 Cons.:3.21e-08 Ch.:2.00e-01
+ It.: 16 (Time)... Total per-It.: 1.04e+02s; Assemb.: 1.10e+01s; CG: 8.92e+01s; Opti.: 1.50e+00s; Filtering: 1.85e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    9.036284e-04
+ It.:  17 Obj.:  2.52668468e+00 Vol.:1.2000e-01 Sharp.:5.3602e-02 Cons.:4.57e-08 Ch.:2.00e-01
+ It.: 17 (Time)... Total per-It.: 1.12e+02s; Assemb.: 1.65e+01s; CG: 9.20e+01s; Opti.: 1.47e+00s; Filtering: 1.84e+00s.
+CG solver converged at iteration   67 to a solution with relative residual    9.320863e-04
+ It.:  18 Obj.:  2.48438132e+00 Vol.:1.2000e-01 Sharp.:5.2562e-02 Cons.:3.05e-08 Ch.:2.00e-01
+ It.: 18 (Time)... Total per-It.: 1.23e+02s; Assemb.: 1.92e+01s; CG: 1.00e+02s; Opti.: 1.46e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.840053e-04
+ It.:  19 Obj.:  2.45425820e+00 Vol.:1.2000e-01 Sharp.:5.1824e-02 Cons.:6.96e-09 Ch.:2.00e-01
+ It.: 19 (Time)... Total per-It.: 1.03e+02s; Assemb.: 1.49e+01s; CG: 8.50e+01s; Opti.: 1.29e+00s; Filtering: 1.85e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.710726e-04
+ It.:  20 Obj.:  2.43056353e+00 Vol.:1.2000e-01 Sharp.:5.1269e-02 Cons.:3.97e-09 Ch.:2.00e-01
+ It.: 20 (Time)... Total per-It.: 1.18e+02s; Assemb.: 2.34e+01s; CG: 9.11e+01s; Opti.: 1.27e+00s; Filtering: 1.78e+00s.
+CG solver converged at iteration   67 to a solution with relative residual    9.186990e-04
+ It.:  21 Obj.:  2.41134656e+00 Vol.:1.2000e-01 Sharp.:5.0907e-02 Cons.:9.80e-09 Ch.:2.00e-01
+ It.: 21 (Time)... Total per-It.: 1.05e+02s; Assemb.: 1.32e+01s; CG: 8.87e+01s; Opti.: 1.29e+00s; Filtering: 1.77e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    8.851980e-04
+ It.:  22 Obj.:  2.39585523e+00 Vol.:1.2000e-01 Sharp.:5.0643e-02 Cons.:8.30e-09 Ch.:2.00e-01
+ It.: 22 (Time)... Total per-It.: 1.09e+02s; Assemb.: 1.57e+01s; CG: 9.00e+01s; Opti.: 1.23e+00s; Filtering: 1.80e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    9.928496e-04
+ It.:  23 Obj.:  2.38277840e+00 Vol.:1.2000e-01 Sharp.:5.0400e-02 Cons.:-1.79e-08 Ch.:2.00e-01
+ It.: 23 (Time)... Total per-It.: 9.79e+01s; Assemb.: 1.24e+01s; CG: 8.23e+01s; Opti.: 1.29e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   70 to a solution with relative residual    9.329728e-04
+ It.:  24 Obj.:  2.37120355e+00 Vol.:1.2000e-01 Sharp.:5.0191e-02 Cons.:-4.24e-08 Ch.:2.00e-01
+ It.: 24 (Time)... Total per-It.: 1.10e+02s; Assemb.: 1.25e+01s; CG: 9.41e+01s; Opti.: 1.60e+00s; Filtering: 1.80e+00s.
+CG solver converged at iteration   71 to a solution with relative residual    9.777702e-04
+ It.:  25 Obj.:  2.36103085e+00 Vol.:1.2000e-01 Sharp.:5.0023e-02 Cons.:-2.05e-08 Ch.:2.00e-01
+ It.: 25 (Time)... Total per-It.: 1.06e+02s; Assemb.: 1.61e+01s; CG: 8.63e+01s; Opti.: 1.36e+00s; Filtering: 1.81e+00s.
+CG solver converged at iteration   70 to a solution with relative residual    9.934106e-04
+ It.:  26 Obj.:  2.35210777e+00 Vol.:1.2000e-01 Sharp.:4.9871e-02 Cons.:-3.88e-08 Ch.:2.00e-01
+ It.: 26 (Time)... Total per-It.: 1.40e+02s; Assemb.: 2.03e+01s; CG: 1.16e+02s; Opti.: 1.57e+00s; Filtering: 1.83e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    9.176969e-04
+ It.:  27 Obj.:  2.34401219e+00 Vol.:1.2000e-01 Sharp.:4.9737e-02 Cons.:-1.88e-08 Ch.:2.00e-01
+ It.: 27 (Time)... Total per-It.: 1.47e+02s; Assemb.: 1.80e+01s; CG: 1.24e+02s; Opti.: 1.84e+00s; Filtering: 2.80e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    9.371584e-04
+ It.:  28 Obj.:  2.33663361e+00 Vol.:1.2000e-01 Sharp.:4.9625e-02 Cons.:6.90e-09 Ch.:2.00e-01
+ It.: 28 (Time)... Total per-It.: 1.42e+02s; Assemb.: 2.56e+01s; CG: 1.13e+02s; Opti.: 1.29e+00s; Filtering: 1.80e+00s.
+CG solver converged at iteration   68 to a solution with relative residual    9.181151e-04
+ It.:  29 Obj.:  2.32992580e+00 Vol.:1.2000e-01 Sharp.:4.9530e-02 Cons.:3.06e-08 Ch.:2.00e-01
+ It.: 29 (Time)... Total per-It.: 1.33e+02s; Assemb.: 2.14e+01s; CG: 1.06e+02s; Opti.: 2.26e+00s; Filtering: 3.06e+00s.
+CG solver converged at iteration   68 to a solution with relative residual    9.709578e-04
+ It.:  30 Obj.:  2.32375120e+00 Vol.:1.2000e-01 Sharp.:4.9448e-02 Cons.:5.08e-08 Ch.:2.00e-01
+ It.: 30 (Time)... Total per-It.: 1.38e+02s; Assemb.: 1.73e+01s; CG: 1.15e+02s; Opti.: 2.35e+00s; Filtering: 2.97e+00s.
+CG solver converged at iteration   67 to a solution with relative residual    9.626043e-04
+ It.:  31 Obj.:  2.31803563e+00 Vol.:1.2000e-01 Sharp.:4.9374e-02 Cons.:2.57e-08 Ch.:2.00e-01
+ It.: 31 (Time)... Total per-It.: 1.41e+02s; Assemb.: 1.27e+01s; CG: 1.23e+02s; Opti.: 2.07e+00s; Filtering: 2.76e+00s.
+CG solver converged at iteration   67 to a solution with relative residual    9.214336e-04
+ It.:  32 Obj.:  2.31267673e+00 Vol.:1.2000e-01 Sharp.:4.9304e-02 Cons.:5.12e-08 Ch.:2.00e-01
+ It.: 32 (Time)... Total per-It.: 1.52e+02s; Assemb.: 2.06e+01s; CG: 1.27e+02s; Opti.: 1.91e+00s; Filtering: 2.63e+00s.
+CG solver converged at iteration   66 to a solution with relative residual    9.166389e-04
+ It.:  33 Obj.:  2.30758847e+00 Vol.:1.2000e-01 Sharp.:4.9244e-02 Cons.:5.31e-08 Ch.:1.97e-01
+ It.: 33 (Time)... Total per-It.: 1.41e+02s; Assemb.: 1.46e+01s; CG: 1.24e+02s; Opti.: 1.33e+00s; Filtering: 1.77e+00s.
+CG solver converged at iteration   63 to a solution with relative residual    9.462529e-04
+ It.:  34 Obj.:  2.30280096e+00 Vol.:1.2000e-01 Sharp.:4.9196e-02 Cons.:4.26e-08 Ch.:1.95e-01
+ It.: 34 (Time)... Total per-It.: 1.34e+02s; Assemb.: 1.67e+01s; CG: 1.13e+02s; Opti.: 2.07e+00s; Filtering: 2.75e+00s.
+CG solver converged at iteration   63 to a solution with relative residual    9.791818e-04
+ It.:  35 Obj.:  2.29831515e+00 Vol.:1.2000e-01 Sharp.:4.9156e-02 Cons.:5.80e-08 Ch.:1.88e-01
+ It.: 35 (Time)... Total per-It.: 1.37e+02s; Assemb.: 1.43e+01s; CG: 1.19e+02s; Opti.: 1.67e+00s; Filtering: 2.31e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.328580e-04
+ It.:  36 Obj.:  2.29405025e+00 Vol.:1.2000e-01 Sharp.:4.9122e-02 Cons.:4.50e-08 Ch.:1.82e-01
+ It.: 36 (Time)... Total per-It.: 1.42e+02s; Assemb.: 1.45e+01s; CG: 1.23e+02s; Opti.: 2.17e+00s; Filtering: 2.86e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.858801e-04
+ It.:  37 Obj.:  2.29002999e+00 Vol.:1.2000e-01 Sharp.:4.9090e-02 Cons.:6.39e-08 Ch.:1.78e-01
+ It.: 37 (Time)... Total per-It.: 1.48e+02s; Assemb.: 1.40e+01s; CG: 1.29e+02s; Opti.: 1.92e+00s; Filtering: 2.74e+00s.
+CG solver converged at iteration   64 to a solution with relative residual    9.558682e-04
+ It.:  38 Obj.:  2.28619984e+00 Vol.:1.2000e-01 Sharp.:4.9060e-02 Cons.:4.83e-08 Ch.:1.72e-01
+ It.: 38 (Time)... Total per-It.: 1.32e+02s; Assemb.: 1.79e+01s; CG: 1.09e+02s; Opti.: 1.93e+00s; Filtering: 2.83e+00s.
+CG solver converged at iteration   63 to a solution with relative residual    9.722614e-04
+ It.:  39 Obj.:  2.28252536e+00 Vol.:1.2000e-01 Sharp.:4.9033e-02 Cons.:4.24e-08 Ch.:1.66e-01
+ It.: 39 (Time)... Total per-It.: 1.33e+02s; Assemb.: 1.43e+01s; CG: 1.14e+02s; Opti.: 2.22e+00s; Filtering: 2.82e+00s.
+CG solver converged at iteration   66 to a solution with relative residual    9.378018e-04
+ It.:  40 Obj.:  2.27901463e+00 Vol.:1.2000e-01 Sharp.:4.9008e-02 Cons.:3.80e-08 Ch.:1.67e-01
+ It.: 40 (Time)... Total per-It.: 1.30e+02s; Assemb.: 1.70e+01s; CG: 1.10e+02s; Opti.: 1.51e+00s; Filtering: 2.05e+00s.
+CG solver converged at iteration   66 to a solution with relative residual    9.578520e-04
+ It.:  41 Obj.:  2.27563518e+00 Vol.:1.2000e-01 Sharp.:4.8984e-02 Cons.:2.56e-08 Ch.:1.59e-01
+ It.: 41 (Time)... Total per-It.: 1.15e+02s; Assemb.: 1.51e+01s; CG: 9.73e+01s; Opti.: 1.30e+00s; Filtering: 1.73e+00s.
+CG solver converged at iteration   64 to a solution with relative residual    9.651294e-04
+ It.:  42 Obj.:  2.27239765e+00 Vol.:1.2000e-01 Sharp.:4.8957e-02 Cons.:4.06e-08 Ch.:1.60e-01
+ It.: 42 (Time)... Total per-It.: 1.17e+02s; Assemb.: 1.86e+01s; CG: 9.54e+01s; Opti.: 1.33e+00s; Filtering: 1.95e+00s.
+CG solver converged at iteration   63 to a solution with relative residual    9.995100e-04
+ It.:  43 Obj.:  2.26923993e+00 Vol.:1.2000e-01 Sharp.:4.8923e-02 Cons.:6.62e-08 Ch.:1.52e-01
+ It.: 43 (Time)... Total per-It.: 1.38e+02s; Assemb.: 1.86e+01s; CG: 1.14e+02s; Opti.: 2.11e+00s; Filtering: 2.71e+00s.
+CG solver converged at iteration   68 to a solution with relative residual    9.390276e-04
+ It.:  44 Obj.:  2.26611870e+00 Vol.:1.2000e-01 Sharp.:4.8875e-02 Cons.:7.86e-08 Ch.:1.51e-01
+ It.: 44 (Time)... Total per-It.: 1.39e+02s; Assemb.: 2.01e+01s; CG: 1.14e+02s; Opti.: 1.90e+00s; Filtering: 2.61e+00s.
+CG solver converged at iteration   69 to a solution with relative residual    9.893028e-04
+ It.:  45 Obj.:  2.26297800e+00 Vol.:1.2000e-01 Sharp.:4.8803e-02 Cons.:5.66e-08 Ch.:1.94e-01
+ It.: 45 (Time)... Total per-It.: 1.60e+02s; Assemb.: 1.65e+01s; CG: 1.39e+02s; Opti.: 1.63e+00s; Filtering: 2.35e+00s.
+CG solver converged at iteration   70 to a solution with relative residual    9.646697e-04
+ It.:  46 Obj.:  2.25969166e+00 Vol.:1.2000e-01 Sharp.:4.8698e-02 Cons.:3.42e-08 Ch.:2.00e-01
+ It.: 46 (Time)... Total per-It.: 1.54e+02s; Assemb.: 1.25e+01s; CG: 1.38e+02s; Opti.: 1.69e+00s; Filtering: 2.17e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.346158e-04
+ It.:  47 Obj.:  2.25620257e+00 Vol.:1.2000e-01 Sharp.:4.8592e-02 Cons.:3.51e-08 Ch.:2.00e-01
+ It.: 47 (Time)... Total per-It.: 1.39e+02s; Assemb.: 1.15e+01s; CG: 1.23e+02s; Opti.: 1.69e+00s; Filtering: 2.73e+00s.
+CG solver converged at iteration   64 to a solution with relative residual    9.422589e-04
+ It.:  48 Obj.:  2.25282532e+00 Vol.:1.2000e-01 Sharp.:4.8537e-02 Cons.:3.99e-08 Ch.:1.46e-01
+ It.: 48 (Time)... Total per-It.: 1.40e+02s; Assemb.: 1.50e+01s; CG: 1.21e+02s; Opti.: 1.73e+00s; Filtering: 1.98e+00s.
+CG solver converged at iteration   65 to a solution with relative residual    9.933266e-04
+ It.:  49 Obj.:  2.24992914e+00 Vol.:1.2000e-01 Sharp.:4.8521e-02 Cons.:3.23e-08 Ch.:1.53e-01
+ It.: 49 (Time)... Total per-It.: 1.16e+02s; Assemb.: 1.29e+01s; CG: 9.95e+01s; Opti.: 1.40e+00s; Filtering: 2.73e+00s.
+CG solver converged at iteration   67 to a solution with relative residual    9.740187e-04
+ It.:  50 Obj.:  2.24736013e+00 Vol.:1.2000e-01 Sharp.:4.8507e-02 Cons.:1.61e-08 Ch.:1.53e-01
+ It.: 50 (Time)... Total per-It.: 1.31e+02s; Assemb.: 1.20e+01s; CG: 1.15e+02s; Opti.: 1.65e+00s; Filtering: 2.38e+00s.
+..........Solving FEA Costs: 5.5859e+03s.
+..........Optimization (inc. sentivity analysis, update) Costs: 7.8894e+01s.
+..........Performing PDE Filtering Costs: 1.0742e+02s.
+..........Performing Topology Optimization Costs (in total): 5.8451e+03s.
+[Warning: MATLAB has disabled some advanced graphics rendering features by
+switching to software OpenGL. For more information, click <a
+href="matlab:opengl('problems')">here</a>.] 
+Parallel pool using the 'threads' profile is shutting down.

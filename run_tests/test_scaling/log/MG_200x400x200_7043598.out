@@ -1,0 +1,50 @@
+Running Multigrid for 200 400 200 with OMP_NUM_THREADS=32
+Output directed to: /home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling (cwd=/home/nhirt/AlgorithmEngineering_AltProject/run_tests/test_scaling)
+TOP3D_PRECOND=mg
+Running GLOBAL topo-opt on cuboid: 200x400x200, V0=0.12, iters=50
+
+==========================Displaying Inputs==========================
+Simulation: 0
+..............................................Volume Fraction: 0.1200
+..........................................Filter Radius: 1.7321 Cells
+................................................Cell Size: 1.0000e+00
+.................................................#CG Iterations:  800
+...........................................Youngs Modulus: 1.0000e+00
+....................................Youngs Modulus (Min.): 1.0000e-06
+...........................................Poissons Ratio: 3.0000e-01
+Building Multigrid Hierarchy...
+[MG] levels=3 coarsest=50x25x25 dofs=103428
+Preparing Voxel-based FEA Model Costs        3.3s
+Compliance of Fully Solid Domain:     1.995230e-01
+ It.:    0 Solver Time:  449s.
+
+ It.:   1 Obj.:  1.15399568e+02 Vol.:1.2000e-01 Sharp.:4.0667e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:    1 (Time)... Total per-It.: 4.42e+02s; CG: 4.40e+02s; Opti.: 1.85e+00s; Filtering: 1.29e+00s.
+ It.:   2 Obj.:  2.23175794e+02 Vol.:1.2000e-01 Sharp.:4.0069e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:    2 (Time)... Total per-It.: 4.50e+02s; CG: 4.49e+02s; Opti.: 1.76e+00s; Filtering: 1.16e+00s.
+ It.:   3 Obj.:  3.41582035e+02 Vol.:1.2000e-01 Sharp.:3.7984e-01 Cons.:-2.24e-08 Ch.:2.00e-01
+ It.:    3 (Time)... Total per-It.: 4.62e+02s; CG: 4.60e+02s; Opti.: 1.78e+00s; Filtering: 1.25e+00s.
+ It.:   4 Obj.:  4.87803696e+02 Vol.:1.2000e-01 Sharp.:3.5118e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:    4 (Time)... Total per-It.: 4.55e+02s; CG: 4.53e+02s; Opti.: 2.03e+00s; Filtering: 1.47e+00s.
+ It.:   5 Obj.:  7.49865610e+01 Vol.:1.2000e-01 Sharp.:3.5933e-01 Cons.:5.96e-08 Ch.:2.00e-01
+ It.:    5 (Time)... Total per-It.: 4.51e+02s; CG: 4.49e+02s; Opti.: 1.82e+00s; Filtering: 1.25e+00s.
+ It.:   6 Obj.:  3.16278047e+02 Vol.:1.2000e-01 Sharp.:3.4712e-01 Cons.:2.24e-08 Ch.:2.00e-01
+ It.:    6 (Time)... Total per-It.: 4.60e+02s; CG: 4.58e+02s; Opti.: 2.05e+00s; Filtering: 1.47e+00s.
+ It.:   7 Obj.:  1.17440133e+03 Vol.:1.2000e-01 Sharp.:3.1305e-01 Cons.:-5.96e-08 Ch.:2.00e-01
+ It.:    7 (Time)... Total per-It.: 4.67e+02s; CG: 4.65e+02s; Opti.: 1.94e+00s; Filtering: 1.41e+00s.
+ It.:   8 Obj.:  2.27795225e+03 Vol.:1.2000e-01 Sharp.:2.6649e-01 Cons.:3.73e-08 Ch.:2.00e-01
+ It.:    8 (Time)... Total per-It.: 4.56e+02s; CG: 4.54e+02s; Opti.: 2.52e+00s; Filtering: 1.96e+00s.
+ It.:   9 Obj.:  3.81833211e+03 Vol.:1.2000e-01 Sharp.:2.2170e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:    9 (Time)... Total per-It.: 3.89e+02s; CG: 3.87e+02s; Opti.: 2.17e+00s; Filtering: 1.64e+00s.
+ It.:  10 Obj.:  3.60503070e+04 Vol.:1.2000e-01 Sharp.:2.6941e-01 Cons.:0.00e+00 Ch.:2.00e-01
+ It.:   10 (Time)... Total per-It.: 3.98e+02s; CG: 3.96e+02s; Opti.: 1.93e+00s; Filtering: 1.42e+00s.
+ It.:  11 Obj.:  3.26943325e+05 Vol.:1.2000e-01 Sharp.:3.4412e-01 Cons.:1.49e-08 Ch.:2.00e-01
+ It.:   11 (Time)... Total per-It.: 3.97e+02s; CG: 3.94e+02s; Opti.: 2.95e+00s; Filtering: 2.46e+00s.
+ It.:  12 Obj.:  7.93218009e+07 Vol.:1.2000e-01 Sharp.:3.3494e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   12 (Time)... Total per-It.: 3.99e+02s; CG: 3.95e+02s; Opti.: 3.40e+00s; Filtering: 2.96e+00s.
+ It.:  13 Obj.:  2.52427294e+08 Vol.:1.2000e-01 Sharp.:3.0139e-01 Cons.:-7.45e-09 Ch.:2.00e-01
+ It.:   13 (Time)... Total per-It.: 3.97e+02s; CG: 3.94e+02s; Opti.: 3.14e+00s; Filtering: 2.72e+00s.
+ It.:  14 Obj.:  2.90285883e+08 Vol.:1.2000e-01 Sharp.:2.6247e-01 Cons.:-1.49e-08 Ch.:2.00e-01
+ It.:   14 (Time)... Total per-It.: 3.52e+02s; CG: 3.50e+02s; Opti.: 2.59e+00s; Filtering: 2.21e+00s.
+ It.:  15 Obj.:  1.56534491e+05 Vol.:1.2000e-01 Sharp.:2.5176e-01 Cons.:-2.98e-08 Ch.:2.00e-01
+ It.:   15 (Time)... Total per-It.: 3.61e+02s; CG: 3.58e+02s; Opti.: 3.08e+00s; Filtering: 2.62e+00s.
