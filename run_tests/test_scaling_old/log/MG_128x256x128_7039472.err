@@ -1,0 +1,1 @@
+/var/spool/slurmd/job7039472/slurm_script: line 40: 2982580 Bus error               (core dumped) "$EXEC" GLOBAL $NELY $NELX $NELZ 0.12 50 1 1

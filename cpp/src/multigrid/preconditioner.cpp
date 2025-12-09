@@ -19,9 +19,9 @@ namespace top3d { namespace mg {
 void build_static_once(const Problem& pb, const MGPrecondConfig& cfg,
 								  MGHierarchy& H, std::vector<std::vector<uint8_t>>& fixedMasks) {
 	H.levels.clear();
-	// Reduced limit to ensure dense solver is fast (< 1s). 
-    // 2000 DOFs -> Matrix 2000x2000 -> 16MB -> Cholesky ~ 2.6 GFLOPs.
-	const int NlimitDofs = 1000;
+	// Reduced limit to ensure dense solver is fast (< 1s).
+	// 2000 DOFs -> Matrix 2000x2000 -> 16MB -> Cholesky ~ 2.6 GFLOPs.
+	int NlimitDofs = cfg.coarsestDofLimit;
 	int adaptiveMax = ComputeAdaptiveMaxLevels(pb, cfg.nonDyadic, cfg.maxLevels, NlimitDofs);
 	BuildMGHierarchy(pb, cfg.nonDyadic, H, adaptiveMax);
 	
@@ -45,11 +45,12 @@ Preconditioner make_diagonal_preconditioner_from_static(const Problem& pb,
 	MG_BuildDiagonals(pb, H, fixedMasks, eleModulus, diag);
 
 	// 2) Build aggregated Ee at coarsest level and factorize
-	std::vector<double> Lcoarse; int Ncoarse = 0;
+		std::vector<double> Lcoarse; int Ncoarse = 0;
 	{
 		const auto& Lc = H.levels.back();
 		Ncoarse = 3*Lc.numNodes;
-		const int NlimitDofs = 1000; // Match build limit
+		int NlimitDofs = cfg.coarsestDofLimit; // Match build limit by default
+		if (cfg.forceJacobiCoarsest) NlimitDofs = 0;
 		if (H.levels.size() == 1 || Ncoarse > NlimitDofs) {
 			Ncoarse = 0; // diagonal fallback
 		} else {

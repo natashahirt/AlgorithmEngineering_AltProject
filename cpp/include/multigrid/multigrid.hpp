@@ -10,6 +10,10 @@ struct MGPrecondConfig {
 	bool nonDyadic = true;   // first jump 1->3 (span=4)
 	int  maxLevels = 5;      // cap levels
 	float weight = 0.6f;     // diagonal relaxation factor
+	// Controls coarsest treatment: when dofs <= coarsestDofLimit we attempt dense solve.
+	// Setting coarsestDofLimit=0 or forceJacobiCoarsest=true forces Jacobi on coarsest.
+	int coarsestDofLimit = 2000;
+	bool forceJacobiCoarsest = false;
 };
 
 struct MGLevel {

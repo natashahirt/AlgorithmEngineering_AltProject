@@ -1,0 +1,722 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineSystem.cmake:211 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The system is: Linux - 5.14.0-503.38.1.el9_5.x86_64 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx 
+      Build flags: -march=native;-qopenmp
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is IntelLLVM, found in:
+        /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/3.27.9/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_54f4f/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_54f4f.dir/build.make CMakeFiles/cmTC_54f4f.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv'
+        Building CXX object CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp    -v -MD -MT CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -c /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp
+        Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)
+        Target: x86_64-unknown-linux-gnu
+        Thread model: posix
+        InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler
+        Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg
+        Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/clang" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model static -fveclib=SVML -faltmathlib=SVMLAltMathLibrary -mframe-pointer=none -fapprox-func -funsafe-math-optimizations -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign,preserve-sign -ffp-contract=fast-honor-pragmas -fno-rounding-math -complex-range=promoted -mconstructor-aliases -funwind-tables=2 -target-cpu emeraldrapids -target-feature +prfchw -target-feature +cldemote -target-feature +avx -target-feature -msrlist -target-feature +aes -target-feature +sahf -target-feature +pclmul -target-feature -xop -target-feature +crc32 -target-feature -pbndkb -target-feature -amx-fp8 -target-feature +xsaves -target-feature +avx512fp16 -target-feature -usermsr -target-feature -sm4 -target-feature -egpr -target-feature +sse4.1 -target-feature +avx512ifma -target-feature +xsave -target-feature +sse4.2 -target-feature +tsxldtrk -target-feature -sm3 -target-feature +ptwrite -target-feature -widekl -target-feature -movrs -target-feature -wrmsrns -target-feature +invpcid -target-feature +64bit -target-feature +xsavec -target-feature -avx10.1-512 -target-feature +avx512vpopcntdq -target-feature +cmov -target-feature -avx512vp2intersect -target-feature +avx512cd -target-feature +movbe -target-feature -avxvnniint8 -target-feature -ccmp -target-feature +amx-int8 -target-feature -kl -target-feature -avx10.1-256 -target-feature +evex512 -target-feature +avxvnni -target-feature -rtm -target-feature +adx -target-feature +avx2 -target-feature -hreset -target-feature +movdiri -target-feature +serialize -target-feature -sha512 -target-feature +vpclmulqdq -target-feature +avx512vl -target-feature +uintr -target-feature -cf -target-feature +clflushopt -target-feature -raoint -target-feature -cmpccxadd -target-feature +bmi -target-feature +amx-tile -target-feature +sse -target-feature -avx10.2-256 -target-feature +gfni -target-feature -avxvnniint16 -target-feature -amx-fp16 -target-feature -zu -target-feature -ndd -target-feature +xsaveopt -target-feature +rdrnd -target-feature +avx512f -target-feature +amx-bf16 -target-feature +avx512bf16 -target-feature +avx512vnni -target-feature -push2pop2 -target-feature +cx8 -target-feature +avx512bw -target-feature +sse3 -target-feature +pku -target-feature -nf -target-feature -amx-tf32 -target-feature -amx-avx512 -target-feature +fsgsbase -target-feature -clzero -target-feature -mwaitx -target-feature -lwp -target-feature +lzcnt -target-feature +sha -target-feature +movdir64b -target-feature -ppx -target-feature +wbnoinvd -target-feature +enqcmd -target-feature -amx-transpose -target-feature -avx10.2-512 -target-feature -avxneconvert -target-feature -tbm -target-feature +pconfig -target-feature -amx-complex -target-feature +ssse3 -target-feature +cx16 -target-feature +bmi2 -target-feature +fma -target-feature +popcnt -target-feature -avxifma -target-feature +f16c -target-feature +avx512bitalg -target-feature -rdpru -target-feature +clwb -target-feature +mmx -target-feature +sse2 -target-feature +rdseed -target-feature +avx512vbmi2 -target-feature +rdpid -target-feature -prefetchi -target-feature -amx-movrs -target-feature -fma4 -target-feature +avx512vbmi -target-feature +shstk -target-feature +vaes -target-feature +waitpkg -target-feature +sgx -target-feature +fxsr -target-feature +avx512dq -target-feature -sse4a -mllvm -x86-enable-unaligned-vector-move=true -debugger-tuning=gdb -fdebug-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv -v -fcoverage-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv -fclang-abi-compat=17 -resource-dir /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21 -dependency-file CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0 -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include -internal-isystem /usr/local/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include -internal-externc-isystem /include -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fopenmp-late-outline -fopenmp-threadprivate-legacy -fopenmp -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -vectorize-loops -vectorize-slp -mllvm -disable-hir-generate-mkl-call -mllvm -loopopt=1 -floopopt-pipeline=light -mllvm -intel-abi-compatible=true -mllvm -paropt=31 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -fintel-compatibility -fintel-libirc-allowed -fintel-libimf-allowed -o CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -x c++ /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 21.0.0git based upon LLVM 21.0.0git default target x86_64-unknown-linux-gnu
+        ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include"
+          as it is a non-system directory that duplicates a system directory
+        ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include"
+          as it is a non-system directory that duplicates a system directory
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include
+         /usr/local/include
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_54f4f
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_54f4f.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp  -static-libstdc++ -v CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_54f4f 
+        Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)
+        Target: x86_64-unknown-linux-gnu
+        Thread model: posix
+        InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler
+        Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg
+        Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" --hash-style=gnu --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_54f4f /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib64 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib -L/lib -L/usr/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -Bstatic -lsvml -Bdynamic -Bstatic -lirng -Bdynamic -Bstatic -lstdc++ -Bdynamic -Bstatic -limf -Bdynamic -lm -lgcc_s -lgcc -Bstatic -lirc -Bdynamic -ldl -liomp5 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc -Bstatic -lirc_s -Bdynamic /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+          add: [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+          add: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include]
+          add: [/usr/local/include]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/include]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu]
+        collapse include dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward]
+        collapse include dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/include;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/x86_64-pc-linux-gnu;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/include/c++/12.2.0/backward;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include;/usr/local/include;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeDetermineCompilerABI.cmake:152 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv']
+        ignore line: []
+        ignore line: [Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_54f4f/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_54f4f.dir/build.make CMakeFiles/cmTC_54f4f.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv']
+        ignore line: [Building CXX object CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp    -v -MD -MT CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -c /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)]
+        ignore line: [Target: x86_64-unknown-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler]
+        ignore line: [Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg]
+        ignore line: [Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        ignore line: [ (in-process)]
+        ignore line: [ "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/clang" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model static -fveclib=SVML -faltmathlib=SVMLAltMathLibrary -mframe-pointer=none -fapprox-func -funsafe-math-optimizations -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign preserve-sign -ffp-contract=fast-honor-pragmas -fno-rounding-math -complex-range=promoted -mconstructor-aliases -funwind-tables=2 -target-cpu emeraldrapids -target-feature +prfchw -target-feature +cldemote -target-feature +avx -target-feature -msrlist -target-feature +aes -target-feature +sahf -target-feature +pclmul -target-feature -xop -target-feature +crc32 -target-feature -pbndkb -target-feature -amx-fp8 -target-feature +xsaves -target-feature +avx512fp16 -target-feature -usermsr -target-feature -sm4 -target-feature -egpr -target-feature +sse4.1 -target-feature +avx512ifma -target-feature +xsave -target-feature +sse4.2 -target-feature +tsxldtrk -target-feature -sm3 -target-feature +ptwrite -target-feature -widekl -target-feature -movrs -target-feature -wrmsrns -target-feature +invpcid -target-feature +64bit -target-feature +xsavec -target-feature -avx10.1-512 -target-feature +avx512vpopcntdq -target-feature +cmov -target-feature -avx512vp2intersect -target-feature +avx512cd -target-feature +movbe -target-feature -avxvnniint8 -target-feature -ccmp -target-feature +amx-int8 -target-feature -kl -target-feature -avx10.1-256 -target-feature +evex512 -target-feature +avxvnni -target-feature -rtm -target-feature +adx -target-feature +avx2 -target-feature -hreset -target-feature +movdiri -target-feature +serialize -target-feature -sha512 -target-feature +vpclmulqdq -target-feature +avx512vl -target-feature +uintr -target-feature -cf -target-feature +clflushopt -target-feature -raoint -target-feature -cmpccxadd -target-feature +bmi -target-feature +amx-tile -target-feature +sse -target-feature -avx10.2-256 -target-feature +gfni -target-feature -avxvnniint16 -target-feature -amx-fp16 -target-feature -zu -target-feature -ndd -target-feature +xsaveopt -target-feature +rdrnd -target-feature +avx512f -target-feature +amx-bf16 -target-feature +avx512bf16 -target-feature +avx512vnni -target-feature -push2pop2 -target-feature +cx8 -target-feature +avx512bw -target-feature +sse3 -target-feature +pku -target-feature -nf -target-feature -amx-tf32 -target-feature -amx-avx512 -target-feature +fsgsbase -target-feature -clzero -target-feature -mwaitx -target-feature -lwp -target-feature +lzcnt -target-feature +sha -target-feature +movdir64b -target-feature -ppx -target-feature +wbnoinvd -target-feature +enqcmd -target-feature -amx-transpose -target-feature -avx10.2-512 -target-feature -avxneconvert -target-feature -tbm -target-feature +pconfig -target-feature -amx-complex -target-feature +ssse3 -target-feature +cx16 -target-feature +bmi2 -target-feature +fma -target-feature +popcnt -target-feature -avxifma -target-feature +f16c -target-feature +avx512bitalg -target-feature -rdpru -target-feature +clwb -target-feature +mmx -target-feature +sse2 -target-feature +rdseed -target-feature +avx512vbmi2 -target-feature +rdpid -target-feature -prefetchi -target-feature -amx-movrs -target-feature -fma4 -target-feature +avx512vbmi -target-feature +shstk -target-feature +vaes -target-feature +waitpkg -target-feature +sgx -target-feature +fxsr -target-feature +avx512dq -target-feature -sse4a -mllvm -x86-enable-unaligned-vector-move=true -debugger-tuning=gdb -fdebug-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv -v -fcoverage-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-nAnMgv -fclang-abi-compat=17 -resource-dir /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21 -dependency-file CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0 -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include -internal-isystem /usr/local/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include -internal-externc-isystem /include -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -ferror-limit 19 -fopenmp-late-outline -fopenmp-threadprivate-legacy -fopenmp -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -vectorize-loops -vectorize-slp -mllvm -disable-hir-generate-mkl-call -mllvm -loopopt=1 -floopopt-pipeline=light -mllvm -intel-abi-compatible=true -mllvm -paropt=31 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -fintel-compatibility -fintel-libirc-allowed -fintel-libimf-allowed -o CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -x c++ /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang -cc1 version 21.0.0git based upon LLVM 21.0.0git default target x86_64-unknown-linux-gnu]
+        ignore line: [ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/include"]
+        ignore line: [ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include"]
+        ignore line: [  as it is a non-system directory that duplicates a system directory]
+        ignore line: [ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include"]
+        ignore line: [  as it is a non-system directory that duplicates a system directory]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Linking CXX executable cmTC_54f4f]
+        ignore line: [/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_54f4f.dir/link.txt --verbose=1]
+        ignore line: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp  -static-libstdc++ -v CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_54f4f ]
+        ignore line: [Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)]
+        ignore line: [Target: x86_64-unknown-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler]
+        ignore line: [Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg]
+        ignore line: [Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        link line: [ "/usr/bin/ld" --hash-style=gnu --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_54f4f /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib64 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib -L/lib -L/usr/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o -Bstatic -lsvml -Bdynamic -Bstatic -lirng -Bdynamic -Bstatic -lstdc++ -Bdynamic -Bstatic -limf -Bdynamic -lm -lgcc_s -lgcc -Bstatic -lirc -Bdynamic -ldl -liomp5 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc -Bstatic -lirc_s -Bdynamic /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o]
+          arg [/usr/bin/ld] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_54f4f] ==> ignore
+          arg [/lib/../lib64/crt1.o] ==> obj [/lib/../lib64/crt1.o]
+          arg [/lib/../lib64/crti.o] ==> obj [/lib/../lib64/crti.o]
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o] ==> obj [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib64] ==> dir [/usr/lib64]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib]
+          arg [CMakeFiles/cmTC_54f4f.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-Bstatic] ==> search static
+          arg [-lsvml] ==> lib [svml]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-lirng] ==> lib [irng]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-lstdc++] ==> lib [SEARCH_STATIC:stdc++]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-limf] ==> lib [imf]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-Bstatic] ==> search static
+          arg [-lirc] ==> lib [irc]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-ldl] ==> lib [dl]
+          arg [-liomp5] ==> lib [iomp5]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lpthread] ==> lib [pthread]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-Bstatic] ==> search static
+          arg [-lirc_s] ==> lib [irc_s]
+          arg [-Bdynamic] ==> search dynamic
+          arg [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o] ==> obj [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o]
+          arg [/lib/../lib64/crtn.o] ==> obj [/lib/../lib64/crtn.o]
+        search lib [SEARCH_STATIC:stdc++] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64/libstdc++.a]
+        collapse obj [/lib/../lib64/crt1.o] ==> [/lib64/crt1.o]
+        collapse obj [/lib/../lib64/crti.o] ==> [/lib64/crti.o]
+        collapse obj [/lib/../lib64/crtn.o] ==> [/lib64/crtn.o]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib64] ==> [/usr/lib64]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+        implicit libs: [svml;irng;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64/libstdc++.a;imf;m;gcc_s;gcc;irc;dl;iomp5;gcc_s;gcc;pthread;c;gcc_s;gcc;irc_s]
+        implicit objs: [/lib64/crt1.o;/lib64/crti.o;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o;/lib64/crtn.o]
+        implicit dirs: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64;/lib64;/usr/lib64;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/lib;/lib;/usr/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CheckFunctionExists.cmake:86 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindBLAS.cmake:372 (check_function_exists)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindBLAS.cmake:416 (check_blas_libraries)"
+      - "CMakeLists.txt:17 (find_package)"
+    checks:
+      - "Looking for sgemm_"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "BLAS_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_18587/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_18587.dir/build.make CMakeFiles/cmTC_18587.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf'
+        Building CXX object CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp -DCHECK_FUNCTION_EXISTS=sgemm_ -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o -MF CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o.d -o CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf/CheckFunctionExists.cxx
+        Linking CXX executable cmTC_18587
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_18587.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp -DCHECK_FUNCTION_EXISTS=sgemm_ -static-libstdc++  CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o -o cmTC_18587 
+        CMakeFiles/cmTC_18587.dir/CheckFunctionExists.cxx.o: In function `main':
+        CheckFunctionExists.cxx:(.text+0x1d): undefined reference to `sgemm_'
+        icpx: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[1]: *** [CMakeFiles/cmTC_18587.dir/build.make:100: cmTC_18587] Error 1
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-ExMyzf'
+        gmake: *** [Makefile:127: cmTC_18587/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindThreads.cmake:99 (CHECK_CXX_SOURCE_COMPILES)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindBLAS.cmake:468 (find_package)"
+      - "CMakeLists.txt:17 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_cdb71/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_cdb71.dir/build.make CMakeFiles/cmTC_cdb71.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0'
+        Building CXX object CMakeFiles/cmTC_cdb71.dir/src.cxx.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -DCMAKE_HAVE_LIBC_PTHREAD  -march=native -qopenmp  -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_cdb71.dir/src.cxx.o -MF CMakeFiles/cmTC_cdb71.dir/src.cxx.o.d -o CMakeFiles/cmTC_cdb71.dir/src.cxx.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0/src.cxx
+        Linking CXX executable cmTC_cdb71
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cdb71.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp  -static-libstdc++  CMakeFiles/cmTC_cdb71.dir/src.cxx.o -o cmTC_cdb71 
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-BXXrK0'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/CheckFunctionExists.cmake:86 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindBLAS.cmake:372 (check_function_exists)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindBLAS.cmake:666 (check_blas_libraries)"
+      - "CMakeLists.txt:17 (find_package)"
+    checks:
+      - "Looking for sgemm_"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "BLAS_mkl_intel_lp64_deps_mkl_intel_thread_deps_mkl_core_deps_iomp5_deps_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_15598/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_15598.dir/build.make CMakeFiles/cmTC_15598.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv'
+        Building CXX object CMakeFiles/cmTC_15598.dir/CheckFunctionExists.cxx.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp -DCHECK_FUNCTION_EXISTS=sgemm_ -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_15598.dir/CheckFunctionExists.cxx.o -MF CMakeFiles/cmTC_15598.dir/CheckFunctionExists.cxx.o.d -o CMakeFiles/cmTC_15598.dir/CheckFunctionExists.cxx.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv/CheckFunctionExists.cxx
+        Linking CXX executable cmTC_15598
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_15598.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp -DCHECK_FUNCTION_EXISTS=sgemm_ -static-libstdc++  CMakeFiles/cmTC_15598.dir/CheckFunctionExists.cxx.o -o cmTC_15598  /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib/libmkl_intel_lp64.so /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib/libmkl_intel_thread.so /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib/libmkl_core.so /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/libiomp5.so -lm -ldl 
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-9EtYAv'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:219 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:485 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:74 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_fiopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_73896/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_73896.dir/build.make CMakeFiles/cmTC_73896.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V'
+        Building CXX object CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp -fiopenmp -v -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V/OpenMPTryFlag.cpp
+        Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)
+        Target: x86_64-unknown-linux-gnu
+        Thread model: posix
+        InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler
+        Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg
+        Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/clang" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name OpenMPTryFlag.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -fveclib=SVML -faltmathlib=SVMLAltMathLibrary -mframe-pointer=none -fapprox-func -funsafe-math-optimizations -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign,preserve-sign -ffp-contract=fast-honor-pragmas -fno-rounding-math -complex-range=promoted -mconstructor-aliases -funwind-tables=2 -target-cpu emeraldrapids -target-feature +prfchw -target-feature +cldemote -target-feature +avx -target-feature -msrlist -target-feature +aes -target-feature +sahf -target-feature +pclmul -target-feature -xop -target-feature +crc32 -target-feature -pbndkb -target-feature -amx-fp8 -target-feature +xsaves -target-feature +avx512fp16 -target-feature -usermsr -target-feature -sm4 -target-feature -egpr -target-feature +sse4.1 -target-feature +avx512ifma -target-feature +xsave -target-feature +sse4.2 -target-feature +tsxldtrk -target-feature -sm3 -target-feature +ptwrite -target-feature -widekl -target-feature -movrs -target-feature -wrmsrns -target-feature +invpcid -target-feature +64bit -target-feature +xsavec -target-feature -avx10.1-512 -target-feature +avx512vpopcntdq -target-feature +cmov -target-feature -avx512vp2intersect -target-feature +avx512cd -target-feature +movbe -target-feature -avxvnniint8 -target-feature -ccmp -target-feature +amx-int8 -target-feature -kl -target-feature -avx10.1-256 -target-feature +evex512 -target-feature +avxvnni -target-feature -rtm -target-feature +adx -target-feature +avx2 -target-feature -hreset -target-feature +movdiri -target-feature +serialize -target-feature -sha512 -target-feature +vpclmulqdq -target-feature +avx512vl -target-feature +uintr -target-feature -cf -target-feature +clflushopt -target-feature -raoint -target-feature -cmpccxadd -target-feature +bmi -target-feature +amx-tile -target-feature +sse -target-feature -avx10.2-256 -target-feature +gfni -target-feature -avxvnniint16 -target-feature -amx-fp16 -target-feature -zu -target-feature -ndd -target-feature +xsaveopt -target-feature +rdrnd -target-feature +avx512f -target-feature +amx-bf16 -target-feature +avx512bf16 -target-feature +avx512vnni -target-feature -push2pop2 -target-feature +cx8 -target-feature +avx512bw -target-feature +sse3 -target-feature +pku -target-feature -nf -target-feature -amx-tf32 -target-feature -amx-avx512 -target-feature +fsgsbase -target-feature -clzero -target-feature -mwaitx -target-feature -lwp -target-feature +lzcnt -target-feature +sha -target-feature +movdir64b -target-feature -ppx -target-feature +wbnoinvd -target-feature +enqcmd -target-feature -amx-transpose -target-feature -avx10.2-512 -target-feature -avxneconvert -target-feature -tbm -target-feature +pconfig -target-feature -amx-complex -target-feature +ssse3 -target-feature +cx16 -target-feature +bmi2 -target-feature +fma -target-feature +popcnt -target-feature -avxifma -target-feature +f16c -target-feature +avx512bitalg -target-feature -rdpru -target-feature +clwb -target-feature +mmx -target-feature +sse2 -target-feature +rdseed -target-feature +avx512vbmi2 -target-feature +rdpid -target-feature -prefetchi -target-feature -amx-movrs -target-feature -fma4 -target-feature +avx512vbmi -target-feature +shstk -target-feature +vaes -target-feature +waitpkg -target-feature +sgx -target-feature +fxsr -target-feature +avx512dq -target-feature -sse4a -mllvm -x86-enable-unaligned-vector-move=true -debugger-tuning=gdb -fdebug-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V -v -fcoverage-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V -fclang-abi-compat=17 -resource-dir /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21 -dependency-file CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o.d -MT CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -sys-header-deps -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0 -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include -internal-isystem /usr/local/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include -internal-externc-isystem /include -internal-externc-isystem /usr/include -O2 -std=gnu++17 -fdeprecated-macro -ferror-limit 19 -fopenmp-late-outline -fopenmp-threadprivate-legacy -fopenmp -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -vectorize-loops -vectorize-slp -mllvm -disable-hir-generate-mkl-call -mllvm -loopopt=1 -floopopt-pipeline=light -mllvm -intel-abi-compatible=true -mllvm -paropt=31 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -fintel-compatibility -fintel-libirc-allowed -fintel-libimf-allowed -o CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -x c++ /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V/OpenMPTryFlag.cpp
+        clang -cc1 version 21.0.0git based upon LLVM 21.0.0git default target x86_64-unknown-linux-gnu
+        ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include"
+          as it is a non-system directory that duplicates a system directory
+        ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include"
+          as it is a non-system directory that duplicates a system directory
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu
+         /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward
+         /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include
+         /usr/local/include
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_73896
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_73896.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp -fiopenmp -v -static-libstdc++  CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -o cmTC_73896  -v 
+        Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)
+        Target: x86_64-unknown-linux-gnu
+        Thread model: posix
+        InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler
+        Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg
+        Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" --hash-style=gnu --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_73896 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib64 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib -L/lib -L/usr/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -Bstatic -lsvml -Bdynamic -Bstatic -lirng -Bdynamic -Bstatic -lstdc++ -Bdynamic -Bstatic -limf -Bdynamic -lm -lgcc_s -lgcc -Bstatic -lirc -Bdynamic -ldl -liomp5 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc -Bstatic -lirc_s -Bdynamic /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:262 (message)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:485 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:74 (find_package)"
+    message: |
+      Parsed CXX OpenMP implicit link information from above output:
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V']
+        ignore line: []
+        ignore line: [Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_73896/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_73896.dir/build.make CMakeFiles/cmTC_73896.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V']
+        ignore line: [Building CXX object CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o]
+        ignore line: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp -fiopenmp -v -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V/OpenMPTryFlag.cpp]
+        ignore line: [Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)]
+        ignore line: [Target: x86_64-unknown-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler]
+        ignore line: [Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg]
+        ignore line: [Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        ignore line: [ (in-process)]
+        ignore line: [ "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/clang" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name OpenMPTryFlag.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -fveclib=SVML -faltmathlib=SVMLAltMathLibrary -mframe-pointer=none -fapprox-func -funsafe-math-optimizations -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign preserve-sign -ffp-contract=fast-honor-pragmas -fno-rounding-math -complex-range=promoted -mconstructor-aliases -funwind-tables=2 -target-cpu emeraldrapids -target-feature +prfchw -target-feature +cldemote -target-feature +avx -target-feature -msrlist -target-feature +aes -target-feature +sahf -target-feature +pclmul -target-feature -xop -target-feature +crc32 -target-feature -pbndkb -target-feature -amx-fp8 -target-feature +xsaves -target-feature +avx512fp16 -target-feature -usermsr -target-feature -sm4 -target-feature -egpr -target-feature +sse4.1 -target-feature +avx512ifma -target-feature +xsave -target-feature +sse4.2 -target-feature +tsxldtrk -target-feature -sm3 -target-feature +ptwrite -target-feature -widekl -target-feature -movrs -target-feature -wrmsrns -target-feature +invpcid -target-feature +64bit -target-feature +xsavec -target-feature -avx10.1-512 -target-feature +avx512vpopcntdq -target-feature +cmov -target-feature -avx512vp2intersect -target-feature +avx512cd -target-feature +movbe -target-feature -avxvnniint8 -target-feature -ccmp -target-feature +amx-int8 -target-feature -kl -target-feature -avx10.1-256 -target-feature +evex512 -target-feature +avxvnni -target-feature -rtm -target-feature +adx -target-feature +avx2 -target-feature -hreset -target-feature +movdiri -target-feature +serialize -target-feature -sha512 -target-feature +vpclmulqdq -target-feature +avx512vl -target-feature +uintr -target-feature -cf -target-feature +clflushopt -target-feature -raoint -target-feature -cmpccxadd -target-feature +bmi -target-feature +amx-tile -target-feature +sse -target-feature -avx10.2-256 -target-feature +gfni -target-feature -avxvnniint16 -target-feature -amx-fp16 -target-feature -zu -target-feature -ndd -target-feature +xsaveopt -target-feature +rdrnd -target-feature +avx512f -target-feature +amx-bf16 -target-feature +avx512bf16 -target-feature +avx512vnni -target-feature -push2pop2 -target-feature +cx8 -target-feature +avx512bw -target-feature +sse3 -target-feature +pku -target-feature -nf -target-feature -amx-tf32 -target-feature -amx-avx512 -target-feature +fsgsbase -target-feature -clzero -target-feature -mwaitx -target-feature -lwp -target-feature +lzcnt -target-feature +sha -target-feature +movdir64b -target-feature -ppx -target-feature +wbnoinvd -target-feature +enqcmd -target-feature -amx-transpose -target-feature -avx10.2-512 -target-feature -avxneconvert -target-feature -tbm -target-feature +pconfig -target-feature -amx-complex -target-feature +ssse3 -target-feature +cx16 -target-feature +bmi2 -target-feature +fma -target-feature +popcnt -target-feature -avxifma -target-feature +f16c -target-feature +avx512bitalg -target-feature -rdpru -target-feature +clwb -target-feature +mmx -target-feature +sse2 -target-feature +rdseed -target-feature +avx512vbmi2 -target-feature +rdpid -target-feature -prefetchi -target-feature -amx-movrs -target-feature -fma4 -target-feature +avx512vbmi -target-feature +shstk -target-feature +vaes -target-feature +waitpkg -target-feature +sgx -target-feature +fxsr -target-feature +avx512dq -target-feature -sse4a -mllvm -x86-enable-unaligned-vector-move=true -debugger-tuning=gdb -fdebug-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V -v -fcoverage-compilation-dir=/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V -fclang-abi-compat=17 -resource-dir /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21 -dependency-file CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o.d -MT CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -sys-header-deps -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include -I/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -c-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include -cxx-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0 -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward -internal-isystem /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include -internal-isystem /usr/local/include -internal-isystem /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include -internal-externc-isystem /include -internal-externc-isystem /usr/include -O2 -std=gnu++17 -fdeprecated-macro -ferror-limit 19 -fopenmp-late-outline -fopenmp-threadprivate-legacy -fopenmp -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -vectorize-loops -vectorize-slp -mllvm -disable-hir-generate-mkl-call -mllvm -loopopt=1 -floopopt-pipeline=light -mllvm -intel-abi-compatible=true -mllvm -paropt=31 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -fintel-compatibility -fintel-libirc-allowed -fintel-libimf-allowed -o CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -x c++ /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-C8mS9V/OpenMPTryFlag.cpp]
+        ignore line: [clang -cc1 version 21.0.0git based upon LLVM 21.0.0git default target x86_64-unknown-linux-gnu]
+        ignore line: [ignoring nonexistent directory "/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../x86_64-pc-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/include"]
+        ignore line: [ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include"]
+        ignore line: [  as it is a non-system directory that duplicates a system directory]
+        ignore line: [ignoring duplicate directory "/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include"]
+        ignore line: [  as it is a non-system directory that duplicates a system directory]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dev-utilities/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpl/2022.9/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dpcpp-ct/2025.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/include]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/include]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu]
+        ignore line: [ /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward]
+        ignore line: [ /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Linking CXX executable cmTC_73896]
+        ignore line: [/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_73896.dir/link.txt --verbose=1]
+        ignore line: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp -fiopenmp -v -static-libstdc++  CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -o cmTC_73896  -v ]
+        ignore line: [Intel(R) oneAPI DPC++/C++ Compiler 2025.2.1 (2025.2.0.20250806)]
+        ignore line: [Target: x86_64-unknown-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler]
+        ignore line: [Configuration file: /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../icpx.cfg]
+        ignore line: [Found candidate GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Selected GCC installation: /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        link line: [ "/usr/bin/ld" --hash-style=gnu --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_73896 /lib/../lib64/crt1.o /lib/../lib64/crti.o /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtbegin.o -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0 -L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib64 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib -L/lib -L/usr/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o -Bstatic -lsvml -Bdynamic -Bstatic -lirng -Bdynamic -Bstatic -lstdc++ -Bdynamic -Bstatic -limf -Bdynamic -lm -lgcc_s -lgcc -Bstatic -lirc -Bdynamic -ldl -liomp5 -L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc -Bstatic -lirc_s -Bdynamic /orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/crtend.o /lib/../lib64/crtn.o]
+          arg [/usr/bin/ld] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_73896] ==> ignore
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+          arg [-L/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib64] ==> dir [/usr/lib64]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib]
+          arg [CMakeFiles/cmTC_73896.dir/OpenMPTryFlag.cpp.o] ==> ignore
+          arg [-Bstatic] ==> search static
+          arg [-lsvml] ==> lib [svml]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-lirng] ==> lib [irng]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-lstdc++] ==> lib [SEARCH_STATIC:stdc++]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-Bstatic] ==> search static
+          arg [-limf] ==> lib [imf]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-Bstatic] ==> search static
+          arg [-lirc] ==> lib [irc]
+          arg [-Bdynamic] ==> search dynamic
+          arg [-ldl] ==> lib [dl]
+          arg [-liomp5] ==> lib [iomp5]
+          arg [-L/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib] ==> dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lpthread] ==> lib [pthread]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-Bstatic] ==> search static
+          arg [-lirc_s] ==> lib [irc_s]
+          arg [-Bdynamic] ==> search dynamic
+        search lib [SEARCH_STATIC:stdc++] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64/libstdc++.a]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0]
+        collapse library dir [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../lib64] ==> [/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib64] ==> [/usr/lib64]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/compiler/../../opt/compiler/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib]
+        collapse library dir [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib] ==> [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+        implicit libs: [svml;irng;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64/libstdc++.a;imf;m;gcc_s;gcc;irc;dl;iomp5;gcc_s;gcc;pthread;c;gcc_s;gcc;irc_s]
+        implicit objs: []
+        implicit dirs: [/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/lib/clang/21/lib/x86_64-unknown-linux-gnu;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib/gcc/x86_64-pc-linux-gnu/12.2.0;/orcd/software/core/001/spack/pkg/gcc/12.2.0/yt6vabm/lib64;/lib64;/usr/lib64;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/opt/compiler/lib;/lib;/usr/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/opt/mpi/libfabric/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mpi/2021.16/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/mkl/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ipp/2022.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ippcp/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/dnnl/2025.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/ccl/2021.16/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/umf/0.11/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/tbb/2022.2/lib;/orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:419 (try_compile)"
+      - "/orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/share/cmake-3.27/Modules/FindOpenMP.cmake:559 (_OPENMP_GET_SPEC_DATE)"
+      - "CMakeLists.txt:74 (find_package)"
+    description: "Detecting CXX OpenMP version"
+    directories:
+      source: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge"
+      binary: "/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "-march=native -qopenmp"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: "-static-libstdc++"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "OpenMP_SPECTEST_CXX_"
+      cached: true
+      stdout: |
+        Change Dir: '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge'
+        
+        Run Build Command(s): /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_010e7/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_010e7.dir/build.make CMakeFiles/cmTC_010e7.dir/build
+        gmake[1]: Entering directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge'
+        Building CXX object CMakeFiles/cmTC_010e7.dir/OpenMPCheckVersion.cpp.o
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx   -march=native -qopenmp -fiopenmp -std=gnu++17 -fPIE -MD -MT CMakeFiles/cmTC_010e7.dir/OpenMPCheckVersion.cpp.o -MF CMakeFiles/cmTC_010e7.dir/OpenMPCheckVersion.cpp.o.d -o CMakeFiles/cmTC_010e7.dir/OpenMPCheckVersion.cpp.o -c /home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge/OpenMPCheckVersion.cpp
+        Linking CXX executable cmTC_010e7
+        /orcd/software/core/001/spack/pkg/cmake/3.27.9/fsi2zli/bin/cmake -E cmake_link_script CMakeFiles/cmTC_010e7.dir/link.txt --verbose=1
+        /orcd/software/core/001/pkg/intel-hpc/2025.2.1.44/compiler/2025.2/bin/icpx -march=native -qopenmp -fiopenmp -static-libstdc++  CMakeFiles/cmTC_010e7.dir/OpenMPCheckVersion.cpp.o -o cmTC_010e7 
+        gmake[1]: Leaving directory '/home/nhirt/AlgorithmEngineering_AltProject/build_mg/CMakeFiles/CMakeScratch/TryCompile-Pfs5Ge'
+        
+      exitCode: 0
+...
