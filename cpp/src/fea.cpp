@@ -769,29 +769,11 @@ void K_times_u_finest(const Problem& pb,
 	const auto& mesh = pb.mesh;
 	const size_t numFreeDofs = uFree.size();
 
+	bool needZero = (yFree.size() == numFreeDofs); // If we didn't assign (resize), we must zero.
+
     // Resize output if necessary (serial)
 	if (yFree.size() != numFreeDofs) {
         yFree.assign(numFreeDofs, 0.0);
-    }
-    // Note: if we just resized, it is zeroed. If not, we need to zero it.
-    // We can do this efficiently in the parallel region.
-    bool needZero = (yFree.size() == numFreeDofs); // If we didn't assign (resize), we must zero.
-    // Wait, assign sets it to 0.0. So if resized, no need to zero. 
-    // If size matched, we didn't call assign, so it has old data.
-    // Logic:
-    // if (size != num) { assign(num, 0); needZero = false; }
-    // else { needZero = true; }
-    // Actually, assign is O(N). If we resize, we pay O(N).
-    // Can we avoid assign? resize() keeps content? No, we want to clear.
-    // If size != num: yFree.resize(num); needZero = true; (resize fills with default? No, resize to smaller keeps. Resize to larger fills.)
-    // Better:
-    if (yFree.size() != numFreeDofs) {
-        yFree.resize(numFreeDofs); // Size change
-        needZero = true; // Just to be safe, or we can rely on new elements being 0? 
-        // std::vector resize initializes new elements. Old ones are kept.
-        // We need ALL zero.
-    } else {
-        needZero = true;
     }
 
 	const int32_t* __restrict__ eDofFree = pb.eDofFreeMat.data();
