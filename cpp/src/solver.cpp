@@ -149,7 +149,7 @@ int PCG_free(const Problem& pb,
     const double stop_tol = std::max(1.0e-30, normb) * tol; // Pre-calc threshold
 
     // --- MAIN LOOP ---
-    // Use raw pointers for better optimization
+    // Use raw pointers to skip bounds check
     double* __restrict__ r_ptr = r.data();
     double* __restrict__ z_ptr_w = z.data();
     double* __restrict__ p_ptr = p.data();
